@@ -9,12 +9,12 @@ import { useInView } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, SectionTitle, ScanningLine } from "@/components/shared";
 import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
-  comparisonData, dataSources, researcherInfo
+  comparisonData, dataSources
 } from "@/lib/mockData";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database, Check, X,
-  Linkedin, Github, ArrowRight, ChevronDown, Lock, ExternalLink
+  ArrowRight, ChevronDown, Lock, ExternalLink, GraduationCap
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -114,10 +114,7 @@ export default function Landing() {
       {/* ===== TRUSTED DATA SOURCES ===== */}
       <DataSourcesSection />
 
-      {/* ===== ABOUT RESEARCHER ===== */}
-      <ResearcherSection />
-
-      {/* ===== DATA PRIVACY ===== */}
+      {/* ===== DATA PRIVACY & DISCLAIMER ===== */}
       <PrivacySection />
 
       <Footer variant="dark" />
@@ -307,59 +304,46 @@ function DataSourcesSection() {
   );
 }
 
-function ResearcherSection() {
-  const { isInView, ref } = useInView(0.2);
-  return (
-    <section ref={ref as React.Ref<HTMLElement>} className="py-24 md:py-32 bg-[#060a16]">
-      <div className="max-w-6xl mx-auto px-4">
-        <SectionTitle dark>About the Researcher</SectionTitle>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
-          <div className="glass-card-dark rounded-xl p-8 md:p-10">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold font-display text-white mb-4">{researcherInfo.name}</h3>
-                <div className="space-y-3 mb-6">
-                  {researcherInfo.education.map((edu, i) => (
-                    <div key={i} className="text-sm font-body">
-                      <div className="text-slate-300 font-medium">{edu.degree}</div>
-                      <div className="text-slate-500">{edu.institution}, {edu.location}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-4">
-                  <a href={researcherInfo.links.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all text-sm">
-                    <Linkedin className="w-4 h-4" /> LinkedIn
-                  </a>
-                  <a href={researcherInfo.links.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all text-sm">
-                    <Github className="w-4 h-4" /> GitHub
-                  </a>
-                </div>
-              </div>
-              <div className="md:w-72">
-                <div className="rounded-xl border border-slate-700/50 p-6 bg-slate-800/30">
-                  <h4 className="text-sm font-semibold font-display text-slate-400 uppercase tracking-wider mb-4">Research & Writing</h4>
-                  <p className="text-sm text-slate-500 font-body italic">Coming soon — articles on sanctions compliance, Cyrillic transliteration challenges, and AI in trade finance.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-}
-
 function PrivacySection() {
   return (
-    <section className="py-16 md:py-20">
-      <div className="max-w-3xl mx-auto px-4 text-center">
-        <div className="inline-flex items-center gap-2 mb-6">
-          <Lock className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-lg font-bold font-display text-white">Data Privacy</h3>
+    <section className="py-20 md:py-28 bg-[#060a16]">
+      <div className="max-w-4xl mx-auto px-4">
+        <SectionTitle dark subtitle="Transparency and responsible use">Data Privacy & Disclaimer</SectionTitle>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Data Privacy */}
+          <div className="glass-card-dark rounded-xl p-8">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                <Lock className="w-4.5 h-4.5 text-cyan-400" />
+              </div>
+              <h3 className="text-base font-bold font-display text-white">Data Privacy</h3>
+            </div>
+            <div className="space-y-3 text-sm text-slate-400 font-body leading-relaxed">
+              <p>This prototype provides AI-assisted analysis to support human review. All screening data is processed locally in the browser.</p>
+              <p>No vendor names, screening results, or uploaded documents are stored, transmitted to external servers, or retained after the session ends.</p>
+              <p>All sanctions list data is sourced from publicly available government databases (OFAC, EU, UN, UK OFSI).</p>
+            </div>
+          </div>
+          {/* Terms of Use */}
+          <div className="glass-card-dark rounded-xl p-8">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                <GraduationCap className="w-4.5 h-4.5 text-cyan-400" />
+              </div>
+              <h3 className="text-base font-bold font-display text-white">Terms of Use</h3>
+            </div>
+            <div className="space-y-3 text-sm text-slate-400 font-body leading-relaxed">
+              <p>TradeScreen AI is an academic research prototype developed at Atlantis University (ISM 6026).</p>
+              <p>For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.</p>
+              <p>Results should be verified by qualified compliance professionals before any business decisions are made.</p>
+            </div>
+          </div>
         </div>
-        <p className="text-sm text-slate-400 font-body leading-relaxed max-w-xl mx-auto">
-          This academic research prototype processes all data locally in the browser. No vendor names, screening results, or uploaded documents are stored, transmitted to external servers, or retained after the session ends. All sanctions list data is sourced from publicly available government databases.
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-xs text-slate-600 font-body">
+            &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; Academic Research Prototype
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -55,8 +55,9 @@ export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
   return (
     <footer className={cn("py-8 text-center text-sm font-body", isDark ? "bg-[#050810] text-slate-500 border-t border-slate-800" : "bg-white text-slate-500 border-t border-slate-200")}>
       <div className="max-w-6xl mx-auto px-4 space-y-2">
-        <p>TradeScreenAI — Tatiana Podobivskaia — Atlantis University, Miami FL</p>
-        <p className="text-xs opacity-70">Academic research project — not a commercial service.</p>
+        <p className="font-medium">TradeScreen AI — Academic Research Prototype — Atlantis University ISM 6026</p>
+        <p className="text-xs opacity-70">For Educational Use Only — Not a Commercial Compliance Tool</p>
+        <p className="text-xs opacity-50">This prototype provides AI-assisted analysis to support human review.</p>
       </div>
     </footer>
   );
