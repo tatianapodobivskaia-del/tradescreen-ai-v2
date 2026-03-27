@@ -1,0 +1,428 @@
+# Instincts generated from https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+# Generated: 2026-03-27T23:54:57.908Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: tradescreen-ai-v2-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Commit Length
+
+## Action
+
+Write detailed commit messages (~294 characters for first line)
+
+## Evidence
+
+- Average commit message length: 294 chars
+- Based on 5 commits
+
+---
+id: tradescreen-ai-v2-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: tradescreen-ai-v2-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: tradescreen-ai-v2-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: tradescreen-ai-v2-arch-type-based
+trigger: "when adding new code"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Arch Type Based
+
+## Action
+
+Place code in the appropriate type folder (components/, services/, utils/, etc.)
+
+## Evidence
+
+- Type-based module organization detected
+- Folders: 
+
+---
+id: tradescreen-ai-v2-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: tradescreen-ai-v2-workflow-add-or-update-app-page
+trigger: "when doing add or update app page"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Workflow Add Or Update App Page
+
+## Action
+
+Follow the add-or-update-app-page workflow:
+1. Create or modify a file in client/src/pages/PageName.tsx
+2. Update navigation or layout components in client/src/components/AppLayout.tsx or client/src/components/shared.tsx to include the new/updated page
+3. Update client/src/App.tsx to register the new route or adjust routing logic
+4. Optionally update client/src/pages/Landing.tsx if the landing page references the new/updated page
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: client/src/pages/*.tsx, client/src/components/AppLayout.tsx, client/src/components/shared.tsx
+
+---
+id: tradescreen-ai-v2-workflow-update-legal-or-footer-links
+trigger: "when doing update legal or footer links"
+confidence: 0.55
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Workflow Update Legal Or Footer Links
+
+## Action
+
+Follow the update-legal-or-footer-links workflow:
+1. Create or update legal page components in client/src/pages/LegalPages.tsx (or similar)
+2. Update footer links in client/src/components/shared.tsx and/or client/src/pages/Landing.tsx
+3. Update navigation or layout in client/src/components/AppLayout.tsx if necessary
+4. Update client/src/App.tsx to register new routes for legal pages
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~1x per month
+- Files: client/src/pages/LegalPages.tsx, client/src/components/shared.tsx, client/src/pages/Landing.tsx
+
+---
+id: tradescreen-ai-v2-instinct-file-naming
+trigger: "When creating a new file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct File Naming
+
+## Action
+
+Name the file using camelCase
+
+## Evidence
+
+- Pattern: namingConventions.files = camelCase
+- Seen in client/src/pages/Landing.tsx
+
+---
+id: tradescreen-ai-v2-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern: namingConventions.functions = camelCase
+
+---
+id: tradescreen-ai-v2-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern: namingConventions.classes = PascalCase
+
+---
+id: tradescreen-ai-v2-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern: namingConventions.constants = SCREAMING_SNAKE_CASE
+
+---
+id: tradescreen-ai-v2-instinct-import-alias
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Import Alias
+
+## Action
+
+Use alias import style
+
+## Evidence
+
+- Pattern: importStyle = alias
+
+---
+id: tradescreen-ai-v2-instinct-export-named
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Export Named
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern: exportStyle = named
+
+---
+id: tradescreen-ai-v2-instinct-error-boundaries
+trigger: "When handling errors in React components"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Error Boundaries
+
+## Action
+
+Implement error boundaries for error handling
+
+## Evidence
+
+- Pattern: errorHandling.errorBoundaries = true
+
+---
+id: tradescreen-ai-v2-instinct-commit-prefix-checkpoint
+trigger: "When committing significant progress or a milestone"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Commit Prefix Checkpoint
+
+## Action
+
+Prefix the commit message with 'Checkpoint:'
+
+## Evidence
+
+- Pattern: commits.prefixes = ['checkpoint']
+- Seen in commit: 'Checkpoint: Updated About Researcher page...'
+
+---
+id: tradescreen-ai-v2-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Commit Length
+
+## Action
+
+Write a descriptive commit message averaging around 294 characters
+
+## Evidence
+
+- Pattern: commits.averageLength = 294
+
+---
+id: tradescreen-ai-v2-instinct-add-update-app-page
+trigger: "When introducing a new app page or making significant changes to an existing page"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Add Update App Page
+
+## Action
+
+Follow the sequence: (1) Create/modify client/src/pages/PageName.tsx, (2) Update navigation/layout in client/src/components/AppLayout.tsx or client/src/components/shared.tsx, (3) Update client/src/App.tsx for routing, (4) Optionally update client/src/pages/Landing.tsx
+
+## Evidence
+
+- Workflow: add-or-update-app-page
+- Commit sequence and file patterns in workflow definition
+
+---
+id: tradescreen-ai-v2-instinct-update-legal-footer-links
+trigger: "When adding or updating legal pages or footer/navigation links to legal information"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Update Legal Footer Links
+
+## Action
+
+Follow the sequence: (1) Create/update client/src/pages/LegalPages.tsx, (2) Update footer links in client/src/components/shared.tsx and/or client/src/pages/Landing.tsx, (3) Update navigation/layout in client/src/components/AppLayout.tsx if needed, (4) Update client/src/App.tsx for routing
+
+## Evidence
+
+- Workflow: update-legal-or-footer-links
+- Commit sequence and file patterns in workflow definition
+
+---
+id: tradescreen-ai-v2-instinct-test-location
+trigger: "When adding new tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Test Location
+
+## Action
+
+Place test files in a separate directory from source files
+
+## Evidence
+
+- Pattern: architecture.testLocation = separate
+
+---
+id: tradescreen-ai-v2-instinct-type-based-module-organization
+trigger: "When organizing modules"
+confidence: 0.8
+domain: architecture
+source: repo-analysis
+source_repo: tatianapodobivskaia-del/tradescreen-ai-v2
+---
+
+# Tradescreen Ai V2 Instinct Type Based Module Organization
+
+## Action
+
+Organize modules by type (e.g., components, pages, utils)
+
+## Evidence
+
+- Pattern: architecture.moduleOrganization = type-based
+- Common folders: client/src/components, client/src/pages
+
