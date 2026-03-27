@@ -12,30 +12,6 @@ const fadeIn = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
 };
 
-const publications = [
-  {
-    title: "AI-Powered Multi-List Sanctions Screening with Cyrillic Transliteration",
-    type: "Capstone Project",
-    venue: "Atlantis University — Master of Science in Information Technology",
-    year: "2026",
-    description: "A comprehensive research prototype demonstrating two-pass AI architecture combining in-browser fuzzy matching with GPT-4o deep analysis for sanctions compliance screening across OFAC, EU, UN, and UK OFSI databases.",
-  },
-  {
-    title: "Cyrillic Name Transliteration Challenges in International Sanctions Compliance",
-    type: "Research Paper",
-    venue: "Atlantis University",
-    year: "2026",
-    description: "Analysis of transliteration inconsistencies across ISO 9, ICAO, BGN/PCGN, and informal standards, and their impact on sanctions screening accuracy for Russian, Ukrainian, and Belarusian names.",
-  },
-  {
-    title: "Vision AI Document Analysis for Trade Compliance",
-    type: "Technical Report",
-    venue: "Atlantis University",
-    year: "2026",
-    description: "A four-agent AI pipeline using GPT-4o Vision for automated extraction and risk assessment of trade documents including invoices, bills of lading, and certificates of origin.",
-  },
-];
-
 export default function AboutResearcher() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -104,29 +80,49 @@ export default function AboutResearcher() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-6">
             <FileText className="w-5 h-5 text-cyan-500" />
-            <h3 className="text-lg font-bold font-display text-slate-900">Publications & Research</h3>
+            <h3 className="text-lg font-bold font-display text-slate-900">Publications</h3>
           </div>
           <div className="space-y-5">
-            {publications.map((pub, i) => (
-              <div key={i} className="p-5 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-50 to-teal-50 flex items-center justify-center shrink-0 mt-0.5">
-                    <Award className="w-5 h-5 text-cyan-600" />
+            {/* Real publication — Medium article */}
+            <a
+              href="https://medium.com/@tatiana.podobivskaia/the-hidden-sanctions-loophole-that-costs-u-s-businesses-millions-and-how-ai-closes-it-ba5ea9f496a5"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-5 rounded-xl bg-slate-50 border border-slate-100 hover:border-cyan-300 hover:bg-cyan-50/30 transition-all group"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-50 to-teal-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:from-cyan-100 group-hover:to-teal-100 transition-colors">
+                  <Award className="w-5 h-5 text-cyan-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h4 className="text-[15px] font-semibold text-slate-800 font-display leading-snug group-hover:text-cyan-700 transition-colors">
+                      The Hidden Sanctions Loophole That Costs U.S. Businesses Millions — and How AI Closes It
+                    </h4>
+                    <ExternalLink className="w-4 h-4 text-slate-300 shrink-0 mt-0.5 group-hover:text-cyan-500 transition-colors" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-[15px] font-semibold text-slate-800 font-display leading-snug">{pub.title}</h4>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase font-data bg-cyan-500/10 text-cyan-600 border border-cyan-500/20">
-                        {pub.type}
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase font-data bg-cyan-500/10 text-cyan-600 border border-cyan-500/20">
+                      Article
+                    </span>
+                    <span className="text-xs text-slate-400 font-data">March 2026</span>
+                    <span className="text-xs text-slate-400 font-data">&middot;</span>
+                    <span className="text-xs text-slate-400 font-data">6 min read</span>
+                  </div>
+                  <p className="text-sm text-slate-500 font-body mt-1">Medium</p>
+                  <p className="text-sm text-slate-500 font-body mt-2 leading-relaxed">
+                    How transliteration-based evasion defeats traditional screening tools, and why a two-pass AI architecture changes the equation for SMEs. Covers multi-script transliteration, multi-algorithm fuzzy matching, and GPT-4o contextual analysis for sanctions compliance.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {["Sanctions", "AI", "Compliance", "RegTech", "Trade"].map((tag) => (
+                      <span key={tag} className="px-2 py-0.5 rounded text-[10px] font-medium font-data bg-slate-100 text-slate-500 border border-slate-200">
+                        {tag}
                       </span>
-                      <span className="text-xs text-slate-400 font-data">{pub.year}</span>
-                    </div>
-                    <p className="text-sm text-slate-500 font-body mt-1">{pub.venue}</p>
-                    <p className="text-sm text-slate-500 font-body mt-2 leading-relaxed">{pub.description}</p>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
+            </a>
           </div>
         </div>
       </motion.div>
