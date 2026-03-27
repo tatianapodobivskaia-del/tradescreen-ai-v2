@@ -333,13 +333,20 @@ function PrivacySection() {
               <h3 className="text-base font-bold font-display text-white">Terms of Use</h3>
             </div>
             <div className="space-y-3 text-sm text-slate-400 font-body leading-relaxed">
-              <p>TradeScreen AI is an academic research prototype developed at Atlantis University (ISM 6026).</p>
+              <p>TradeScreen AI is an academic research prototype developed at Atlantis University.</p>
               <p>For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.</p>
               <p>Results should be verified by qualified compliance professionals before any business decisions are made.</p>
             </div>
           </div>
         </div>
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 text-xs">
+            <a href="/app/disclaimer" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Disclaimer</a>
+            <span className="text-slate-700">|</span>
+            <a href="/app/privacy" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Privacy Policy</a>
+            <span className="text-slate-700">|</span>
+            <a href="/app/terms" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Terms of Use</a>
+          </div>
           <p className="text-xs text-slate-600 font-body">
             &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; Academic Research Prototype
           </p>

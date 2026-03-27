@@ -1,5 +1,6 @@
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 // ---- Risk Badge ----
 export function RiskBadge({ risk, className }: { risk: "High" | "Medium" | "Low"; className?: string }) {
@@ -53,11 +54,41 @@ export function DemoBadge({ className }: { className?: string }) {
 export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
   const isDark = variant === "dark";
   return (
-    <footer className={cn("py-8 text-center text-sm font-body", isDark ? "bg-[#050810] text-slate-500 border-t border-slate-800" : "bg-white text-slate-500 border-t border-slate-200")}>
-      <div className="max-w-6xl mx-auto px-4 space-y-2">
-        <p className="font-medium">TradeScreen AI — Academic Research Prototype — Atlantis University ISM 6026</p>
-        <p className="text-xs opacity-70">For Educational Use Only — Not a Commercial Compliance Tool</p>
-        <p className="text-xs opacity-50">This prototype provides AI-assisted analysis to support human review.</p>
+    <footer className={cn(
+      "py-10 text-center font-body",
+      isDark ? "bg-[#050810] text-slate-500 border-t border-slate-800" : "bg-white text-slate-500 border-t border-slate-200"
+    )}>
+      <div className="max-w-6xl mx-auto px-4 space-y-4">
+        {/* Main line */}
+        <p className={cn("text-sm font-medium", isDark ? "text-slate-400" : "text-slate-600")}>
+          TradeScreen AI — Academic Research Prototype — Atlantis University
+        </p>
+
+        {/* Legal links */}
+        <div className="flex items-center justify-center gap-2 text-xs">
+          <Link href="/app/disclaimer" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+            Disclaimer
+          </Link>
+          <span className="text-slate-600/40">|</span>
+          <Link href="/app/privacy" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+            Privacy Policy
+          </Link>
+          <span className="text-slate-600/40">|</span>
+          <Link href="/app/terms" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+            Terms of Use
+          </Link>
+        </div>
+
+        {/* Disclaimer lines */}
+        <div className="space-y-1">
+          <p className="text-xs opacity-70">For Educational Use Only — Not a Commercial Compliance Tool</p>
+          <p className="text-xs opacity-50">This prototype provides AI-assisted analysis to support human review.</p>
+        </div>
+
+        {/* Copyright */}
+        <p className={cn("text-xs pt-2", isDark ? "text-slate-600" : "text-slate-400")}>
+          &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL
+        </p>
       </div>
     </footer>
   );
