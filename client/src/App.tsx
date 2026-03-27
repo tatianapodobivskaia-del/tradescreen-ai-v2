@@ -4,32 +4,61 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import Landing from "./pages/Landing";
+import Dashboard from "./pages/Dashboard";
+import Screening from "./pages/Screening";
+import Watchlist from "./pages/Watchlist";
+import CyrillicEngine from "./pages/CyrillicEngine";
+import DocumentScanner from "./pages/DocumentScanner";
+import Reports from "./pages/Reports";
+import AuditLog from "./pages/AuditLog";
+import Architecture from "./pages/Architecture";
+import AboutResearcher from "./pages/AboutResearcher";
+import SettingsPage from "./pages/Settings";
+import AppLayout from "./components/AppLayout";
+import { useLocation } from "wouter";
 
+function AppPages() {
+  return (
+    <AppLayout>
+      <Switch>
+        <Route path="/app" component={Dashboard} />
+        <Route path="/app/screening" component={Screening} />
+        <Route path="/app/watchlist" component={Watchlist} />
+        <Route path="/app/cyrillic" component={CyrillicEngine} />
+        <Route path="/app/scanner" component={DocumentScanner} />
+        <Route path="/app/reports" component={Reports} />
+        <Route path="/app/audit" component={AuditLog} />
+        <Route path="/app/architecture" component={Architecture} />
+        <Route path="/app/about" component={AboutResearcher} />
+        <Route path="/app/settings" component={SettingsPage} />
+        <Route component={NotFound} />
+      </Switch>
+    </AppLayout>
+  );
+}
 
 function Router() {
+  const [location] = useLocation();
+  const isAppRoute = location.startsWith("/app");
+
+  if (isAppRoute) {
+    return <AppPages />;
+  }
+
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={Landing} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
