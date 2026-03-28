@@ -14,10 +14,10 @@ import { useState } from "react";
 
 const navItems = [
   { path: "/app/screening", label: "Screening", icon: Search },
+  { path: "/app/scanner", label: "AI Document Scanner", icon: ScanLine },
+  { path: "/app/cyrillic", label: "Cyrillic Engine", icon: Languages },
   { path: "/app", label: "Dashboard", icon: LayoutDashboard },
   { path: "/app/watchlist", label: "Watchlist Explorer", icon: Globe },
-  { path: "/app/cyrillic", label: "Cyrillic Engine", icon: Languages },
-  { path: "/app/scanner", label: "AI Document Scanner", icon: ScanLine },
   { path: "/app/reports", label: "Reports & Analytics", icon: BarChart3 },
   { path: "/app/audit", label: "Audit Log", icon: ScrollText },
   { path: "/app/architecture", label: "Architecture", icon: Cpu },
