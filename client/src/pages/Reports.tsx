@@ -1,19 +1,199 @@
 /*
  * REPORTS & ANALYTICS — Charts, heatmap, reports archive, performance metrics
  */
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { screeningTrends, geographicDistribution, performanceMetrics, reportsArchive } from "@/lib/mockData";
-import { BarChart3, Download, Globe, TrendingUp, FileText, Award } from "lucide-react";
+import { BarChart3, Download, Globe, TrendingUp, FileText, Award, Printer, X, ShieldAlert } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 
+const pdfSampleRows = [
+  { entity: "Rosoboronexport Trading", country: "Russia", score: "97", risk: "HIGH", decision: "BLOCK" },
+  { entity: "Shcherbakov Import Export", country: "Turkey", score: "91", risk: "HIGH", decision: "BLOCK" },
+  { entity: "Sunny Day Flowers Co", country: "Colombia", score: "26", risk: "LOW", decision: "APPROVE" },
+  { entity: "Miami Fresh Produce LLC", country: "USA", score: "18", risk: "LOW", decision: "APPROVE" },
+] as const;
+
+function PdfReportPreviewModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:static print:inset-auto print:p-0">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/70 print:hidden"
+        onClick={onClose}
+        aria-label="Close report preview"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-report-title"
+        className="relative z-10 flex max-h-[90vh] w-full max-w-[800px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl print:max-h-none print:shadow-none print:border-0"
+      >
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-100 px-4 py-3 print:hidden">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => alert("In production, this would download the screening report as a PDF.")}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition-opacity hover:opacity-90"
+            >
+              <Download className="h-4 w-4 shrink-0 text-cyan-600" strokeWidth={2} />
+              Download PDF
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition-opacity hover:opacity-90"
+            >
+              <Printer className="h-4 w-4 shrink-0 text-slate-600" strokeWidth={2} />
+              Print
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-transparent text-slate-600 transition-opacity hover:bg-slate-200/80 hover:opacity-100"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" strokeWidth={2} />
+          </button>
+        </div>
+
+        <div id="pdf-report-print-area" className="min-h-0 flex-1 overflow-y-auto px-8 py-8 text-slate-900 print:overflow-visible">
+          <h1 id="pdf-report-title" className="text-center text-xl font-extrabold font-display tracking-tight text-slate-900">
+            TradeScreenAI — Academic Research Demo — Screening Report
+          </h1>
+
+          <div className="mt-6 rounded-md bg-cyan-600 px-4 py-3 text-center">
+            <p className="text-[10px] font-bold font-display leading-relaxed tracking-wide text-white sm:text-[11px]">
+              ACADEMIC RESEARCH PROTOTYPE — FOR EDUCATIONAL USE ONLY — NOT A COMMERCIAL COMPLIANCE TOOL
+            </p>
+          </div>
+
+          <section className="mt-8">
+            <h2 className="border-b border-slate-200 pb-2 text-sm font-bold font-display uppercase tracking-wider text-slate-800">
+              Executive Summary
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-700 font-body">
+              Screened 7 vendors. 5 blocked (high risk), 0 flagged (medium risk), 2 approved (low risk). Total value
+              screened: $2,020,500. Average risk score: 71/100.
+            </p>
+          </section>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 border-y border-slate-200 py-4 text-center text-xs font-bold font-display tracking-wide text-slate-800 sm:text-sm">
+            <span>
+              <span className="font-data text-lg text-slate-900 sm:text-xl">7</span> TOTAL SCREENED
+            </span>
+            <span className="hidden text-slate-300 sm:inline" aria-hidden>
+              |
+            </span>
+            <span>
+              <span className="font-data text-lg text-slate-900 sm:text-xl">5</span> BLOCKED
+            </span>
+            <span className="hidden text-slate-300 sm:inline" aria-hidden>
+              |
+            </span>
+            <span>
+              <span className="font-data text-lg text-slate-900 sm:text-xl">0</span> FLAGGED
+            </span>
+            <span className="hidden text-slate-300 sm:inline" aria-hidden>
+              |
+            </span>
+            <span>
+              <span className="font-data text-lg text-slate-900 sm:text-xl">2</span> APPROVED
+            </span>
+          </div>
+
+          <section className="mt-8">
+            <h2 className="border-b border-slate-200 pb-2 text-sm font-bold font-display uppercase tracking-wider text-slate-800">
+              Screening Results (sample)
+            </h2>
+            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full min-w-[520px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-100">
+                    <th className="px-4 py-3 text-xs font-bold font-display uppercase tracking-wide text-slate-600">Entity</th>
+                    <th className="px-4 py-3 text-xs font-bold font-display uppercase tracking-wide text-slate-600">Country</th>
+                    <th className="px-4 py-3 text-xs font-bold font-display uppercase tracking-wide text-slate-600">Score</th>
+                    <th className="px-4 py-3 text-xs font-bold font-display uppercase tracking-wide text-slate-600">Risk</th>
+                    <th className="px-4 py-3 text-xs font-bold font-display uppercase tracking-wide text-slate-600">Decision</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pdfSampleRows.map((row) => (
+                    <tr key={row.entity} className="border-b border-slate-100 last:border-0">
+                      <td className="px-4 py-3 font-medium text-slate-800 font-body">{row.entity}</td>
+                      <td className="px-4 py-3 text-slate-600 font-body">{row.country}</td>
+                      <td className="px-4 py-3 font-data font-semibold text-slate-800">{row.score}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block rounded px-2 py-0.5 text-[10px] font-bold font-display ${
+                            row.risk === "HIGH" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-800"
+                          }`}
+                        >
+                          {row.risk}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-data text-xs font-bold text-slate-800">{row.decision}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <footer className="mt-10 flex gap-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-4 py-4">
+            <ShieldAlert className="h-5 w-5 shrink-0 text-amber-700 mt-0.5" strokeWidth={2} />
+            <div>
+              <h3 className="text-xs font-bold font-display uppercase tracking-wide text-amber-900">Compliance disclaimer</h3>
+              <p className="mt-2 text-xs leading-relaxed text-amber-950/90 font-body">
+                This report is produced by an academic research prototype for educational use only. It does not constitute
+                legal, regulatory, or compliance advice. Screening results are simulated demo data and must not be used for
+                real transaction decisions. Verify all outcomes with qualified compliance professionals and official
+                sanctions sources.
+              </p>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Reports() {
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Reports & Analytics</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Screening trends, risk distribution, and performance benchmarks</p>
       </div>
+
+      <PdfReportPreviewModal open={pdfPreviewOpen} onClose={() => setPdfPreviewOpen(false)} />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -109,8 +289,12 @@ export default function Reports() {
                   <td className="py-3 px-5 font-data text-slate-700">{report.records.toLocaleString()}</td>
                   <td className="py-3 px-5 font-data text-red-600">{report.flagged}</td>
                   <td className="py-3 px-5">
-                    <button className="flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700 font-medium">
-                      <Download className="w-3 h-3" /> PDF
+                    <button
+                      type="button"
+                      onClick={() => setPdfPreviewOpen(true)}
+                      className="flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700 font-medium"
+                    >
+                      <FileText className="w-3 h-3" /> PDF
                     </button>
                   </td>
                 </tr>
