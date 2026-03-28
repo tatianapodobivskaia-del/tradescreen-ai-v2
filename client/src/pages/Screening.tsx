@@ -281,14 +281,28 @@ export default function Screening() {
           </table>
         </div>
         <div className="px-7 pb-7 pt-5 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={() => alert("AI Deep Analysis will be available when connected to Azure API")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-200"
-          >
-            <Brain className="w-4 h-4 shrink-0" strokeWidth={2} />
-            Run AI Deep Analysis
-          </button>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => alert("AI Deep Analysis will be connected to Azure API")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+            >
+              <span className="text-base leading-none select-none" aria-hidden>
+                🧠
+              </span>
+              Run AI Deep Analysis
+            </button>
+            <button
+              type="button"
+              onClick={() => alert("Email generation will be connected to Azure API")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+            >
+              <span className="text-base leading-none select-none" aria-hidden>
+                📧
+              </span>
+              Generate Email to Bank
+            </button>
+          </div>
         </div>
       </div>
 
