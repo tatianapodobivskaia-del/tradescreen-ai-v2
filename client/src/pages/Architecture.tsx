@@ -138,6 +138,68 @@ export default function Architecture() {
         </div>
       </div>
 
+      {/* Side-by-Side Comparison */}
+      <div className="premium-card rounded-xl p-8">
+        <h3 className="text-base font-bold font-display text-slate-900 mb-6">Side-by-Side Comparison</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80 border-l-4 border-l-red-500 shadow-lg">
+            <div className="px-4 py-3.5 bg-gradient-to-r from-red-950 via-orange-950/90 to-red-950 border-b border-red-900/40">
+              <h4 className="text-sm font-extrabold font-display text-orange-100 tracking-tight">Fuzzy Matching Only</h4>
+            </div>
+            <div className="p-5">
+              <ul className="space-y-2.5 text-sm text-slate-300 font-body">
+                {[
+                  "Basic string comparison",
+                  "Single transliteration system",
+                  "Binary match/no-match result",
+                  "No context understanding",
+                  "High false positive rate on short names",
+                  "Misses transliteration variants",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-orange-500/80" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-3">
+                <p className="text-xs font-bold font-data text-red-300 leading-relaxed">
+                  Щербаков → NOT FOUND
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80 border-l-4 border-l-cyan-500 shadow-lg">
+            <div className="px-4 py-3.5 bg-gradient-to-r from-cyan-950 via-emerald-950/80 to-cyan-950 border-b border-cyan-900/40">
+              <h4 className="text-sm font-extrabold font-display text-cyan-50 tracking-tight">TradeScreenAI 4-Agent AI Pipeline</h4>
+            </div>
+            <div className="p-5">
+              <ul className="space-y-2.5 text-sm text-slate-300 font-body">
+                {[
+                  "Multi-algorithm fuzzy matching (n-gram + token sort + token set)",
+                  "4 transliteration systems (ISO 9, ICAO, BGN/PCGN, Informal)",
+                  "Composite risk score 0-100 with breakdown",
+                  "GPT-4o contextual analysis with reasoning",
+                  "AI-powered false positive reduction",
+                  "Catches all Cyrillic name variants",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-cyan-400/90" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 rounded-lg border border-emerald-900/50 bg-emerald-950/35 px-4 py-3">
+                <p className="text-[11px] sm:text-xs font-bold font-data text-emerald-300 leading-relaxed break-words">
+                  Щербаков → Shcherbakov, Scherbakov, Ščerbakov → MATCH: SHCHERBAKOV DEFENSE SYSTEMS (91% similarity) → BLOCK
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Why AI */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
