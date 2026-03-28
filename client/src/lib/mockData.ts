@@ -11,10 +11,10 @@ export const heroStats = {
 };
 
 export const whyItMattersStats = [
-  { value: "$3.8B", label: "Total Fines Levied", sublabel: "Global sanctions penalties since 2019", icon: "DollarSign" },
-  { value: "79,830", label: "Sanctioned Entities", sublabel: "Across OFAC, EU, UN & UK lists", icon: "Users" },
+  { value: "4", label: "Sanctions Lists", sublabel: "OFAC, EU, UN & UK OFSI coverage", icon: "Shield" },
+  { value: "45,296", label: "Sanctioned Entities", sublabel: "Across OFAC, EU, UN & UK lists", icon: "Users" },
   { value: "95%", label: "False Positive Rate", sublabel: "In legacy screening systems", icon: "AlertTriangle" },
-  { value: "62×", label: "Penalty Surge", sublabel: "Enforcement increase in 2025", icon: "TrendingUp" },
+  { value: "4", label: "Transliteration Systems", sublabel: "ISO 9, ICAO, BGN/PCGN, Informal", icon: "Languages" },
 ];
 
 export const howItWorksSteps = [

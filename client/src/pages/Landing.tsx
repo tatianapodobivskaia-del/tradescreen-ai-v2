@@ -128,7 +128,7 @@ function WhyItMatters() {
     <section ref={ref as React.Ref<HTMLElement>} className="relative py-24 md:py-32" style={{ backgroundImage: `url(${PATTERN_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-[#0a0e1a]/90" />
       <div className="relative z-10 max-w-6xl mx-auto px-4">
-        <SectionTitle dark subtitle="The cost of compliance failure is rising exponentially">Why It Matters</SectionTitle>
+        <SectionTitle dark subtitle="The challenge of sanctions compliance grows more complex every year">Why It Matters</SectionTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {whyItMattersStats.map((stat, i) => {
             const Icon = iconMap[stat.icon];
