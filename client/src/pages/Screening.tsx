@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RiskBadge, ScanningLine } from "@/components/shared";
 import { demoScenarios, batchResults } from "@/lib/mockData";
 import {
-  Search, Upload, FileSpreadsheet, Play, Brain, ChevronRight,
-  AlertTriangle, CheckCircle, XCircle, Shield, Zap, Users, ArrowRight
+  Search, Upload, FileSpreadsheet, Play, Brain, BrainCircuit, ChevronRight,
+  AlertTriangle, CheckCircle, XCircle, Shield, Zap, Users, ArrowRight, Mail
 } from "lucide-react";
 export default function Screening() {
   const [activeTab, setActiveTab] = useState<"single" | "batch">("single");
@@ -98,20 +98,6 @@ export default function Screening() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Real-World Use Case — with AI glow */}
-      <div className="ai-glow premium-card rounded-xl p-8 border-l-4 border-l-cyan-500">
-        <div className="flex items-center gap-2.5 mb-3">
-          <Zap className="w-5 h-5 text-cyan-500" />
-          <h3 className="text-lg font-extrabold font-display text-slate-900">Real-World Use Case</h3>
-        </div>
-        <p className="text-sm text-slate-600 font-body leading-relaxed">
-          A compliance team uploaded <span className="font-bold text-slate-800">40 vendor names</span> via batch CSV.
-          TradeScreenAI screened all entities across 4 sanctions lists in <span className="font-bold text-slate-800">under 2 minutes</span>,
-          flagging <span className="font-bold text-red-600">3 high-risk matches</span> that required immediate review.
-          Traditional manual screening of the same batch would have taken approximately 6 hours.
-        </p>
       </div>
 
       {/* Scenario Results */}
@@ -300,30 +286,39 @@ export default function Screening() {
             </tbody>
           </table>
         </div>
-        <div className="px-7 pb-7 pt-5 border-t border-slate-100">
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => alert("AI Deep Analysis will be connected to Azure API")}
-              className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-            >
-              <span className="text-base leading-none select-none" aria-hidden>
-                🧠
-              </span>
-              Run AI Deep Analysis
-            </button>
-            <button
-              type="button"
-              onClick={() => alert("Email generation will be connected to Azure API")}
-              className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 shadow-md shadow-slate-900/20 hover:shadow-lg hover:shadow-slate-900/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-            >
-              <span className="text-base leading-none select-none" aria-hidden>
-                📧
-              </span>
-              Generate Email to Bank
-            </button>
-          </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => alert("AI Deep Analysis will be available when connected to Azure API")}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#00D2D3] to-[#0AB4B4] px-6 py-3 text-sm font-bold text-white shadow-md shadow-cyan-500/20 transition-opacity duration-200 hover:opacity-90"
+        >
+          <BrainCircuit className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+          Run AI Deep Analysis
+        </button>
+        <button
+          type="button"
+          onClick={() => alert("Email generation will be available when connected to Azure API")}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500 bg-[#1a2332] px-6 py-3 text-sm font-bold text-white shadow-md transition-opacity duration-200 hover:opacity-90"
+        >
+          <Mail className="h-5 w-5 shrink-0" strokeWidth={2.25} aria-hidden />
+          Generate Email to Bank
+        </button>
+      </div>
+
+      {/* Real-World Use Case — with AI glow */}
+      <div className="ai-glow premium-card rounded-xl p-8 border-l-4 border-l-cyan-500">
+        <div className="flex items-center gap-2.5 mb-3">
+          <Zap className="w-5 h-5 text-cyan-500" />
+          <h3 className="text-lg font-extrabold font-display text-slate-900">Real-World Use Case</h3>
         </div>
+        <p className="text-sm text-slate-600 font-body leading-relaxed">
+          A compliance team uploaded <span className="font-bold text-slate-800">40 vendor names</span> via batch CSV.
+          TradeScreenAI screened all entities across 4 sanctions lists in <span className="font-bold text-slate-800">under 2 minutes</span>,
+          flagging <span className="font-bold text-red-600">3 high-risk matches</span> that required immediate review.
+          Traditional manual screening of the same batch would have taken approximately 6 hours.
+        </p>
       </div>
     </div>
   );
