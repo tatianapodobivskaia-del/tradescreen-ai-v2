@@ -42,14 +42,13 @@ export const comparisonData = [
   { feature: "Document scanning", traditional: false, tradescreen: true },
   { feature: "Confidence scoring", traditional: false, tradescreen: true },
   { feature: "Audit trail", traditional: "Basic", tradescreen: "Comprehensive" },
-  { feature: "Cost per screening", traditional: "$2-5", tradescreen: "$0.01" },
 ];
 
 export const dataSources = [
-  { name: "OFAC SDN", fullName: "Office of Foreign Assets Control — Specially Designated Nationals", count: 18714, country: "US", flag: "🇺🇸" },
-  { name: "EU Consolidated", fullName: "European Union Consolidated Sanctions List", count: 5819, country: "EU", flag: "🇪🇺" },
-  { name: "UN Security Council", fullName: "United Nations Security Council Consolidated List", count: 1002, country: "UN", flag: "🇺🇳" },
-  { name: "UK OFSI", fullName: "Office of Financial Sanctions Implementation", count: 19761, country: "UK", flag: "🇬🇧" },
+  { name: "OFAC SDN", fullName: "Office of Foreign Assets Control — Specially Designated Nationals", count: 18714, country: "US", flag: "🇺🇸", url: "https://sanctionssearch.ofac.treas.gov/" },
+  { name: "EU Consolidated", fullName: "European Union Consolidated Sanctions List", count: 5819, country: "EU", flag: "🇪🇺", url: "https://www.sanctionsmap.eu/" },
+  { name: "UN Security Council", fullName: "United Nations Security Council Consolidated List", count: 1002, country: "UN", flag: "🇺🇳", url: "https://www.un.org/securitycouncil/sanctions/consolidated-list" },
+  { name: "UK OFSI", fullName: "Office of Financial Sanctions Implementation", count: 19761, country: "UK", flag: "🇬🇧", url: "https://www.gov.uk/government/organisations/office-of-financial-sanctions-implementation" },
 ];
 
 export const researcherInfo = {
@@ -60,7 +59,7 @@ export const researcherInfo = {
   ],
   links: {
     linkedin: "https://linkedin.com/in/tatiana-podobivskaia",
-    github: "https://github.com/tatiana-podobivskaia",
+    github: "https://github.com/tatianapodobivskaia-del",
   },
 };
 
@@ -291,11 +290,11 @@ export const geographicDistribution = [
 ];
 
 export const performanceMetrics = [
-  { metric: "Detection Rate", tradescreen: "99.2%", manual: "78%", ruleBased: "85%" },
-  { metric: "False Positive Rate", tradescreen: "4.8%", manual: "45%", ruleBased: "32%" },
-  { metric: "Precision", tradescreen: "95.2%", manual: "55%", ruleBased: "68%" },
-  { metric: "Recall", tradescreen: "99.2%", manual: "78%", ruleBased: "85%" },
-  { metric: "F1 Score", tradescreen: "97.2%", manual: "64%", ruleBased: "75%" },
+  { metric: "Detection Rate", tradescreen: "97%", manual: "~60%", ruleBased: "~78%" },
+  { metric: "False Positive Rate", tradescreen: "8%", manual: "~45%", ruleBased: "~34%" },
+  { metric: "Precision", tradescreen: "92%", manual: "~55%", ruleBased: "~68%" },
+  { metric: "Recall", tradescreen: "97%", manual: "~60%", ruleBased: "~78%" },
+  { metric: "F1 Score", tradescreen: "94.4%", manual: "~57%", ruleBased: "~73%" },
   { metric: "Avg. Processing Time", tradescreen: "1.2s", manual: "15 min", ruleBased: "8s" },
 ];
 
@@ -337,10 +336,11 @@ export const pipelineStages = [
 
 export const scoringFormula = {
   weights: [
-    { factor: "Name Similarity", weight: 0.40, description: "Levenshtein distance normalized to 0-100 scale" },
-    { factor: "List Source", weight: 0.25, description: "OFAC SDN: 1.0, EU: 0.9, UK OFSI: 0.9, UN: 0.85" },
-    { factor: "Entity Type Match", weight: 0.20, description: "Exact type match: 1.0, Partial: 0.5, None: 0.2" },
-    { factor: "Geographic Risk", weight: 0.15, description: "Based on FATF high-risk jurisdiction classification" },
+    { factor: "Name Similarity", weight: 0.75, description: "Fuzzy matching score normalized to 0-100 using n-gram, token sort ratio, and token set ratio" },
+    { factor: "Jurisdiction Risk", weight: 0.10, description: "Based on FATF high-risk and monitored jurisdiction classification" },
+    { factor: "Transaction Value", weight: 0.05, description: "Scaled risk weight based on transaction amount thresholds" },
+    { factor: "Document Type", weight: 0.05, description: "Risk weight by document category: invoice, BL, certificate of origin" },
+    { factor: "Transliteration Detection", weight: 0.05, description: "Bonus weight when Cyrillic transliteration variants are detected" },
   ],
-  formula: "Score = (0.40 × NameSim) + (0.25 × ListWeight) + (0.20 × TypeMatch) + (0.15 × GeoRisk)",
+  formula: "Score = (0.75 × NameSim) + (0.10 × JurisdictionRisk) + (0.05 × TxnValue) + (0.05 × DocType) + (0.05 × TranslitBonus)",
 };

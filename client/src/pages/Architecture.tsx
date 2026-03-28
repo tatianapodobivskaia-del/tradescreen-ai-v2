@@ -184,7 +184,7 @@ export default function Architecture() {
             {[
               { icon: Lock, label: "End-to-end encryption for all data in transit" },
               { icon: Server, label: "Horizontally scalable microservice architecture" },
-              { icon: Shield, label: "SOC 2 Type II compliant infrastructure design" },
+              { icon: Shield, label: "Role-based access control and audit logging" },
               { icon: Cpu, label: "Sub-second response time for single entity screening" },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">

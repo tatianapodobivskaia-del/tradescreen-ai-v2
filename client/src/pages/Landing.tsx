@@ -1,7 +1,7 @@
 /*
  * LANDING PAGE — TradeScreenAI
  * Design: Intelligence Command Center — dark cinematic (#0a0e1a)
- * Signature: scanning lines, radar pulses, cyan accents, Space Grotesk display
+ * Signature: scanning lines, radar pulses, cyan accents, Inter display
  */
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -281,22 +281,29 @@ function DataSourcesSection() {
         <SectionTitle dark subtitle="Comprehensive coverage across major international sanctions programs">Trusted Data Sources</SectionTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {dataSources.map((source, i) => (
-            <motion.div
+            <motion.a
               key={i}
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
               custom={i}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
               variants={fadeUp}
-              className="glass-card-dark rounded-xl p-6 text-center group hover:border-cyan-500/30 transition-all duration-300"
+              className="glass-card-dark rounded-xl p-6 text-center group hover:border-cyan-500/30 transition-all duration-300 cursor-pointer block"
             >
               <div className="text-4xl mb-4">{source.flag}</div>
-              <h3 className="text-lg font-bold font-display text-white mb-1">{source.name}</h3>
+              <h3 className="text-lg font-bold font-display text-white mb-1 group-hover:text-cyan-400 transition-colors">{source.name}</h3>
               <p className="text-xs text-slate-500 font-body mb-4 leading-relaxed">{source.fullName}</p>
               <div className="text-2xl font-bold font-data text-cyan-400">
                 <CountUpNumber value={source.count} />
               </div>
               <div className="text-xs text-slate-500 font-body mt-1">entities</div>
-            </motion.div>
+              <div className="mt-3 flex items-center justify-center gap-1 text-[10px] text-slate-600 group-hover:text-cyan-400 transition-colors">
+                <ExternalLink className="w-3 h-3" />
+                <span>Official Source</span>
+              </div>
+            </motion.a>
           ))}
         </div>
       </div>

@@ -36,7 +36,7 @@ export default function AboutResearcher() {
                 <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">{researcherInfo.name}</h2>
                 <div className="flex items-center gap-2 mt-2">
                   <Shield className="w-4 h-4 text-cyan-500" />
-                  <span className="text-sm font-medium text-cyan-600 font-body">TradeScreenAI Creator</span>
+                  <span className="text-sm font-medium text-cyan-600 font-body">Researcher</span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-2">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
