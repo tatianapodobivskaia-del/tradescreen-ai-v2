@@ -343,18 +343,6 @@ function PrivacySection() {
             </div>
           </div>
         </div>
-        <div className="mt-12 text-center space-y-4">
-          <div className="flex items-center justify-center gap-3 text-sm">
-            <a href="/app/disclaimer" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Disclaimer</a>
-            <span className="text-slate-700">|</span>
-            <a href="/app/privacy" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Privacy Policy</a>
-            <span className="text-slate-700">|</span>
-            <a href="/app/terms" className="text-slate-500 hover:text-cyan-400 transition-colors hover:underline">Terms of Use</a>
-          </div>
-          <p className="text-xs text-slate-600 font-body">
-            &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; Academic Research Prototype
-          </p>
-        </div>
       </div>
     </section>
   );
