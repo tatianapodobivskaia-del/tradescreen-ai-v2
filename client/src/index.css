@@ -176,6 +176,30 @@
     animation: scan-line 3s ease-in-out infinite;
   }
 
+  /* Landing hero — network graph edge pulse (pathLength="100" on paths) */
+  @keyframes hero-network-dash-flow {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+  .hero-network-edge-pulse {
+    stroke-dasharray: 14 86;
+    stroke-dashoffset: 0;
+    animation-name: hero-network-dash-flow;
+    animation-duration: var(--net-flow-dur, 2.6s);
+    animation-delay: var(--net-flow-delay, 0s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    filter: drop-shadow(0 0 2px rgb(34 211 238 / 0.45));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-network-edge-pulse {
+      animation: none !important;
+      opacity: 0;
+    }
+  }
+
   /* Pulse glow for risk items */
   @keyframes pulse-glow {
     0%, 100% { opacity: 0.7; }
