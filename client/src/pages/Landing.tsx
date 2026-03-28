@@ -69,7 +69,7 @@ export default function Landing() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }}
             className="text-lg md:text-xl text-slate-400 font-body max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Multi-list compliance intelligence with Cyrillic transliteration and GPT-4o deep analysis
+            Multi-list compliance intelligence with Cyrillic transliteration and AI deep analysis
           </motion.p>
 
           {/* Entity counter with AI glow */}

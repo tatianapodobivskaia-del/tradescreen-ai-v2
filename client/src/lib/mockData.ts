@@ -7,7 +7,7 @@
 export const heroStats = {
   totalEntities: 45296,
   title: "AI-Powered Sanctions Screening",
-  subtitle: "Multi-list compliance intelligence with Cyrillic transliteration and GPT-4o deep analysis",
+  subtitle: "Multi-list compliance intelligence with Cyrillic transliteration and AI deep analysis",
 };
 
 export const whyItMattersStats = [
@@ -27,7 +27,7 @@ export const coreCapabilities = [
   { title: "Multi-List Screening", description: "Simultaneous screening across OFAC SDN, EU Consolidated, UN Security Council, and UK OFSI sanctions lists", icon: "Shield" },
   { title: "Cyrillic Transliteration Engine", description: "ISO 9, ICAO, BGN/PCGN, and informal transliteration variants for Russian-language entity matching", icon: "Languages" },
   { title: "AI Document Scanner", description: "4-agent pipeline: Vision extraction, transliteration, risk scoring, and action recommendation", icon: "ScanLine" },
-  { title: "GPT-4o Deep Analysis", description: "Context-aware AI analysis of flagged entities with confidence scoring and compliance recommendations", icon: "Brain" },
+  { title: "AI Deep Analysis", description: "Context-aware AI analysis of flagged entities with confidence scoring and compliance recommendations", icon: "Brain" },
   { title: "Composite Risk Scoring", description: "Weighted scoring algorithm combining name similarity, list source, entity type, and geographic risk factors", icon: "BarChart3" },
   { title: "PDF Report Generation", description: "Generate comprehensive PDF compliance reports with risk scores and recommended actions", icon: "Database" },
 ];
@@ -312,10 +312,10 @@ export const auditLogEntries = [
   { timestamp: "2025-03-15T14:28:05.112Z", action: "SCREENING_COMPLETED", user: "system", entity: "Viktor Petrov", details: "Single entity screening — Risk: MEDIUM (67)", severity: "medium" as const },
   { timestamp: "2025-03-15T14:15:42.891Z", action: "SCREENING_COMPLETED", user: "system", entity: "Global Trade Partners LLC", details: "Single entity screening — Risk: LOW (12)", severity: "low" as const },
   { timestamp: "2025-03-15T14:00:00.000Z", action: "BATCH_UPLOAD", user: "analyst_01", entity: "batch_vendors_march.csv", details: "Batch upload: 40 vendors processed, 3 flagged", severity: "info" as const },
-  { timestamp: "2025-03-15T13:55:12.334Z", action: "AI_ANALYSIS", user: "system", entity: "Dmitry Kozlov", details: "GPT-4o deep analysis triggered — Recommendation: BLOCK", severity: "high" as const },
+  { timestamp: "2025-03-15T13:55:12.334Z", action: "AI_ANALYSIS", user: "system", entity: "Dmitry Kozlov", details: "AI deep analysis triggered — Recommendation: BLOCK", severity: "high" as const },
   { timestamp: "2025-03-15T13:42:08.776Z", action: "SCREENING_COMPLETED", user: "system", entity: "Meridian Shipping Co.", details: "Single entity screening — Risk: LOW (8)", severity: "low" as const },
   { timestamp: "2025-03-15T13:30:55.221Z", action: "SCREENING_COMPLETED", user: "system", entity: "Aleksandr Volkov", details: "Single entity screening — Risk: MEDIUM (58)", severity: "medium" as const },
-  { timestamp: "2025-03-15T13:18:33.109Z", action: "AI_ANALYSIS", user: "system", entity: "Novatek PJSC", details: "GPT-4o deep analysis triggered — Recommendation: BLOCK", severity: "high" as const },
+  { timestamp: "2025-03-15T13:18:33.109Z", action: "AI_ANALYSIS", user: "system", entity: "Novatek PJSC", details: "AI deep analysis triggered — Recommendation: BLOCK", severity: "high" as const },
   { timestamp: "2025-03-15T12:00:00.000Z", action: "DATABASE_UPDATE", user: "system", entity: "OFAC SDN List", details: "Sanctions list updated: 18,714 entities (+23 new)", severity: "info" as const },
   { timestamp: "2025-03-15T11:45:22.887Z", action: "DOCUMENT_SCAN", user: "analyst_02", entity: "invoice_RU_2025_0312.pdf", details: "Document scanned: 4 entities extracted, 1 HIGH risk", severity: "high" as const },
   { timestamp: "2025-03-15T11:30:00.000Z", action: "SYSTEM_START", user: "system", entity: "TradeScreenAI", details: "System initialized — All services operational", severity: "info" as const },

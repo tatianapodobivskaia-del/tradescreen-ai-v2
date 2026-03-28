@@ -185,7 +185,7 @@ export default function Screening() {
                     className="btn-premium inline-flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all duration-300 text-sm"
                   >
                     <Brain className="w-5 h-5" />
-                    {showAiAnalysis === scenario.id ? "Hide" : "Run"} GPT-4o Deep Analysis
+                    {showAiAnalysis === scenario.id ? "Hide" : "Run"} AI Deep Analysis
                   </button>
                 </div>
               )}
@@ -201,7 +201,7 @@ export default function Screening() {
                   <div className="ai-glow premium-card rounded-xl p-8 border-l-4 border-l-violet-500">
                     <div className="flex items-center gap-3 mb-6">
                       <Brain className="w-6 h-6 text-violet-500" />
-                      <h4 className="text-lg font-extrabold font-display text-slate-900">GPT-4o Deep Analysis</h4>
+                      <h4 className="text-lg font-extrabold font-display text-slate-900">AI Deep Analysis</h4>
                       <span className="text-[10px] font-data px-2.5 py-1 rounded-full bg-violet-100 text-violet-600 font-bold">AI-Generated</span>
                     </div>
 
