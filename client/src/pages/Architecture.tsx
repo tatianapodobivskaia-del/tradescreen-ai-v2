@@ -203,7 +203,7 @@ export default function Architecture() {
           <div className="space-y-3">
             {[
               "Uses static sanctions list snapshots (not real-time feeds)",
-              "AI analysis is simulated — not connected to live GPT-4o",
+              "AI analysis is simulated — not connected to live AI analysis",
               "Document scanner uses pre-processed demo data",
               "Fuzzy matching algorithm is simplified for demonstration",
               "No persistent storage — all data resets on page reload",

@@ -101,7 +101,7 @@ export default function SettingsPage() {
           </div>
           <div className="p-3 rounded-lg bg-slate-50">
             <div className="text-xs text-slate-500 font-body mb-1">Build</div>
-            <div className="text-sm font-data text-slate-900">2025.03.15</div>
+            <div className="text-sm font-data text-slate-900">2026.03.15</div>
           </div>
           <div className="p-3 rounded-lg bg-slate-50">
             <div className="text-xs text-slate-500 font-body mb-1">Entities Database</div>
