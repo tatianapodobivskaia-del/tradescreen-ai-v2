@@ -176,40 +176,6 @@
     animation: scan-line 3s ease-in-out infinite;
   }
 
-  /* Landing hero — trade route arcs (subtle flowing dashes) */
-  @keyframes trade-route-flow {
-    to {
-      stroke-dashoffset: -10;
-    }
-  }
-  .trade-route-dash {
-    stroke-dasharray: 1.2 3.2;
-    stroke-dashoffset: 0;
-    animation-name: trade-route-flow;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-  }
-
-  @keyframes trade-hub-soft {
-    0%,
-    100% {
-      opacity: 0.4;
-    }
-    50% {
-      opacity: 0.75;
-    }
-  }
-  .trade-hub-glow {
-    animation: trade-hub-soft 4s ease-in-out infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .trade-route-dash,
-    .trade-hub-glow {
-      animation: none !important;
-    }
-  }
-
   /* Pulse glow for risk items */
   @keyframes pulse-glow {
     0%, 100% { opacity: 0.7; }
