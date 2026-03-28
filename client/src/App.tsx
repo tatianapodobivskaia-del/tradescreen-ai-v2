@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Screening from "./pages/Screening";
+import LiveDemo from "./pages/LiveDemo";
 import Watchlist from "./pages/Watchlist";
 import CyrillicEngine from "./pages/CyrillicEngine";
 import DocumentScanner from "./pages/DocumentScanner";
@@ -25,6 +26,7 @@ function AppPages() {
       <Switch>
         <Route path="/app" component={Dashboard} />
         <Route path="/app/screening" component={Screening} />
+        <Route path="/app/live-demo" component={LiveDemo} />
         <Route path="/app/watchlist" component={Watchlist} />
         <Route path="/app/cyrillic" component={CyrillicEngine} />
         <Route path="/app/scanner" component={DocumentScanner} />

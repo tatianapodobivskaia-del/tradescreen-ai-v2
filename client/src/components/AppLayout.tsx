@@ -8,12 +8,14 @@ import { Link, useLocation } from "wouter";
 import { Footer, AcademicBadge } from "./shared";
 import {
   LayoutDashboard, Search, Globe, Languages, ScanLine, BarChart3,
-  ScrollText, Cpu, User, Settings, Shield, ChevronLeft, ChevronRight, Menu, Home, ExternalLink
+  ScrollText, Cpu, User, Settings, Shield, ChevronLeft, ChevronRight, Menu, Home, ExternalLink,
+  PlayCircle,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { path: "/app/screening", label: "Screening", icon: Search },
+  { path: "/app/live-demo", label: "Live Demo", icon: PlayCircle },
   { path: "/app/scanner", label: "AI Document Scanner", icon: ScanLine },
   { path: "/app/cyrillic", label: "Cyrillic Engine", icon: Languages },
   { path: "/app", label: "Dashboard", icon: LayoutDashboard },
