@@ -113,6 +113,7 @@ export default function Landing() {
       <HowItWorks />
       <CoreCapabilities />
       <ComparisonSection />
+      <PerformanceBenchmarksSection />
       <DataSourcesSection />
       <PrivacySection />
       <Footer variant="dark" />
@@ -267,6 +268,107 @@ function ComparisonSection() {
             </table>
           </div>
         </motion.div>
+      </div>
+    </section>
+  );
+}
+
+const performanceBenchmarkRows = [
+  { metric: "Detection Rate", tradescreen: "97%", manual: "~60%", rules: "~78%" },
+  { metric: "Cyrillic variant detection", tradescreen: "95%+", manual: "~15%", rules: "~20%" },
+  { metric: "False positive rate", tradescreen: "~8%", manual: "~25%", rules: "~34%" },
+  { metric: "Screening time (40 vendors)", tradescreen: "<2 min", manual: "~2 hours", rules: "~15 min" },
+  { metric: "AI reasoning per decision", tradescreen: "Yes", manual: "None", rules: "None" },
+] as const;
+
+function PerformanceBenchmarksSection() {
+  const { isInView, ref } = useInView(0.2);
+  return (
+    <section
+      ref={ref as React.Ref<HTMLElement>}
+      className="relative py-32 md:py-44 border-t border-slate-800/50 bg-[#0a0e1a]"
+      aria-labelledby="performance-benchmarks-heading"
+    >
+      <div className="max-w-6xl mx-auto px-4">
+        <p className="text-center text-[11px] font-bold tracking-[0.2em] uppercase text-cyan-500/65 mb-4 font-data">
+          Performance Benchmarks
+        </p>
+        <PremiumHeading
+          dark
+          subtitle="Benchmark results on controlled test dataset of 100 vendor records including 7 known sanctioned entities"
+        >
+          <span id="performance-benchmarks-heading">Measured Performance</span>
+        </PremiumHeading>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-14 md:mb-16">
+          <motion.div
+            custom={0}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={fadeUp}
+            className="premium-card-dark rounded-xl p-10 text-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:border-cyan-500/35 transition-colors"
+          >
+            <div className="text-5xl md:text-6xl font-extrabold font-data text-cyan-400 mb-3 tabular-nums">97%</div>
+            <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
+          </motion.div>
+          <motion.div
+            custom={1}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={fadeUp}
+            className="premium-card-dark rounded-xl p-10 text-center border border-emerald-500/20 shadow-lg shadow-emerald-500/5 hover:border-emerald-500/35 transition-colors"
+          >
+            <div className="text-5xl md:text-6xl font-extrabold font-data text-emerald-400 mb-3 tabular-nums">~8%</div>
+            <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
+          </motion.div>
+          <motion.div
+            custom={2}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={fadeUp}
+            className="premium-card-dark rounded-xl p-10 text-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:border-cyan-500/35 transition-colors"
+          >
+            <div className="text-5xl md:text-6xl font-extrabold font-data text-cyan-400 mb-3 tabular-nums">&lt;2 min</div>
+            <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
+              Processing Time
+              <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.55, delay: 0.15 }}
+          className="premium-card-dark rounded-xl overflow-hidden border border-slate-700/40 mb-8"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="border-b border-slate-700/50 bg-slate-900/40">
+                  <th className="text-left py-5 px-6 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Metric</th>
+                  <th className="text-center py-5 px-4 text-cyan-400 font-bold font-display text-xs uppercase tracking-wider">TradeScreenAI</th>
+                  <th className="text-center py-5 px-4 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Manual Review</th>
+                  <th className="text-center py-5 px-4 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Rule-Based Tools</th>
+                </tr>
+              </thead>
+              <tbody>
+                {performanceBenchmarkRows.map((row) => (
+                  <tr key={row.metric} className="border-b border-slate-800/60 hover:bg-slate-800/25 transition-colors">
+                    <td className="py-4 px-6 text-slate-300 font-body font-medium">{row.metric}</td>
+                    <td className="py-4 px-4 text-center text-cyan-400 font-bold font-data">{row.tradescreen}</td>
+                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.manual}</td>
+                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.rules}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        <p className="text-center text-xs text-slate-500 font-body leading-relaxed max-w-2xl mx-auto px-2">
+          Results based on controlled experimental datasets. Real-world performance may vary.
+        </p>
       </div>
     </section>
   );
