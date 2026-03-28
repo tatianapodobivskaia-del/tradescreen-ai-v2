@@ -36,17 +36,17 @@ export default function DocumentScanner() {
   }, [isScanning, currentStage]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">AI Document Scanner</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">AI Document Scanner</h1>
         <p className="text-sm text-slate-500 font-body mt-1">4-agent pipeline for extracting and screening entities from trade documents</p>
       </div>
 
       {/* Pipeline Visualization */}
-      <div className="glass-card rounded-xl p-6 relative overflow-hidden">
+      <div className="premium-card rounded-xl p-6 relative overflow-hidden">
         {isScanning && <ScanningLine />}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-semibold font-display text-slate-900">Processing Pipeline</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Processing Pipeline</h3>
           <Button onClick={runDemo} disabled={isScanning} className="gap-2 bg-cyan-500 hover:bg-cyan-600 text-white">
             {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {isScanning ? "Scanning..." : "Run Demo Scan"}
@@ -76,7 +76,7 @@ export default function DocumentScanner() {
                       <Icon className="w-5 h-5 text-slate-400" />
                     )}
                   </div>
-                  <h4 className="text-sm font-semibold font-display text-slate-800 mb-1">{stage.name}</h4>
+                  <h4 className="text-base font-bold font-display text-slate-800 mb-1">{stage.name}</h4>
                   <p className="text-[11px] text-slate-500 font-body leading-relaxed">{stage.description}</p>
                 </motion.div>
                 {i < 3 && (
@@ -91,8 +91,8 @@ export default function DocumentScanner() {
       </div>
 
       {/* Upload Zone */}
-      <div className="glass-card rounded-xl p-6">
-        <h3 className="text-sm font-semibold font-display text-slate-900 mb-4">Document Upload</h3>
+      <div className="premium-card rounded-xl p-8">
+        <h3 className="text-base font-bold font-display text-slate-900 mb-4">Document Upload</h3>
         <div className="border-2 border-dashed border-slate-200 rounded-xl overflow-hidden hover:border-cyan-500/40 transition-colors cursor-pointer group">
           <div className="relative h-48">
             <img src={DOC_SCAN_IMG} alt="" className="w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity" />
@@ -110,9 +110,9 @@ export default function DocumentScanner() {
       <AnimatePresence>
         {scanComplete && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="glass-card rounded-xl overflow-hidden">
+            <div className="premium-card rounded-xl overflow-hidden">
               <div className="p-5 border-b border-slate-100">
-                <h3 className="text-sm font-semibold font-display text-slate-900">Extracted Entities</h3>
+                <h3 className="text-base font-bold font-display text-slate-900">Extracted Entities</h3>
                 <p className="text-xs text-slate-400 font-body mt-0.5">4 entities identified from sample document</p>
               </div>
               <div className="overflow-x-auto">
@@ -150,10 +150,10 @@ export default function DocumentScanner() {
             </div>
 
             {/* AI Recommendations */}
-            <div className="glass-card rounded-xl p-6 border-l-4 border-l-violet-500">
+            <div className="premium-card rounded-xl p-6 border-l-4 border-l-violet-500">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldAlert className="w-5 h-5 text-violet-500" />
-                <h3 className="text-sm font-semibold font-display text-slate-900">AI Recommendations</h3>
+                <h3 className="text-base font-bold font-display text-slate-900">AI Recommendations</h3>
                 <span className="text-[10px] font-data px-2 py-0.5 rounded-full bg-violet-100 text-violet-600">AI-Generated</span>
               </div>
               <div className="space-y-3">

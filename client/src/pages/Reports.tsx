@@ -9,19 +9,19 @@ import { Button } from "@/components/ui/button";
 
 export default function Reports() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">Reports & Analytics</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Reports & Analytics</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Screening trends, risk distribution, and performance benchmarks</p>
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Screening Trends */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-cyan-500" />
-            <h3 className="text-sm font-semibold font-display text-slate-900">Screening Trends</h3>
+            <h3 className="text-base font-bold font-display text-slate-900">Screening Trends</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Weekly screening volume by risk level</p>
           <div className="h-64">
@@ -41,10 +41,10 @@ export default function Reports() {
         </motion.div>
 
         {/* Geographic Distribution */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
             <Globe className="w-4 h-4 text-cyan-500" />
-            <h3 className="text-sm font-semibold font-display text-slate-900">Geographic Distribution</h3>
+            <h3 className="text-base font-bold font-display text-slate-900">Geographic Distribution</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Sanctioned entities by country of origin</p>
           <div className="space-y-3">
@@ -74,11 +74,11 @@ export default function Reports() {
       </div>
 
       {/* Reports Archive */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl overflow-hidden">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-cyan-500" />
-            <h3 className="text-sm font-semibold font-display text-slate-900">Reports Archive</h3>
+            <h3 className="text-base font-bold font-display text-slate-900">Reports Archive</h3>
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
             <Download className="w-3.5 h-3.5" /> Export All
@@ -121,10 +121,10 @@ export default function Reports() {
       </motion.div>
 
       {/* Performance Metrics */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-1">
           <Award className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Performance Metrics</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Performance Metrics</h3>
         </div>
         <p className="text-xs text-slate-500 font-body mb-4">Comparison: TradeScreenAI vs. manual review vs. rule-based systems</p>
         <div className="overflow-x-auto">

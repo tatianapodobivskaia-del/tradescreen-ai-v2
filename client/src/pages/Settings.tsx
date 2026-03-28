@@ -22,15 +22,15 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">Settings</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Settings</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Configure screening parameters and preferences</p>
       </div>
 
       {/* Fuzzy Matching Threshold */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Sliders className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Fuzzy Matching Threshold</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Fuzzy Matching Threshold</h3>
         </div>
         <p className="text-sm text-slate-500 font-body mb-4">
           Minimum similarity score required to flag a potential match. Lower values increase sensitivity but may produce more false positives.
@@ -60,10 +60,10 @@ export default function SettingsPage() {
       </motion.div>
 
       {/* Notifications */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Notifications</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Notifications</h3>
         </div>
         <div className="space-y-3">
           {[
@@ -89,10 +89,10 @@ export default function SettingsPage() {
       </motion.div>
 
       {/* About / Version */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Info className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">About</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">About</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 rounded-lg bg-slate-50">
@@ -115,10 +115,10 @@ export default function SettingsPage() {
       </motion.div>
 
       {/* Data Handling Policy */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Data Handling Policy</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Data Handling Policy</h3>
         </div>
         <div className="space-y-3 text-sm text-slate-600 font-body leading-relaxed">
           <p>This is an academic research prototype. All data processing occurs locally in the browser.</p>

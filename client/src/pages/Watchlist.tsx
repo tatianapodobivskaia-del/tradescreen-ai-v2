@@ -28,14 +28,14 @@ export default function Watchlist() {
   const selected = watchlistEntities.find(e => e.id === selectedEntity);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">Watchlist Explorer</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Watchlist Explorer</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Search and explore 45,296 sanctioned entities across all monitored lists</p>
       </div>
 
       {/* List proportion bars */}
-      <div className="glass-card rounded-xl p-5">
+      <div className="premium-card rounded-xl p-8">
         <h3 className="text-xs font-semibold text-slate-500 font-display uppercase tracking-wider mb-3">List Distribution</h3>
         <div className="space-y-3">
           {dataSources.map((source, i) => {
@@ -61,7 +61,7 @@ export default function Watchlist() {
       </div>
 
       {/* Search & Filters */}
-      <div className="glass-card rounded-xl p-5">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -103,7 +103,7 @@ export default function Watchlist() {
       {/* Results + Detail */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Entity List */}
-        <div className="lg:col-span-2 glass-card rounded-xl overflow-hidden">
+        <div className="lg:col-span-2 premium-card rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -145,12 +145,12 @@ export default function Watchlist() {
         </div>
 
         {/* Entity Detail */}
-        <div className="glass-card rounded-xl p-5">
+        <div className="premium-card rounded-xl p-8">
           <AnimatePresence mode="wait">
             {selected ? (
               <motion.div key={selected.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold font-display text-slate-900">Entity Detail</h3>
+                  <h3 className="text-base font-bold font-display text-slate-900">Entity Detail</h3>
                   <button onClick={() => setSelectedEntity(null)} className="text-slate-400 hover:text-slate-600">
                     <X className="w-4 h-4" />
                   </button>

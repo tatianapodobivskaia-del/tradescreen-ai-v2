@@ -27,10 +27,10 @@ export default function AuditLog() {
   }, [search, severityFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-display text-slate-900">Audit Log</h1>
+          <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Audit Log</h1>
           <p className="text-sm text-slate-500 font-body mt-1">Complete timestamped record of all system actions</p>
         </div>
         <Button variant="outline" className="gap-2 text-sm">
@@ -39,7 +39,7 @@ export default function AuditLog() {
       </div>
 
       {/* Filters */}
-      <div className="glass-card rounded-xl p-5">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -69,7 +69,7 @@ export default function AuditLog() {
       </div>
 
       {/* Log Entries */}
-      <div className="glass-card rounded-xl overflow-hidden">
+      <div className="premium-card rounded-xl overflow-hidden">
         <div className="divide-y divide-slate-100">
           {filtered.map((entry, i) => {
             const config = severityConfig[entry.severity];

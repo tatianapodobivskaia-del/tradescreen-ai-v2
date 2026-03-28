@@ -33,7 +33,7 @@ export default function AboutResearcher() {
                 <User className="w-9 h-9 text-cyan-400" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold font-display text-slate-900 tracking-tight">{researcherInfo.name}</h2>
+                <h2 className="text-3xl font-extrabold font-display tracking-tight text-slate-900 tracking-tight">{researcherInfo.name}</h2>
                 <div className="flex items-center gap-2 mt-2">
                   <Shield className="w-4 h-4 text-cyan-500" />
                   <span className="text-sm font-medium text-cyan-600 font-body">Researcher</span>

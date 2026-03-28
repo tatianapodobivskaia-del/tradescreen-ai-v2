@@ -12,14 +12,14 @@ export default function CyrillicEngine() {
   const [input, setInput] = useState("");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">Cyrillic Transliteration Engine</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Cyrillic Transliteration Engine</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Generate all standard Latin variants of Russian names for comprehensive sanctions matching</p>
       </div>
 
       {/* Tabs */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit mb-6">
           <button onClick={() => setActiveTab("cyr2lat")} className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === "cyr2lat" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
             <Languages className="w-4 h-4" /> Cyrillic → Latin
@@ -48,10 +48,10 @@ export default function CyrillicEngine() {
       </div>
 
       {/* Animated Transliteration Flow */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
           <ArrowRight className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Transliteration Flow Visualization</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Transliteration Flow Visualization</h3>
         </div>
 
         <div className="overflow-x-auto">
@@ -89,10 +89,10 @@ export default function CyrillicEngine() {
       </div>
 
       {/* Full Cyrillic Variants Reference */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
           <BookOpen className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Cyrillic Variants Reference</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Cyrillic Variants Reference</h3>
           <span className="text-xs text-slate-400 font-body">— Key letters with multiple transliteration forms</span>
         </div>
 
@@ -127,10 +127,10 @@ export default function CyrillicEngine() {
       </div>
 
       {/* Trade Document Comparison */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
           <FileText className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">How Russian Names Appear in Trade Documents</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">How Russian Names Appear in Trade Documents</h3>
           <span className="text-xs text-slate-400 font-body">— Same person, different spellings</span>
         </div>
 

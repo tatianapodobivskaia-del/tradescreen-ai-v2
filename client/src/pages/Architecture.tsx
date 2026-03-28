@@ -11,14 +11,14 @@ const PIPELINE_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/i
 
 export default function Architecture() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold font-display text-slate-900">Architecture & Methodology</h1>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Architecture & Methodology</h1>
         <p className="text-sm text-slate-500 font-body mt-1">Technical documentation of the screening pipeline, scoring algorithm, and system design</p>
       </div>
 
       {/* 5-Stage Pipeline */}
-      <div className="glass-card rounded-xl overflow-hidden">
+      <div className="premium-card rounded-xl overflow-hidden">
         <div className="relative h-32 overflow-hidden">
           <img src={PIPELINE_IMG} alt="" className="w-full h-full object-cover opacity-30" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white" />
@@ -43,7 +43,7 @@ export default function Architecture() {
                     <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center mx-auto mb-3">
                       <Icon className="w-5 h-5 text-cyan-600" />
                     </div>
-                    <h4 className="text-sm font-semibold font-display text-slate-800 mb-1">{stage.name}</h4>
+                    <h4 className="text-base font-bold font-display text-slate-800 mb-1">{stage.name}</h4>
                     <p className="text-[11px] text-slate-500 font-body leading-relaxed">{stage.description}</p>
                   </motion.div>
                   {i < 4 && (
@@ -59,10 +59,10 @@ export default function Architecture() {
       </div>
 
       {/* Scoring Formula */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
           <Calculator className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Composite Risk Scoring Formula</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Composite Risk Scoring Formula</h3>
         </div>
 
         <div className="p-4 rounded-lg bg-slate-900 text-center mb-6">
@@ -101,10 +101,10 @@ export default function Architecture() {
       </div>
 
       {/* Two-Pass Architecture */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Cpu className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Two-Pass Architecture</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Two-Pass Architecture</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50">
@@ -112,7 +112,7 @@ export default function Architecture() {
               <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-cyan-600" />
               </div>
-              <h4 className="text-sm font-semibold font-display text-slate-800">Pass 1: Fast Screening</h4>
+              <h4 className="text-base font-bold font-display text-slate-800">Pass 1: Fast Screening</h4>
             </div>
             <ul className="space-y-2 text-sm text-slate-600 font-body">
               <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Fuzzy string matching using Levenshtein distance</li>
@@ -126,7 +126,7 @@ export default function Architecture() {
               <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
                 <Brain className="w-4 h-4 text-violet-600" />
               </div>
-              <h4 className="text-sm font-semibold font-display text-slate-800">Pass 2: AI Deep Analysis</h4>
+              <h4 className="text-base font-bold font-display text-slate-800">Pass 2: AI Deep Analysis</h4>
             </div>
             <ul className="space-y-2 text-sm text-slate-600 font-body">
               <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-violet-400 mt-1 shrink-0" />GPT-4o contextual analysis of flagged entities</li>
@@ -139,10 +139,10 @@ export default function Architecture() {
       </div>
 
       {/* Why AI */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Brain className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-sm font-semibold font-display text-slate-900">Why AI — Beyond Rule-Based Systems</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">Why AI — Beyond Rule-Based Systems</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -175,10 +175,10 @@ export default function Architecture() {
 
       {/* Security & Scalability + Limitations */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-card rounded-xl p-6">
+        <div className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-4 h-4 text-cyan-500" />
-            <h3 className="text-sm font-semibold font-display text-slate-900">Security & Scalability</h3>
+            <h3 className="text-base font-bold font-display text-slate-900">Security & Scalability</h3>
           </div>
           <div className="space-y-3">
             {[
@@ -195,10 +195,10 @@ export default function Architecture() {
           </div>
         </div>
 
-        <div className="glass-card rounded-xl p-6 border-l-4 border-l-amber-400">
+        <div className="premium-card rounded-xl p-6 border-l-4 border-l-amber-400">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <h3 className="text-sm font-semibold font-display text-slate-900">Limitations of Current Prototype</h3>
+            <h3 className="text-base font-bold font-display text-slate-900">Limitations of Current Prototype</h3>
           </div>
           <div className="space-y-3">
             {[
