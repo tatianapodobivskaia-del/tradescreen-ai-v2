@@ -13,7 +13,7 @@ export const heroStats = {
 export const whyItMattersStats = [
   { value: "4", label: "Sanctions Lists", sublabel: "OFAC, EU, UN & UK OFSI coverage", icon: "Shield" },
   { value: "45,296", label: "Sanctioned Entities", sublabel: "Across OFAC, EU, UN & UK lists", icon: "Users" },
-  { value: "95%", label: "False Positive Rate", sublabel: "In legacy screening systems", icon: "AlertTriangle" },
+  { value: "97%", label: "Detection Rate", sublabel: "Across controlled test dataset", icon: "AlertTriangle" },
   { value: "4", label: "Transliteration Systems", sublabel: "ISO 9, ICAO, BGN/PCGN, Informal", icon: "Languages" },
 ];
 
@@ -29,7 +29,7 @@ export const coreCapabilities = [
   { title: "AI Document Scanner", description: "4-agent pipeline: Vision extraction, transliteration, risk scoring, and action recommendation", icon: "ScanLine" },
   { title: "GPT-4o Deep Analysis", description: "Context-aware AI analysis of flagged entities with confidence scoring and compliance recommendations", icon: "Brain" },
   { title: "Composite Risk Scoring", description: "Weighted scoring algorithm combining name similarity, list source, entity type, and geographic risk factors", icon: "BarChart3" },
-  { title: "Batch Processing", description: "Upload CSV files with hundreds of vendor names for bulk screening with exportable results", icon: "Database" },
+  { title: "PDF Report Generation", description: "Generate comprehensive PDF compliance reports with risk scores and recommended actions", icon: "Database" },
 ];
 
 export const comparisonData = [
@@ -38,7 +38,7 @@ export const comparisonData = [
   { feature: "AI-powered analysis", traditional: false, tradescreen: true },
   { feature: "False positive reduction", traditional: "Manual review", tradescreen: "AI-assisted" },
   { feature: "Processing speed", traditional: "Hours", tradescreen: "Seconds" },
-  { feature: "Batch processing", traditional: "Limited", tradescreen: "Unlimited" },
+  { feature: "PDF report generation", traditional: "Limited", tradescreen: "Automated" },
   { feature: "Document scanning", traditional: false, tradescreen: true },
   { feature: "Confidence scoring", traditional: false, tradescreen: true },
   { feature: "Audit trail", traditional: "Basic", tradescreen: "Comprehensive" },
@@ -291,7 +291,7 @@ export const geographicDistribution = [
 
 export const performanceMetrics = [
   { metric: "Detection Rate", tradescreen: "97%", manual: "~60%", ruleBased: "~78%" },
-  { metric: "False Positive Rate", tradescreen: "8%", manual: "~45%", ruleBased: "~34%" },
+  { metric: "Detection Rate", tradescreen: "8%", manual: "~45%", ruleBased: "~34%" },
   { metric: "Precision", tradescreen: "92%", manual: "~55%", ruleBased: "~68%" },
   { metric: "Recall", tradescreen: "97%", manual: "~60%", ruleBased: "~78%" },
   { metric: "F1 Score", tradescreen: "94.4%", manual: "~57%", ruleBased: "~73%" },
