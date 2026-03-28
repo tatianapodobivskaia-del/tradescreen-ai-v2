@@ -26,6 +26,19 @@ const AGENTS = [
 
 type ScenarioId = "ros" | "sch" | "sun";
 
+type AgentPhase = "pending" | "processing" | "complete";
+
+type PipelineCopy = {
+  visionProc: string;
+  visionResult: string;
+  translitProc: string;
+  translitResult: string;
+  riskProc: string;
+  riskResult: string;
+  actionProc: string;
+  actionResult: string;
+};
+
 type DemoResult = {
   matchLine: string;
   matchSub?: string;
@@ -45,6 +58,7 @@ const SCENARIOS: Array<{
   amount: string;
   docType: string;
   riskBadge: "high" | "low";
+  pipeline: PipelineCopy;
   result: DemoResult;
 }> = [
   {
@@ -55,6 +69,16 @@ const SCENARIOS: Array<{
     amount: "$750K",
     docType: "Invoice",
     riskBadge: "high",
+    pipeline: {
+      visionProc: "Extracting entities from document...",
+      visionResult: "Found: Rosoboronexport Trading, Russia, $750K, Invoice",
+      translitProc: "Generating Cyrillic variants...",
+      translitResult: "Рособоронэкспорт → Rosoboroneksport, Rosoboronexport",
+      riskProc: "Screening against 45,296 sanctions entities...",
+      riskResult: "Match: ROSOBORONEXPORT (OFAC SDN) — 97% similarity",
+      actionProc: "Preparing compliance assessment...",
+      actionResult: "Action: BLOCK — Immediate review required",
+    },
     result: {
       matchLine: "ROSOBORONEXPORT",
       matchSub: "from OFAC SDN",
@@ -75,6 +99,16 @@ const SCENARIOS: Array<{
     amount: "$180K",
     docType: "Bill of Lading",
     riskBadge: "high",
+    pipeline: {
+      visionProc: "Extracting entities from document...",
+      visionResult: "Found: Shcherbakov Import Export, Turkey, $180K, Bill of Lading",
+      translitProc: "Generating Cyrillic variants...",
+      translitResult: "Variants: Ščerbakov, Shcherbakov, Scherbakov, Щербаков",
+      riskProc: "Screening against 45,296 sanctions entities...",
+      riskResult: "Match: SHCHERBAKOV DEFENSE SYSTEMS (OFAC SDN) — 91% similarity",
+      actionProc: "Preparing compliance assessment...",
+      actionResult: "Action: BLOCK — Immediate review required",
+    },
     result: {
       matchLine: "SHCHERBAKOV DEFENSE SYSTEMS",
       matchSub: "from OFAC SDN",
@@ -94,6 +128,16 @@ const SCENARIOS: Array<{
     amount: "$12K",
     docType: "Invoice",
     riskBadge: "low",
+    pipeline: {
+      visionProc: "Extracting entities from document...",
+      visionResult: "Found: Sunny Day Flowers Co, Colombia, $12K, Invoice",
+      translitProc: "Generating Cyrillic variants...",
+      translitResult: "No Cyrillic detected — skipping",
+      riskProc: "Screening against 45,296 sanctions entities...",
+      riskResult: "No matches found across 4 lists",
+      actionProc: "Preparing compliance assessment...",
+      actionResult: "APPROVE — Standard due diligence sufficient",
+    },
     result: {
       matchLine: "No match found",
       score: 26,
@@ -106,7 +150,23 @@ const SCENARIOS: Array<{
   },
 ];
 
-const DURATION_MS = 3000;
+const AGENT_STEP_MS = 800;
+const PIPELINE_TOTAL_MS = AGENT_STEP_MS * 4;
+
+function getAgentCopy(pipeline: PipelineCopy, index: 0 | 1 | 2 | 3): { proc: string; result: string } {
+  const map: Record<number, [keyof PipelineCopy, keyof PipelineCopy]> = {
+    0: ["visionProc", "visionResult"],
+    1: ["translitProc", "translitResult"],
+    2: ["riskProc", "riskResult"],
+    3: ["actionProc", "actionResult"],
+  };
+  const [pk, rk] = map[index];
+  return { proc: pipeline[pk], result: pipeline[rk] };
+}
+
+function initialPhases(): AgentPhase[] {
+  return ["pending", "pending", "pending", "pending"];
+}
 
 function RiskCapsBadge({ level }: { level: "high" | "low" }) {
   const isHigh = level === "high";
@@ -124,58 +184,140 @@ function RiskCapsBadge({ level }: { level: "high" | "low" }) {
   );
 }
 
+/** Typing + subtle fade for processing lines */
+function TypingText({ text, active }: { text: string; active: boolean }) {
+  const [n, setN] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setN(0);
+      return;
+    }
+    setN(0);
+    const ms = Math.max(12, Math.min(22, Math.floor(500 / Math.max(text.length, 1))));
+    let idx = 0;
+    const id = window.setInterval(() => {
+      idx += 1;
+      setN(Math.min(idx, text.length));
+      if (idx >= text.length) window.clearInterval(id);
+    }, ms);
+    return () => window.clearInterval(id);
+  }, [text, active]);
+
+  if (!active) return null;
+
+  return (
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+      className="mt-2 min-h-[2.5rem] text-left text-[10px] leading-relaxed text-cyan-200/90 font-body"
+    >
+      {text.slice(0, n)}
+      {n < text.length ? <span className="ml-0.5 inline-block w-0.5 animate-pulse bg-cyan-400" /> : null}
+    </motion.p>
+  );
+}
+
+/** Fade-in + light typewriter tail for result lines */
+function ResultDetailText({ text, show }: { text: string; show: boolean }) {
+  const [n, setN] = useState(0);
+
+  useEffect(() => {
+    if (!show) {
+      setN(0);
+      return;
+    }
+    setN(0);
+    const ms = 10;
+    let idx = 0;
+    const id = window.setInterval(() => {
+      idx += 1;
+      setN(Math.min(idx, text.length));
+      if (idx >= text.length) window.clearInterval(id);
+    }, ms);
+    return () => window.clearInterval(id);
+  }, [text, show]);
+
+  if (!show) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="mt-2 flex items-start gap-1.5 text-left"
+    >
+      <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" strokeWidth={2} />
+      <p className="text-[10px] leading-relaxed text-emerald-100/95 font-body">
+        {text.slice(0, n)}
+        {n < text.length ? <span className="text-emerald-400/80">|</span> : null}
+      </p>
+    </motion.div>
+  );
+}
+
 function AgentPipeline({
-  running,
   progress,
-  currentAgentIndex,
+  phases,
+  pipeline,
 }: {
-  running: boolean;
   progress: number;
-  currentAgentIndex: number;
+  phases: AgentPhase[];
+  pipeline: PipelineCopy;
 }) {
+  const allDone = phases.every((p) => p === "complete");
+
   return (
     <div className="mt-5 space-y-4">
       <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-[width] duration-75 ease-linear"
+          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-[width] duration-100 ease-linear"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {AGENTS.map((agent, i) => {
           const { Icon, label } = agent;
-          const allDone = !running && progress >= 100;
-          const isComplete = allDone || (running && i < currentAgentIndex);
-          const isActive = running && i === currentAgentIndex && currentAgentIndex < 4;
-          const isPending = running && i > currentAgentIndex;
+          const phase = phases[i] ?? "pending";
+          const { proc, result } = getAgentCopy(pipeline, i as 0 | 1 | 2 | 3);
+          const isProcessing = phase === "processing";
+          const isComplete = phase === "complete";
+          const isPending = phase === "pending";
 
           return (
             <div
               key={agent.id}
               className={cn(
-                "relative rounded-xl border p-3 text-center transition-all duration-300",
-                isActive && "border-cyan-400/60 bg-cyan-500/10 shadow-[0_0_20px_rgba(34,211,238,0.15)]",
-                isComplete && !isActive && "border-emerald-500/35 bg-emerald-500/5",
+                "flex min-h-0 flex-col rounded-xl border p-3 text-left transition-all duration-300",
+                isProcessing && "border-cyan-400/60 bg-cyan-500/10 shadow-[0_0_20px_rgba(34,211,238,0.12)]",
+                isComplete && "border-emerald-500/35 bg-emerald-500/5",
                 isPending && "border-slate-700/80 bg-slate-900/40 opacity-70"
               )}
             >
-              <div
-                className={cn(
-                  "mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg",
-                  isActive && "bg-cyan-500/20",
-                  isComplete && !isActive && "bg-emerald-500/15",
-                  isPending && "bg-slate-800"
-                )}
-              >
-                {isActive ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-cyan-400" strokeWidth={2} />
-                ) : isComplete ? (
-                  <CheckCircle className="h-5 w-5 text-emerald-400" strokeWidth={2} />
-                ) : (
-                  <Icon className="h-5 w-5 text-slate-500" strokeWidth={2} />
-                )}
+              <div className="flex items-start gap-2">
+                <div
+                  className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+                    isProcessing && "bg-cyan-500/20",
+                    isComplete && "bg-emerald-500/15",
+                    isPending && "bg-slate-800"
+                  )}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-cyan-400" strokeWidth={2} />
+                  ) : isComplete ? (
+                    <CheckCircle className="h-5 w-5 text-emerald-400" strokeWidth={2} />
+                  ) : (
+                    <Icon className="h-5 w-5 text-slate-500" strokeWidth={2} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 pt-1">
+                  <p className="text-[11px] font-bold font-display leading-tight text-slate-200">{label}</p>
+                  <TypingText text={proc} active={isProcessing} />
+                  <ResultDetailText text={result} show={isComplete} />
+                </div>
               </div>
-              <p className="text-[11px] font-bold font-display leading-tight text-slate-200">{label}</p>
             </div>
           );
         })}
@@ -274,10 +416,16 @@ function ResultPanel({ result }: { result: DemoResult }) {
 function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [currentAgentIndex, setCurrentAgentIndex] = useState(0);
+  const [phases, setPhases] = useState<AgentPhase[]>(() => initialPhases());
   const [showResults, setShowResults] = useState(false);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef(0);
+  const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearTimers = useCallback(() => {
+    timeoutIdsRef.current.forEach((id) => clearTimeout(id));
+    timeoutIdsRef.current = [];
+  }, []);
 
   const stopRaf = useCallback(() => {
     if (rafRef.current != null) {
@@ -287,33 +435,49 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
   }, []);
 
   const runDemo = () => {
+    clearTimers();
     stopRaf();
     setShowResults(false);
     setProgress(0);
-    setCurrentAgentIndex(0);
+    setPhases(["processing", "pending", "pending", "pending"]);
     setRunning(true);
     startRef.current = performance.now();
 
+    const schedule = (fn: () => void, ms: number) => {
+      const id = setTimeout(fn, ms);
+      timeoutIdsRef.current.push(id);
+    };
+
+    schedule(() => setPhases(["complete", "processing", "pending", "pending"]), AGENT_STEP_MS);
+    schedule(() => setPhases(["complete", "complete", "processing", "pending"]), AGENT_STEP_MS * 2);
+    schedule(() => setPhases(["complete", "complete", "complete", "processing"]), AGENT_STEP_MS * 3);
+    schedule(() => {
+      setPhases(["complete", "complete", "complete", "complete"]);
+      setProgress(100);
+      setRunning(false);
+      setShowResults(true);
+    }, AGENT_STEP_MS * 4);
+
     const tick = (now: number) => {
       const elapsed = now - startRef.current;
-      const p = Math.min(100, (elapsed / DURATION_MS) * 100);
+      const p = Math.min(100, (elapsed / PIPELINE_TOTAL_MS) * 100);
       setProgress(p);
-      if (elapsed < DURATION_MS) {
-        const idx = Math.min(3, Math.floor(elapsed / (DURATION_MS / 4)));
-        setCurrentAgentIndex(idx);
+      if (elapsed < PIPELINE_TOTAL_MS) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        setProgress(100);
-        setCurrentAgentIndex(4);
-        setRunning(false);
-        setShowResults(true);
         rafRef.current = null;
       }
     };
     rafRef.current = requestAnimationFrame(tick);
   };
 
-  useEffect(() => () => stopRaf(), [stopRaf]);
+  useEffect(
+    () => () => {
+      stopRaf();
+      clearTimers();
+    },
+    [stopRaf, clearTimers]
+  );
 
   return (
     <motion.article
@@ -368,11 +532,9 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
           >
             {(running || (showResults && progress >= 100)) && (
               <AgentPipeline
-                running={running}
                 progress={running || showResults ? progress : 0}
-                currentAgentIndex={
-                  running ? Math.min(3, currentAgentIndex) : 4
-                }
+                phases={phases}
+                pipeline={scenario.pipeline}
               />
             )}
             {showResults && !running && <ResultPanel result={scenario.result} />}
@@ -401,7 +563,8 @@ export default function LiveDemo() {
 
       <div className="rounded-2xl border border-cyan-500/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl shadow-cyan-500/5 lg:p-8">
         <p className="mb-6 text-center text-xs text-slate-400 font-body lg:text-sm">
-          Four-agent pipeline: each stage activates in sequence over three seconds, then cached results appear instantly.
+          Four-agent pipeline: each stage shows live processing text for 0.8s, then a checked result before the next
+          agent runs — then full results load from cache.
         </p>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {SCENARIOS.map((s) => (
