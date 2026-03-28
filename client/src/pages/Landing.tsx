@@ -16,7 +16,7 @@ import {
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database, Check, X,
-  ArrowRight, ChevronDown, Lock, ExternalLink, GraduationCap
+  ArrowRight, ChevronDown, Lock, ExternalLink, GraduationCap, Play,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -112,6 +112,7 @@ export default function Landing() {
       <WhyItMatters />
       <HowItWorks />
       <CoreCapabilities />
+      <SeeItInAction />
       <ComparisonSection />
       <DataSourcesSection />
       <PerformanceBenchmarksSection />
@@ -219,6 +220,70 @@ function CoreCapabilities() {
                 </div>
                 <h3 className="text-xl font-extrabold font-display text-white mb-3">{cap.title}</h3>
                 <p className="text-sm text-slate-400 font-body leading-relaxed">{cap.description}</p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const seeItInActionSteps = [
+  { title: "Upload Document", Icon: Upload },
+  { title: "AI Screens 4 Lists", Icon: Search },
+  { title: "Get Compliance Report", Icon: FileText },
+] as const;
+
+function SeeItInAction() {
+  const { isInView, ref } = useInView(0.2);
+  return (
+    <section ref={ref as React.Ref<HTMLElement>} className="relative py-32 md:py-44 bg-[#0a0e1a]">
+      <div className="max-w-6xl mx-auto px-4">
+        <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">See It In Action</PremiumHeading>
+
+        <motion.div
+          custom={0}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={fadeUp}
+          role="img"
+          aria-label="Demo video placeholder. Demo video coming soon."
+          className="relative mx-auto flex max-w-4xl flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/90 to-[#050810] px-6 shadow-2xl shadow-black/40 aspect-video"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)`,
+              backgroundSize: "32px 32px",
+            }}
+          />
+          <div className="relative z-10 flex flex-col items-center gap-4">
+            <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-cyan-500/35 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+              <Play className="h-14 w-14 translate-x-1 text-cyan-400" strokeWidth={1.25} fill="currentColor" aria-hidden />
+            </div>
+            <p className="text-center text-sm font-semibold tracking-wide text-slate-400 font-display">
+              Demo Video Coming Soon
+            </p>
+          </div>
+        </motion.div>
+
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {seeItInActionSteps.map((step, i) => {
+            const StepIcon = step.Icon;
+            return (
+              <motion.div
+                key={step.title}
+                custom={i + 1}
+                initial="hidden"
+                animate={isInView ? "visible" : "hidden"}
+                variants={fadeUp}
+                className="premium-card-dark rounded-xl border border-cyan-500/10 p-8 text-center"
+              >
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10">
+                  <StepIcon className="h-7 w-7 text-cyan-400" strokeWidth={2} aria-hidden />
+                </div>
+                <h3 className="text-base font-extrabold font-display text-white">{step.title}</h3>
               </motion.div>
             );
           })}
