@@ -153,7 +153,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-2.5 text-xs font-data font-bold text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-500 status-dot" />
-            All Systems Operational
+            Demo Environment Active
           </div>
         </header>
 

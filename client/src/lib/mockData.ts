@@ -94,21 +94,21 @@ export const listDistribution = [
 ];
 
 export const recentScreenings = [
-  { id: "SCR-2025-4821", entity: "Rosneft Oil Company", date: "2025-03-15T14:32:00Z", risk: "High", score: 94, list: "OFAC SDN", type: "Organization" },
-  { id: "SCR-2025-4820", entity: "Viktor Petrov", date: "2025-03-15T14:28:00Z", risk: "Medium", score: 67, list: "EU Consolidated", type: "Individual" },
-  { id: "SCR-2025-4819", entity: "Global Trade Partners LLC", date: "2025-03-15T14:15:00Z", risk: "Low", score: 12, list: "—", type: "Organization" },
-  { id: "SCR-2025-4818", entity: "Dmitry Kozlov", date: "2025-03-15T13:55:00Z", risk: "High", score: 89, list: "UK OFSI", type: "Individual" },
-  { id: "SCR-2025-4817", entity: "Meridian Shipping Co.", date: "2025-03-15T13:42:00Z", risk: "Low", score: 8, list: "—", type: "Organization" },
-  { id: "SCR-2025-4816", entity: "Aleksandr Volkov", date: "2025-03-15T13:30:00Z", risk: "Medium", score: 58, list: "OFAC SDN", type: "Individual" },
-  { id: "SCR-2025-4815", entity: "Novatek PJSC", date: "2025-03-15T13:18:00Z", risk: "High", score: 97, list: "EU Consolidated", type: "Organization" },
-  { id: "SCR-2025-4814", entity: "Chen Wei Trading", date: "2025-03-15T13:05:00Z", risk: "Low", score: 15, list: "—", type: "Organization" },
+  { id: "SCR-2026-4821", entity: "Rosneft Oil Company", date: "2025-03-15T14:32:00Z", risk: "High", score: 94, list: "OFAC SDN", type: "Organization" },
+  { id: "SCR-2026-4820", entity: "Viktor Petrov", date: "2025-03-15T14:28:00Z", risk: "Medium", score: 67, list: "EU Consolidated", type: "Individual" },
+  { id: "SCR-2026-4819", entity: "Global Trade Partners LLC", date: "2025-03-15T14:15:00Z", risk: "Low", score: 12, list: "—", type: "Organization" },
+  { id: "SCR-2026-4818", entity: "Dmitry Kozlov", date: "2025-03-15T13:55:00Z", risk: "High", score: 89, list: "UK OFSI", type: "Individual" },
+  { id: "SCR-2026-4817", entity: "Meridian Shipping Co.", date: "2025-03-15T13:42:00Z", risk: "Low", score: 8, list: "—", type: "Organization" },
+  { id: "SCR-2026-4816", entity: "Aleksandr Volkov", date: "2025-03-15T13:30:00Z", risk: "Medium", score: 58, list: "OFAC SDN", type: "Individual" },
+  { id: "SCR-2026-4815", entity: "Novatek PJSC", date: "2025-03-15T13:18:00Z", risk: "High", score: 97, list: "EU Consolidated", type: "Organization" },
+  { id: "SCR-2026-4814", entity: "Chen Wei Trading", date: "2025-03-15T13:05:00Z", risk: "Low", score: 15, list: "—", type: "Organization" },
 ];
 
 export const systemStatus = [
   { service: "Screening Engine", status: "operational", uptime: "99.97%" },
   { service: "Sanctions Database", status: "operational", uptime: "99.99%" },
   { service: "Cyrillic Engine", status: "operational", uptime: "99.95%" },
-  { service: "AI Analysis (GPT-4o)", status: "operational", uptime: "99.91%" },
+  { service: "AI Analysis", status: "operational", uptime: "99.91%" },
   { service: "Document Scanner", status: "operational", uptime: "99.88%" },
 ];
 
