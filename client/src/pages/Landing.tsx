@@ -94,7 +94,7 @@ export default function Landing() {
               Start Screening
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/app" className="btn-premium btn-premium-outline flex items-center gap-2.5 text-base">
+            <Link href="/app/architecture" className="btn-premium btn-premium-outline flex items-center gap-2.5 text-base">
               Explore Prototype
             </Link>
           </motion.div>
