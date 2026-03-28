@@ -100,6 +100,20 @@ export default function Screening() {
         </div>
       </div>
 
+      {/* Real-World Use Case — with AI glow */}
+      <div className="ai-glow premium-card rounded-xl p-8 border-l-4 border-l-cyan-500">
+        <div className="flex items-center gap-2.5 mb-3">
+          <Zap className="w-5 h-5 text-cyan-500" />
+          <h3 className="text-lg font-extrabold font-display text-slate-900">Real-World Use Case</h3>
+        </div>
+        <p className="text-sm text-slate-600 font-body leading-relaxed">
+          A compliance team uploaded <span className="font-bold text-slate-800">40 vendor names</span> via batch CSV.
+          TradeScreenAI screened all entities across 4 sanctions lists in <span className="font-bold text-slate-800">under 2 minutes</span>,
+          flagging <span className="font-bold text-red-600">3 high-risk matches</span> that required immediate review.
+          Traditional manual screening of the same batch would have taken approximately 6 hours.
+        </p>
+      </div>
+
       {/* Scenario Results */}
       <AnimatePresence>
         {scenario && (
@@ -241,6 +255,12 @@ export default function Screening() {
         )}
       </AnimatePresence>
 
+      <div className="mb-3">
+        <span className="inline-flex items-center rounded-full border border-slate-200/90 bg-slate-100/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 font-data">
+          Sample Results (Demo Data)
+        </span>
+      </div>
+
       {/* Batch Results Preview */}
       <div className="premium-card rounded-xl overflow-hidden">
         <div className="p-7 border-b border-slate-100 flex items-center justify-between">
@@ -304,20 +324,6 @@ export default function Screening() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Real-World Use Case — with AI glow */}
-      <div className="ai-glow premium-card rounded-xl p-8 border-l-4 border-l-cyan-500">
-        <div className="flex items-center gap-2.5 mb-3">
-          <Zap className="w-5 h-5 text-cyan-500" />
-          <h3 className="text-lg font-extrabold font-display text-slate-900">Real-World Use Case</h3>
-        </div>
-        <p className="text-sm text-slate-600 font-body leading-relaxed">
-          A compliance team uploaded <span className="font-bold text-slate-800">40 vendor names</span> via batch CSV.
-          TradeScreenAI screened all entities across 4 sanctions lists in <span className="font-bold text-slate-800">under 2 minutes</span>,
-          flagging <span className="font-bold text-red-600">3 high-risk matches</span> that required immediate review.
-          Traditional manual screening of the same batch would have taken approximately 6 hours.
-        </p>
       </div>
     </div>
   );

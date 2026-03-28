@@ -113,8 +113,8 @@ export default function Landing() {
       <HowItWorks />
       <CoreCapabilities />
       <ComparisonSection />
-      <PerformanceBenchmarksSection />
       <DataSourcesSection />
+      <PerformanceBenchmarksSection />
       <PrivacySection />
       <Footer variant="dark" />
     </div>
