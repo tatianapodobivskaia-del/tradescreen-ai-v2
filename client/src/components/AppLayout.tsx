@@ -13,8 +13,8 @@ import {
 import { useState } from "react";
 
 const navItems = [
-  { path: "/app", label: "Dashboard", icon: LayoutDashboard },
   { path: "/app/screening", label: "Screening", icon: Search },
+  { path: "/app", label: "Dashboard", icon: LayoutDashboard },
   { path: "/app/watchlist", label: "Watchlist Explorer", icon: Globe },
   { path: "/app/cyrillic", label: "Cyrillic Engine", icon: Languages },
   { path: "/app/scanner", label: "AI Document Scanner", icon: ScanLine },
