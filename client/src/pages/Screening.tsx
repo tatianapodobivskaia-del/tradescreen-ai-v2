@@ -10,8 +10,6 @@ import {
   Search, Upload, FileSpreadsheet, Play, Brain, ChevronRight,
   AlertTriangle, CheckCircle, XCircle, Shield, Zap, Users, ArrowRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
 export default function Screening() {
   const [activeTab, setActiveTab] = useState<"single" | "batch">("single");
   const [searchQuery, setSearchQuery] = useState("");
@@ -281,6 +279,16 @@ export default function Screening() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="px-7 pb-7 pt-5 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={() => alert("AI Deep Analysis will be available when connected to Azure API")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white py-3.5 px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 shadow-md shadow-cyan-500/25 hover:shadow-lg hover:shadow-cyan-500/30 transition-all duration-200"
+          >
+            <Brain className="w-4 h-4 shrink-0" strokeWidth={2} />
+            Run AI Deep Analysis
+          </button>
         </div>
       </div>
 
