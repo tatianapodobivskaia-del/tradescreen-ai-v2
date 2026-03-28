@@ -35,12 +35,12 @@ export default function HeroNetworkAnimation() {
           key={`edge-${i}`}
           x1={nodes[a].x} y1={nodes[a].y}
           x2={nodes[b].x} y2={nodes[b].y}
-          stroke="rgba(0,210,211,0.15)"
+          stroke="rgba(0,210,211,0.2)"
           strokeWidth="0.15"
         >
           <animate
             attributeName="stroke-opacity"
-            values="0.08;0.25;0.08"
+            values="0.15;0.35;0.15"
             dur={`${3 + (i % 5)}s`}
             repeatCount="indefinite"
             begin={`${(i * 0.4) % 3}s`}
@@ -55,7 +55,7 @@ export default function HeroNetworkAnimation() {
         >
           <animate
             attributeName="opacity"
-            values="0.4;0.9;0.4"
+            values="0.5;1;0.5"
             dur={`${2 + (i % 3)}s`}
             repeatCount="indefinite"
             begin={`${(i * 0.3) % 2}s`}
