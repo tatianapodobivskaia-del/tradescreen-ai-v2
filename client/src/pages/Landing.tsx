@@ -8,7 +8,6 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
-import { HeroSimpleNetworkSvg } from "@/components/HeroSimpleNetworkSvg";
 import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
   comparisonData, dataSources
@@ -51,8 +50,7 @@ export default function Landing() {
           <img src={HERO_IMG} alt="" className="w-full h-full object-cover opacity-60" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e1a]/40 via-[#0a0e1a]/20 to-[#0a0e1a]" />
         </div>
-        <HeroSimpleNetworkSvg className="z-[1]" />
-        <ScanningLine className="z-[2]" />
+        <ScanningLine />
 
         <div className="relative z-10 text-center max-w-5xl mx-auto px-4 py-36">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>

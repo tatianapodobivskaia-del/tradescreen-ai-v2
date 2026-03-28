@@ -176,35 +176,6 @@
     animation: scan-line 3s ease-in-out infinite;
   }
 
-  /* Landing hero — simple network lines (pathLength="100", dash 5 + 10) */
-  @keyframes hero-simple-net-flow {
-    to {
-      stroke-dashoffset: -15;
-    }
-  }
-  .hero-simple-net-line {
-    stroke: rgb(34 211 238 / 0.15);
-    stroke-width: 1px;
-    stroke-linecap: round;
-    vector-effect: non-scaling-stroke;
-    stroke-dasharray: 5 10;
-    stroke-dashoffset: 0;
-    animation: hero-simple-net-flow 3.2s linear infinite;
-  }
-
-  .hero-simple-net-dot {
-    opacity: 0.6;
-    r: 3px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-simple-net-line {
-      animation: none !important;
-      stroke-dasharray: 100 0;
-      stroke-dashoffset: 0;
-    }
-  }
-
   /* Pulse glow for risk items */
   @keyframes pulse-glow {
     0%, 100% { opacity: 0.7; }
