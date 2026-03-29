@@ -56,7 +56,6 @@ const LANDING_SECTION_ORDER = [
   "landing-data-sources",
   "landing-performance",
   "landing-privacy",
-  "landing-footer",
 ] as const;
 
 const heroDifferentiatorGlow: CSSProperties = {
@@ -275,7 +274,6 @@ export default function Landing() {
       <PrivacySection />
       <section id="landing-footer" className="relative" aria-label="Site footer">
         <Footer variant="dark" />
-        <SectionScrollArrow sectionId="landing-footer" />
       </section>
     </div>
   );
@@ -664,7 +662,6 @@ function PrivacySection() {
             </div>
           </div>
         </div>
-        <SectionScrollArrow sectionId="landing-privacy" />
       </div>
     </section>
   );
