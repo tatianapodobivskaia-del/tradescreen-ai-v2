@@ -25,6 +25,22 @@ const iconMap: Record<string, React.ElementType> = {
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
 };
 
+/** Landing-only copy; titles/icons still from mockData */
+const coreCapabilityDescriptions: Record<string, string> = {
+  "Multi-List Screening":
+    "Screen against 4 sanctions lists at once — OFAC, EU, UN, and UK OFSI",
+  "Cyrillic Transliteration Engine":
+    "Find hidden matches by generating all possible name spellings across Latin and Cyrillic alphabets",
+  "AI Document Scanner":
+    "Upload a trade document — AI reads it, extracts names, and screens them automatically",
+  "AI Deep Analysis":
+    "Get a detailed risk explanation with confidence scores and recommended next steps",
+  "Composite Risk Scoring":
+    "One clear risk score (0-100) combining name match, country risk, and list source",
+  "PDF Report Generation":
+    "Download a professional compliance report ready to share with your team or bank",
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
@@ -305,7 +321,9 @@ function CoreCapabilities() {
                   <Icon className="w-6 h-6 text-cyan-400" />
                 </div>
                 <h3 className="text-xl font-extrabold font-display text-white mb-3">{cap.title}</h3>
-                <p className="text-sm text-slate-400 font-body leading-relaxed">{cap.description}</p>
+                <p className="text-sm text-slate-400 font-body leading-relaxed">
+                  {coreCapabilityDescriptions[cap.title] ?? cap.description}
+                </p>
               </motion.div>
             );
           })}
