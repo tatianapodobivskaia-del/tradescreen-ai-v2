@@ -168,6 +168,50 @@ const SCENARIOS: Array<{
   },
 ];
 
+/** Phase 1 — name variants shown before list screening (per scenario) */
+const NAME_VARIANT_META: Record<
+  ScenarioId,
+  { rows: { text: string; label: string }[]; summaryCount: number | null; summary: string }
+> = {
+  ros: {
+    summaryCount: 7,
+    summary: "variants generated — now screening all against 45,296 entities across 4 lists…",
+    rows: [
+      { text: "Рособоронэкспорт", label: "Original Cyrillic" },
+      { text: "Rosoboronexport", label: "ISO 9" },
+      { text: "Rosoboroneksport", label: "ICAO" },
+      { text: "Rosoboroneksport", label: "BGN/PCGN" },
+      { text: "Rosoboroneksport", label: "Informal" },
+      { text: "ROSOBORONEXPORT", label: "Uppercase" },
+      { text: "ROSOBORONEKSPORT", label: "Uppercase variant" },
+    ],
+  },
+  sch: {
+    summaryCount: 8,
+    summary: "variants generated — now screening all against 45,296 entities across 4 lists…",
+    rows: [
+      { text: "Щербаков Импорт Экспорт", label: "Original Cyrillic" },
+      { text: "Shcherbakov", label: "ISO 9" },
+      { text: "Ščerbakov", label: "ICAO" },
+      { text: "Scherbakov", label: "BGN/PCGN" },
+      { text: "Sherbakov", label: "Informal" },
+      { text: "SHCHERBAKOV", label: "Uppercase" },
+      { text: "SCHERBAKOV", label: "Uppercase variant" },
+      { text: "SHERBAKOV", label: "Uppercase informal" },
+    ],
+  },
+  sun: {
+    summaryCount: null,
+    summary: "No Cyrillic detected — screening Latin name only against 45,296 entities…",
+    rows: [{ text: "Sunny Day Flowers Co", label: "Original Latin" }],
+  },
+};
+
+const VARIANT_GEN_MS = 1000;
+const VARIANT_STAGGER_MS = 100;
+const VARIANT_SUMMARY_PAUSE_MS = 500;
+const VARIANT_TO_TABLE_MS = 350;
+
 const AGENT_STEP_MS = 900;
 const PIPELINE_TOTAL_MS = AGENT_STEP_MS * 4;
 const FADE_DURATION = 0.3;
@@ -482,6 +526,84 @@ function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 }) {
           </span>
         </span>
       ))}
+    </div>
+  );
+}
+
+function NameVariantGenerationBlock({
+  scenarioId,
+  genLoading,
+  revealed,
+  showSummary,
+  showScreeningLine,
+  screeningLineComplete,
+}: {
+  scenarioId: ScenarioId;
+  genLoading: boolean;
+  revealed: number;
+  showSummary: boolean;
+  showScreeningLine: boolean;
+  screeningLineComplete: boolean;
+}) {
+  const meta = NAME_VARIANT_META[scenarioId];
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/90 to-white p-4 shadow-sm">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Name Variant Generation</p>
+      <p className="mt-1 text-xs leading-relaxed text-slate-600 font-body">
+        This step shows why this system can find matches others miss — it generates every likely spelling before
+        screening. That is the key differentiator.
+      </p>
+
+      {genLoading && (
+        <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-800 font-body">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-600" strokeWidth={2} />
+          <span>Generating name variants…</span>
+        </div>
+      )}
+
+      {!genLoading && revealed > 0 && (
+        <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+          {meta.rows.slice(0, revealed).map((row, i) => (
+            <motion.li
+              key={`${scenarioId}-${row.text}-${row.label}-${i}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2"
+            >
+              <span className="min-w-0 flex-1 break-words font-data text-[13px] font-semibold text-slate-900">{row.text}</span>
+              <span className="shrink-0 rounded-md border border-slate-200/90 bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                {row.label}
+              </span>
+            </motion.li>
+          ))}
+        </ul>
+      )}
+
+      {showSummary && !genLoading && (
+        <p className="mt-4 text-sm leading-relaxed text-slate-700 font-body">
+          {meta.summaryCount != null ? (
+            <>
+              <span className="font-data text-lg font-extrabold tabular-nums text-cyan-600">{meta.summaryCount}</span>
+              <span>{` ${meta.summary}`}</span>
+            </>
+          ) : (
+            <span>{meta.summary}</span>
+          )}
+        </p>
+      )}
+
+      {showScreeningLine && !genLoading && (
+        <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-800 font-body">
+          {screeningLineComplete ? (
+            <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
+          ) : (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-700" strokeWidth={2} />
+          )}
+          <span>Screening all variants…</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1004,6 +1126,11 @@ function ScenarioCard({
   const [screeningSpinner, setScreeningSpinner] = useState(false);
   const [showScreeningComplete, setShowScreeningComplete] = useState(false);
   const [visibleRows, setVisibleRows] = useState(0);
+  const [variantGenLoading, setVariantGenLoading] = useState(false);
+  const [variantRevealedCount, setVariantRevealedCount] = useState(0);
+  const [variantShowSummary, setVariantShowSummary] = useState(false);
+  const [variantShowScreeningLine, setVariantShowScreeningLine] = useState(false);
+  const [showPhase1Table, setShowPhase1Table] = useState(false);
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
 
   const [agentProgress, setAgentProgress] = useState(0);
@@ -1125,6 +1252,11 @@ function ScenarioCard({
     setScreeningSpinner(false);
     setShowScreeningComplete(false);
     setVisibleRows(0);
+    setVariantGenLoading(false);
+    setVariantRevealedCount(0);
+    setVariantShowSummary(false);
+    setVariantShowScreeningLine(false);
+    setShowPhase1Table(false);
     setAnalysisExpanded(false);
     setAgentProgress(0);
     setPhases(initialPhases());
@@ -1136,25 +1268,52 @@ function ScenarioCard({
   const runPhase1 = () => {
     clearTimers();
     setShowScreeningComplete(false);
-    setScreeningSpinner(true);
     setVisibleRows(0);
     setPhase1("running");
-    listRows.forEach((_, i) => {
-      const id = setTimeout(() => setVisibleRows(i + 1), (i + 1) * ROW_STAGGER_MS);
+    setVariantGenLoading(true);
+    setVariantRevealedCount(0);
+    setVariantShowSummary(false);
+    setVariantShowScreeningLine(false);
+    setShowPhase1Table(false);
+    setScreeningSpinner(false);
+
+    const schedule = (fn: () => void, ms: number) => {
+      const id = setTimeout(fn, ms);
       timeoutIdsRef.current.push(id);
-    });
-    const rowsDoneMs = listRows.length * ROW_STAGGER_MS + 200;
-    const idStop = setTimeout(() => {
-      setScreeningSpinner(false);
-      setShowScreeningComplete(true);
-    }, rowsDoneMs);
-    timeoutIdsRef.current.push(idStop);
-    const idComplete = setTimeout(() => {
-      setPhase1("complete");
-      setPhase2("idle");
-      playCue?.("phase1");
-    }, rowsDoneMs + 550);
-    timeoutIdsRef.current.push(idComplete);
+    };
+
+    const meta = NAME_VARIANT_META[scenario.id];
+    const n = meta.rows.length;
+
+    schedule(() => setVariantGenLoading(false), VARIANT_GEN_MS);
+    for (let i = 0; i < n; i++) {
+      schedule(() => setVariantRevealedCount(i + 1), VARIANT_GEN_MS + i * VARIANT_STAGGER_MS);
+    }
+    const tSummary = VARIANT_GEN_MS + (n - 1) * VARIANT_STAGGER_MS + 120;
+    schedule(() => setVariantShowSummary(true), tSummary);
+    const tScreening = tSummary + VARIANT_SUMMARY_PAUSE_MS;
+    schedule(() => setVariantShowScreeningLine(true), tScreening);
+    const tTable = tScreening + VARIANT_TO_TABLE_MS;
+    schedule(() => {
+      setShowPhase1Table(true);
+      setScreeningSpinner(true);
+      listRows.forEach((_, i) => {
+        const id = setTimeout(() => setVisibleRows(i + 1), (i + 1) * ROW_STAGGER_MS);
+        timeoutIdsRef.current.push(id);
+      });
+      const rowsDoneMs = listRows.length * ROW_STAGGER_MS + 200;
+      const idStop = setTimeout(() => {
+        setScreeningSpinner(false);
+        setShowScreeningComplete(true);
+      }, rowsDoneMs);
+      timeoutIdsRef.current.push(idStop);
+      const idComplete = setTimeout(() => {
+        setPhase1("complete");
+        setPhase2("idle");
+        playCue?.("phase1");
+      }, rowsDoneMs + 550);
+      timeoutIdsRef.current.push(idComplete);
+    }, tTable);
   };
 
   const runPhase2 = () => {
@@ -1345,7 +1504,16 @@ function ScenarioCard({
                     </div>
                   </motion.div>
 
-                  {phase1 === "running" && screeningSpinner && (
+                  <NameVariantGenerationBlock
+                    scenarioId={scenario.id}
+                    genLoading={variantGenLoading}
+                    revealed={variantRevealedCount}
+                    showSummary={variantShowSummary}
+                    showScreeningLine={variantShowScreeningLine}
+                    screeningLineComplete={showScreeningComplete || phase1 === "complete"}
+                  />
+
+                  {phase1 === "running" && screeningSpinner && showPhase1Table && visibleRows < listRows.length && (
                     <div className="flex items-center gap-2 text-sm text-slate-800">
                       <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-700" strokeWidth={2} />
                       <span>Screening lists…</span>
@@ -1368,46 +1536,48 @@ function ScenarioCard({
                     )}
                   </AnimatePresence>
 
-                  <div className="w-full min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white">
-                    <table className="w-full min-w-0 table-fixed border-collapse text-left text-xs">
-                      <colgroup>
-                        <col className="w-[24%]" />
-                        <col className="w-[36%]" />
-                        <col className="w-[14%]" />
-                        <col className="w-[26%]" />
-                      </colgroup>
-                      <thead>
-                        <tr className="border-b-2 border-slate-300 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-700">
-                          <th className="px-3 py-3 text-left font-display">List name</th>
-                          <th className="px-3 py-3 text-left font-display">Screened name</th>
-                          <th className="px-3 py-3 text-right font-display tabular-nums">Similarity %</th>
-                          <th className="px-3 py-3 text-left font-display">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-slate-900">
-                        {listRows.slice(0, visibleRows).map((row, i) => (
-                          <motion.tr
-                            key={i}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: FADE_DURATION }}
-                            className="border-b border-slate-200 odd:bg-white even:bg-slate-50"
-                          >
-                            <td className="px-3 py-2.5 align-top font-medium text-slate-800">{row.list}</td>
-                            <td className="break-words px-3 py-2.5 align-top font-data text-[11px] text-slate-900">
-                              {row.matchedEntity}
-                            </td>
-                            <td className="px-3 py-2.5 text-right font-data tabular-nums text-slate-800">
-                              {row.similarity}
-                            </td>
-                            <td className={cn("px-3 py-2.5 align-top", tierCellClass(row.tier))}>
-                              {row.statusLabel}
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {showPhase1Table && (
+                    <div className="w-full min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="w-full min-w-0 table-fixed border-collapse text-left text-xs">
+                        <colgroup>
+                          <col className="w-[24%]" />
+                          <col className="w-[36%]" />
+                          <col className="w-[14%]" />
+                          <col className="w-[26%]" />
+                        </colgroup>
+                        <thead>
+                          <tr className="border-b-2 border-slate-300 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-700">
+                            <th className="px-3 py-3 text-left font-display">List name</th>
+                            <th className="px-3 py-3 text-left font-display">Screened name</th>
+                            <th className="px-3 py-3 text-right font-display tabular-nums">Similarity %</th>
+                            <th className="px-3 py-3 text-left font-display">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-slate-900">
+                          {listRows.slice(0, visibleRows).map((row, i) => (
+                            <motion.tr
+                              key={i}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: FADE_DURATION }}
+                              className="border-b border-slate-200 odd:bg-white even:bg-slate-50"
+                            >
+                              <td className="px-3 py-2.5 align-top font-medium text-slate-800">{row.list}</td>
+                              <td className="break-words px-3 py-2.5 align-top font-data text-[11px] text-slate-900">
+                                {row.matchedEntity}
+                              </td>
+                              <td className="px-3 py-2.5 text-right font-data tabular-nums text-slate-800">
+                                {row.similarity}
+                              </td>
+                              <td className={cn("px-3 py-2.5 align-top", tierCellClass(row.tier))}>
+                                {row.statusLabel}
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
                   {phase1 === "complete" && (
                     <motion.div
