@@ -190,7 +190,10 @@ export default function Reports() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Reports & Analytics</h1>
-        <p className="text-sm text-slate-500 font-body mt-1">Screening trends, risk distribution, and performance benchmarks</p>
+        <p className="text-sm text-slate-500 font-body mt-1 leading-relaxed">
+          Screening reports archive — view and download completed screening results with risk scores, matched entities,
+          and recommended actions.
+        </p>
       </div>
 
       <PdfReportPreviewModal open={pdfPreviewOpen} onClose={() => setPdfPreviewOpen(false)} />

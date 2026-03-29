@@ -16,7 +16,7 @@ import AuditLog from "./pages/AuditLog";
 import Architecture from "./pages/Architecture";
 import AboutResearcher from "./pages/AboutResearcher";
 import SettingsPage from "./pages/Settings";
-import { DisclaimerPage, PrivacyPolicyPage, TermsOfUsePage } from "./pages/LegalPages";
+import LegalPages from "./pages/LegalPages";
 import AppLayout from "./components/AppLayout";
 import { useLocation } from "wouter";
 
@@ -35,9 +35,9 @@ function AppPages() {
         <Route path="/app/architecture" component={Architecture} />
         <Route path="/app/about" component={AboutResearcher} />
         <Route path="/app/settings" component={SettingsPage} />
-        <Route path="/app/disclaimer" component={DisclaimerPage} />
-        <Route path="/app/privacy" component={PrivacyPolicyPage} />
-        <Route path="/app/terms" component={TermsOfUsePage} />
+        <Route path="/app/disclaimer" component={LegalPages} />
+        <Route path="/app/privacy" component={LegalPages} />
+        <Route path="/app/terms" component={LegalPages} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>

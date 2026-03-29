@@ -169,14 +169,20 @@ export default function CyrillicEngine() {
         </div>
 
         <aside className="lg:col-span-4">
-          <div className="premium-card sticky top-6 rounded-xl p-6 lg:top-24">
-            <h2 className="text-sm font-bold font-display text-slate-900">Why Cyrillic Transliteration Matters</h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600 font-body">
+          <div className="premium-card sticky top-6 space-y-4 rounded-xl p-6 lg:top-24">
+            <h2 className="text-sm font-bold font-display text-slate-900">Why This Matters</h2>
+            <p className="text-sm leading-relaxed text-slate-600 font-body">
               A single Russian company name like &apos;Рособоронэкспорт&apos; can be written as Rosoboronexport,
-              Rosoboroneksport, or other Latin spellings depending on the transliteration standard. Traditional screening
-              tools check only one spelling — missing matches on other lists. This engine generates ALL variants across
-              4 standards (ISO 9, ICAO, BGN/PCGN, Informal).
+              Rosoboroneksport, or Rosoboroneksport depending on the transliteration standard. Traditional screening
+              tools check only one spelling — missing matches on other lists. This engine generates ALL variants across 4
+              international standards to catch what others miss.
             </p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+              <p className="text-[11px] leading-relaxed text-slate-600 font-body">
+                <span className="font-semibold text-slate-700">Example:</span> Щербаков → Shcherbakov (ISO 9) / Ščerbakov
+                (ICAO) / Scherbakov (BGN/PCGN) / Sherbakov (Informal)
+              </p>
+            </div>
           </div>
         </aside>
       </div>

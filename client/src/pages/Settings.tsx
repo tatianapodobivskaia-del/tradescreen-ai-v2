@@ -67,10 +67,10 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-3">
           {[
-            { key: "highRisk", label: "High-risk entity alerts", description: "Immediate notification when a HIGH risk match is detected" },
-            { key: "batchComplete", label: "Batch processing complete", description: "Notification when batch CSV screening finishes" },
-            { key: "listUpdates", label: "Sanctions list updates", description: "Alert when OFAC, EU, UN, or UK OFSI lists are updated" },
-            { key: "weeklyReport", label: "Weekly summary report", description: "Automated weekly screening activity digest" },
+            { key: "highRisk", label: "High Risk Alert", description: "Get notified immediately when a high-risk entity (score > 70) is detected" },
+            { key: "batchComplete", label: "Batch Complete", description: "Notification when a batch screening finishes processing" },
+            { key: "listUpdates", label: "List Updates", description: "Alert when sanctions lists are refreshed (auto-updates every 6 hours from OFAC, EU, UN, UK OFSI)" },
+            { key: "weeklyReport", label: "Weekly Report", description: "Receive a weekly summary of all screening activity" },
           ].map((item) => (
             <div key={item.key} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors">
               <div>
@@ -86,6 +86,9 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+        <p className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-500 font-body leading-relaxed">
+          Supported upload formats: CSV, PDF. Excel support coming soon.
+        </p>
       </motion.div>
 
       {/* About / Version */}

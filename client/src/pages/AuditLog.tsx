@@ -31,7 +31,10 @@ export default function AuditLog() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Audit Log</h1>
-          <p className="text-sm text-slate-500 font-body mt-1">Complete timestamped record of all system actions</p>
+          <p className="text-sm text-slate-500 font-body mt-1 leading-relaxed">
+            Complete audit trail of all screening activity. Every scan, analysis, and export is logged with timestamps —
+            essential for regulatory compliance and internal reviews.
+          </p>
         </div>
         <Button variant="outline" className="gap-2 text-sm">
           <Download className="w-4 h-4" /> Export Log

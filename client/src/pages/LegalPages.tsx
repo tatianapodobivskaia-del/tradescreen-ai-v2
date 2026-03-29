@@ -1,181 +1,223 @@
 /*
- * LEGAL PAGES — Disclaimer, Privacy Policy, Terms of Use
- * Professional fintech-grade legal content
+ * LEGAL — Academic research prototype: Disclaimer, Privacy Policy, Terms of Use (single tabbed page)
  */
+import type { ElementType } from "react";
 import { motion } from "framer-motion";
 import { Shield, Lock, FileText, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
-function LegalPageWrapper({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+type LegalTab = "disclaimer" | "privacy" | "terms";
+
+function tabFromPath(path: string): LegalTab {
+  if (path.startsWith("/app/privacy")) return "privacy";
+  if (path.startsWith("/app/terms")) return "terms";
+  return "disclaimer";
+}
+
+const tabs: { id: LegalTab; label: string; href: string; icon: ElementType }[] = [
+  { id: "disclaimer", label: "Disclaimer", href: "/app/disclaimer", icon: Shield },
+  { id: "privacy", label: "Privacy Policy", href: "/app/privacy", icon: Lock },
+  { id: "terms", label: "Terms of Use", href: "/app/terms", icon: FileText },
+];
+
+export default function LegalPages() {
+  const [location, setLocation] = useLocation();
+  const activeTab = tabFromPath(location);
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl">
       <motion.div {...fadeIn}>
-        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-600 mb-8 transition-colors">
-          <ArrowLeft className="w-4 h-4" />
+        <Link href="/app" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-cyan-600">
+          <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
 
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/10 to-teal-500/10 flex items-center justify-center border border-cyan-500/20">
-            <Icon className="w-6 h-6 text-cyan-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold font-display text-slate-900 tracking-tight">{title}</h1>
-            <p className="text-sm text-slate-500 font-body mt-0.5">Last updated: March 2026</p>
-          </div>
+        <div className="mb-6 rounded-xl border border-cyan-500/20 bg-cyan-50/60 px-4 py-3 text-center">
+          <p className="text-xs font-bold font-display uppercase tracking-wide text-cyan-900">
+            Academic Research Prototype — For educational use only — Not a commercial compliance product
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-10 shadow-sm">
+        <h1 className="mb-2 text-2xl font-bold font-display tracking-tight text-slate-900">Legal &amp; policies</h1>
+        <p className="mb-6 text-sm text-slate-500 font-body">Last updated: March 2026</p>
+
+        <div className="mb-8 flex flex-wrap gap-2 border-b border-slate-200 pb-1">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setLocation(t.href)}
+                className={`inline-flex items-center gap-2 rounded-t-lg border border-b-0 px-4 py-3 text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "border-slate-200 bg-white text-cyan-700 shadow-sm"
+                    : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                } `}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
           <div className="prose prose-slate max-w-none prose-headings:font-display prose-headings:tracking-tight prose-p:font-body prose-p:text-[15px] prose-p:leading-relaxed prose-li:font-body prose-li:text-[15px]">
-            {children}
+            {activeTab === "disclaimer" && <DisclaimerContent />}
+            {activeTab === "privacy" && <PrivacyContent />}
+            {activeTab === "terms" && <TermsContent />}
           </div>
         </div>
 
         <div className="mt-8 text-center text-xs text-slate-400 font-body">
-          <p>&copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL</p>
+          <p>
+            &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; TradeScreen AI research prototype
+          </p>
         </div>
       </motion.div>
     </div>
   );
 }
 
-export function DisclaimerPage() {
+function DisclaimerContent() {
   return (
-    <LegalPageWrapper title="Disclaimer" icon={Shield}>
+    <>
       <h2>Academic Research Prototype</h2>
       <p>
-        TradeScreen AI is an academic research prototype developed at Atlantis University. This system is designed
-        for educational and research purposes only and is <strong>not a commercial compliance tool</strong>.
+        TradeScreen AI is an <strong>academic research prototype</strong> developed at Atlantis University. This system
+        is intended for educational and research purposes only and is <strong>not a commercial compliance tool</strong>.
       </p>
 
       <h2>No Legal or Compliance Advice</h2>
       <p>
-        The information and screening results provided by TradeScreen AI do not constitute legal, financial,
-        or compliance advice. This system is not a substitute for professional legal or compliance counsel.
-        All results should be verified by qualified compliance professionals before any business decisions are made.
+        Information and screening results produced by this prototype do not constitute legal, financial, or compliance
+        advice. This system is not a substitute for professional legal or compliance counsel. All outputs should be
+        verified by qualified compliance professionals before any business decisions are made.
       </p>
 
       <h2>Accuracy and Completeness</h2>
       <p>
-        While TradeScreen AI uses data from publicly available government sanctions databases (OFAC SDN, EU Consolidated,
-        UN Security Council, UK OFSI), we make no warranties regarding the accuracy, completeness, or timeliness of the
-        screening results. Sanctions lists are updated periodically, and there may be delays between official list updates
-        and their reflection in this prototype.
+        This prototype draws on publicly available government sanctions databases (OFAC SDN, EU Consolidated, UN
+        Security Council, UK OFSI). The researcher makes no warranties as to the accuracy, completeness, or timeliness
+        of screening results shown here. Official lists change frequently; there may be delays between updates on source
+        sites and what appears in this prototype.
       </p>
 
       <h2>AI-Generated Analysis</h2>
       <p>
-        The AI deep analysis feature provides AI-assisted risk assessments. These assessments are generated by
-        artificial intelligence and may contain errors, hallucinations, or incomplete analysis. AI-generated content
-        should always be reviewed by a qualified human analyst.
+        Where AI-assisted analysis is shown, it is for demonstration only and may contain errors, omissions, or
+        unsupported assertions. A qualified human analyst must review any material before it is relied upon.
       </p>
 
       <h2>Limitation of Liability</h2>
       <p>
-        The developer and Atlantis University shall not be held liable for any damages, losses, or consequences
-        arising from the use of this prototype, including but not limited to reliance on screening results,
-        AI-generated analysis, or any other output of this system.
+        To the fullest extent permitted by law, the researcher and Atlantis University disclaim liability for any
+        damages or losses arising from use of this prototype, including reliance on screening outputs or AI-generated
+        text.
       </p>
-    </LegalPageWrapper>
+    </>
   );
 }
 
-export function PrivacyPolicyPage() {
+function PrivacyContent() {
   return (
-    <LegalPageWrapper title="Privacy Policy" icon={Lock}>
+    <>
       <h2>Data Processing</h2>
       <p>
-        TradeScreen AI is designed with privacy as a core principle. This prototype provides AI-assisted analysis
-        to support human review. All screening data is processed locally in the browser wherever possible.
+        Privacy is a core design goal for this prototype. Where possible, screening-related data is processed locally in
+        the browser.
       </p>
 
-      <h2>No Data Collection</h2>
+      <h2>No Enduring Collection by This Prototype</h2>
       <p>
-        No vendor names, screening results, or uploaded documents are stored, transmitted to external servers,
-        or retained after the session ends. We do not collect, store, or sell any personal information or
-        screening queries entered into this system.
+        This prototype is not intended to store vendor names, screening results, or uploaded documents on external
+        servers or to retain them after the session ends. The researcher does not operate this demo as a data
+        broker—personal or commercial screening queries should not be treated as confidential submissions to a
+        product.
       </p>
 
       <h2>Sanctions Data Sources</h2>
-      <p>
-        All sanctions list data is sourced from publicly available government databases:
-      </p>
+      <p>Indexed sanctions data in the prototype reflects publicly available government sources, including:</p>
       <ul>
-        <li><strong>OFAC SDN</strong> — U.S. Department of the Treasury, Office of Foreign Assets Control</li>
-        <li><strong>EU Consolidated</strong> — European Union Consolidated Financial Sanctions List</li>
-        <li><strong>UN Security Council</strong> — United Nations Security Council Consolidated List</li>
-        <li><strong>UK OFSI</strong> — UK Office of Financial Sanctions Implementation</li>
+        <li>
+          <strong>OFAC SDN</strong> — U.S. Department of the Treasury, Office of Foreign Assets Control
+        </li>
+        <li>
+          <strong>EU Consolidated</strong> — European Union Consolidated Financial Sanctions List
+        </li>
+        <li>
+          <strong>UN Security Council</strong> — United Nations Security Council Consolidated List
+        </li>
+        <li>
+          <strong>UK OFSI</strong> — UK Office of Financial Sanctions Implementation
+        </li>
       </ul>
 
-      <h2>AI Processing</h2>
+      <h2>Optional Cloud AI Processing</h2>
       <p>
-        When the AI deep analysis feature is used, query data may be sent to Azure OpenAI services for processing.
-        This data is not retained by the AI service beyond the immediate processing session and is subject to
-        Microsoft Azure's data processing agreements.
+        If a deployment connects AI analysis to a cloud provider (e.g. Azure OpenAI), query payload and policies would be
+        governed by that provider’s terms—not by this overview. This academic build emphasizes local and demo-safe paths.
       </p>
 
       <h2>Browser Storage</h2>
       <p>
-        This prototype may use browser local storage for user preferences (such as theme settings and screening
-        thresholds). This data remains entirely on your device and is never transmitted externally.
+        The prototype may use browser storage for preferences (e.g. theme). That data stays on the device unless
+        otherwise documented for a specific deployment.
       </p>
 
       <h2>Contact</h2>
-      <p>
-        For questions about this privacy policy, please contact the researcher through the About page.
-      </p>
-    </LegalPageWrapper>
+      <p>For questions about how this research prototype handles information, use the About the Researcher page.</p>
+    </>
   );
 }
 
-export function TermsOfUsePage() {
+function TermsContent() {
   return (
-    <LegalPageWrapper title="Terms of Use" icon={FileText}>
-      <h2>Acceptance of Terms</h2>
+    <>
+      <h2>Acceptance</h2>
       <p>
-        By accessing and using TradeScreen AI, you acknowledge that this is an academic research prototype
-        and agree to the following terms of use.
+        By using TradeScreen AI, you acknowledge that this is an <strong>academic research prototype</strong> and agree
+        to these <strong>Terms of Use</strong> (not a commercial Terms of Service).
       </p>
 
-      <h2>Educational Use Only</h2>
+      <h2>Educational Use</h2>
       <p>
-        TradeScreen AI is developed for educational and research purposes at Atlantis University.
-        This system is <strong>not intended for commercial use</strong> or as a replacement for professional
-        compliance screening tools. Users should not rely on this prototype for actual sanctions compliance decisions.
+        This system is offered for education and research at Atlantis University. It is <strong>not</strong> a
+        substitute for licensed compliance software. Users must not rely on this prototype alone for real-world
+        sanctions determinations.
       </p>
 
       <h2>Permitted Use</h2>
-      <p>You may use TradeScreen AI for:</p>
+      <p>Appropriate uses of this prototype include:</p>
       <ul>
-        <li>Academic research and educational exploration</li>
-        <li>Understanding sanctions screening methodologies</li>
-        <li>Evaluating AI-assisted compliance analysis approaches</li>
-        <li>Studying Cyrillic transliteration in compliance contexts</li>
+        <li>Academic research and classroom discussion</li>
+        <li>Understanding how screening and transliteration concepts apply in trade finance</li>
+        <li>Evaluating AI-assisted compliance <em>methodologies</em> in a non-production setting</li>
       </ul>
 
       <h2>Prohibited Use</h2>
-      <p>You may <strong>not</strong> use TradeScreen AI for:</p>
+      <p>Users agree <strong>not</strong> to:</p>
       <ul>
-        <li>Commercial sanctions compliance screening</li>
-        <li>Making actual business or financial decisions based solely on screening results</li>
-        <li>Circumventing or evading sanctions regulations</li>
-        <li>Any illegal or unauthorized purpose</li>
+        <li>Represent this prototype as production-ready commercial screening</li>
+        <li>Base sole business, banking, or legal decisions on outputs from this demo</li>
+        <li>Use this system for any unlawful purpose, including evasion of sanctions</li>
       </ul>
 
       <h2>Intellectual Property</h2>
       <p>
-        The TradeScreen AI prototype, including its design, code, and methodology, is the intellectual property
-        of the researcher. The underlying sanctions data is sourced from public government databases and remains
-        the property of the respective issuing authorities.
+        The TradeScreen AI prototype (design, code, narrative) reflects the researcher&apos;s work. Underlying
+        sanctions listings remain the property of their issuing authorities.
       </p>
 
-      <h2>Modifications</h2>
+      <h2>Changes</h2>
       <p>
-        These terms may be updated at any time without prior notice. Continued use of the prototype after
-        changes constitutes acceptance of the modified terms.
+        These Terms of Use may be revised as the research evolves. Continued use after updates constitutes acceptance of
+        the revised terms for this prototype context.
       </p>
-    </LegalPageWrapper>
+    </>
   );
 }

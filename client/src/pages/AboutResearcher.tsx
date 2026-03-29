@@ -134,6 +134,10 @@ export default function AboutResearcher() {
             <BookOpen className="w-5 h-5 text-cyan-500" />
             <h3 className="text-lg font-bold font-display text-slate-900">Research Focus</h3>
           </div>
+          <p className="text-sm text-slate-600 font-body leading-relaxed mb-6">
+            This research combines business analytics methodology with AI technology to solve a real compliance problem
+            — bridging the gap between data science and practical sanctions screening.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               { title: "Sanctions Compliance", desc: "Multi-list screening methodologies and regulatory frameworks across OFAC, EU, UN, and UK OFSI databases." },

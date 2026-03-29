@@ -3,7 +3,7 @@
  */
 import { motion } from "framer-motion";
 import { pipelineStages, scoringFormula } from "@/lib/mockData";
-import { Download, Languages, Search, Calculator, Brain, ArrowRight, Cpu, Shield, Lock, AlertTriangle, Zap, Server } from "lucide-react";
+import { Download, Languages, Search, Calculator, Brain, ArrowRight, Cpu, Shield, Lock, AlertTriangle, Zap, Server, Eye } from "lucide-react";
 
 const stageIcons: Record<string, React.ElementType> = { Download, Languages, Search, Calculator, Brain };
 
@@ -14,7 +14,7 @@ export default function Architecture() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Architecture & Methodology</h1>
-        <p className="text-sm text-slate-500 font-body mt-1">Technical documentation of the screening pipeline, scoring algorithm, and system design</p>
+        <p className="text-sm text-slate-500 font-body mt-1">How TradeScreen AI processes and analyzes trade documents</p>
       </div>
 
       {/* 5-Stage Pipeline */}
@@ -55,6 +55,52 @@ export default function Architecture() {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* 4-Agent Document Scanner */}
+      <div className="premium-card rounded-xl p-8">
+        <h3 className="text-base font-bold font-display text-slate-900 mb-6">4-Agent Document Scanner</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {[
+            {
+              title: "Vision Agent",
+              icon: Eye,
+              desc: "Reads uploaded documents using OCR, extracts entity names and transaction details",
+            },
+            {
+              title: "Transliteration Agent",
+              icon: Languages,
+              desc: "Generates all possible name spellings across Latin and Cyrillic alphabets",
+            },
+            {
+              title: "Risk Agent",
+              icon: Shield,
+              desc: "Screens extracted names against 45,296 entities across 4 sanctions lists",
+            },
+            {
+              title: "Action Agent",
+              icon: Zap,
+              desc: "Calculates composite risk score and generates compliance recommendation",
+            },
+          ].map((agent, i) => {
+            const Icon = agent.icon;
+            return (
+              <motion.div
+                key={agent.title}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 hover:border-cyan-500/25 hover:shadow-sm transition-all"
+              >
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-50">
+                  <Icon className="h-5 w-5 text-cyan-600" />
+                </div>
+                <h4 className="text-sm font-bold font-display text-slate-900 mb-1.5">{agent.title}</h4>
+                <p className="text-[12px] leading-relaxed text-slate-600 font-body">{agent.desc}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 
