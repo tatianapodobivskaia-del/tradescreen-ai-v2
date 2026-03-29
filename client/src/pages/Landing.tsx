@@ -41,6 +41,9 @@ const coreCapabilityDescriptions: Record<string, string> = {
     "Download a professional compliance report ready to share with your team or bank",
 };
 
+const howItWorksScreenDescription =
+  "Checks all name variations across 4 sanctions lists and 45,296 entities";
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
@@ -350,7 +353,9 @@ function HowItWorks() {
                     <Icon className="h-9 w-9 text-cyan-400" />
                   </div>
                   <h3 className="mb-3 font-display text-2xl font-extrabold text-white">{step.title}</h3>
-                  <p className="text-sm text-slate-400 font-body leading-relaxed">{step.description}</p>
+                  <p className="text-sm text-slate-400 font-body leading-relaxed">
+                    {step.title === "Screen" ? howItWorksScreenDescription : step.description}
+                  </p>
                 </div>
                 {i < 2 && (
                   <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 z-10">
