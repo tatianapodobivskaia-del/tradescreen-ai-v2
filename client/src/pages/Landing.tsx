@@ -4,10 +4,10 @@
  * Premium: enlarged spacing, stronger headings, premium cards, glow effects
  * Typography: Inter display + JetBrains Mono data
  */
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect, useRef, type CSSProperties } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { useInView, useCountUp } from "@/hooks/useCountUp";
+import { useInView } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
 import {
@@ -47,6 +47,20 @@ const howItWorksScreenDescription =
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
+};
+
+/** Fade-up with stagger 0ms / 200ms / 400ms (per card index) when section enters view */
+const fadeUpStaggerScroll = {
+  hidden: { opacity: 0, y: 28 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.2,
+      duration: 0.65,
+      ease: [0, 0, 0.58, 1] as const,
+    },
+  }),
 };
 
 const LANDING_SECTION_ORDER = [
@@ -125,11 +139,44 @@ function WhyItMattersStatCount({ value }: { value: string }) {
     : parseInt(value.replace(/,/g, ""), 10);
   const end = Number.isFinite(numeric) ? numeric : 0;
   const useComma = value.includes(",") && !isPercent;
-  const { count, ref } = useCountUp(end, 2000);
+  const [count, setCount] = useState(0);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || startedRef.current) return;
+        startedRef.current = true;
+        observer.disconnect();
+
+        const duration = 2000;
+        const t0 = performance.now();
+        const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+        const tick = (now: number) => {
+          const raw = Math.min((now - t0) / duration, 1);
+          const eased = easeOut(raw);
+          setCount(Math.floor(end * eased));
+          if (raw < 1) requestAnimationFrame(tick);
+          else setCount(end);
+        };
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -5% 0px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [end]);
+
   const display = useComma ? count.toLocaleString("en-US") : String(count);
 
   return (
-    <div ref={ref} className="mb-3 font-data text-4xl font-extrabold tabular-nums text-white md:text-5xl">
+    <div ref={wrapRef} className="mb-3 font-data text-4xl font-extrabold tabular-nums text-white md:text-5xl">
       {display}
       {isPercent ? "%" : ""}
     </div>
@@ -341,7 +388,7 @@ function HowItWorks() {
                 custom={i}
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
-                variants={fadeUp}
+                variants={fadeUpStaggerScroll}
                 className="relative"
               >
                 <div className="premium-card-dark h-full rounded-xl p-7 text-center group">
@@ -388,7 +435,7 @@ function CoreCapabilities() {
                 custom={i}
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
-                variants={fadeUp}
+                variants={fadeUpStaggerScroll}
                 className="premium-card-dark rounded-xl p-8 group"
               >
                 <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-5 group-hover:bg-cyan-500/20 transition-colors">

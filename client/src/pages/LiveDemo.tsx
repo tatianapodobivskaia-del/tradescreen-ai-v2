@@ -17,6 +17,8 @@ import {
   CheckCircle,
   Printer,
   X,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 const AGENTS = [
@@ -171,6 +173,48 @@ const PIPELINE_TOTAL_MS = AGENT_STEP_MS * 4;
 const FADE_DURATION = 0.3;
 const ROW_STAGGER_MS = 420;
 const PHASE2_PROCESS_MS = 1600;
+
+/** Web Audio cues — only played when sound toggle is on */
+type DemoSoundCue = "phase1" | "phase2" | "agentTick" | "verdictOk" | "verdictHigh";
+
+function playWebAudioCue(ctx: AudioContext, cue: DemoSoundCue) {
+  const t0 = ctx.currentTime;
+
+  const tone = (freq: number, start: number, dur: number, type: OscillatorType, peak: number) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.001, peak), start + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + dur + 0.03);
+  };
+
+  switch (cue) {
+    case "phase1":
+      tone(1040, t0, 0.2, "sine", 0.13);
+      break;
+    case "phase2":
+      tone(740, t0, 0.22, "triangle", 0.11);
+      break;
+    case "agentTick":
+      tone(1560, t0, 0.045, "sine", 0.055);
+      break;
+    case "verdictOk":
+      tone(523.25, t0, 0.1, "sine", 0.09);
+      tone(659.25, t0 + 0.09, 0.12, "sine", 0.095);
+      break;
+    case "verdictHigh":
+      tone(165, t0, 0.26, "triangle", 0.1);
+      break;
+    default:
+      break;
+  }
+}
 
 /** Shared table look in PDF preview + print (class `rpt` styled in print window CSS) */
 const PDF_TABLE_CLASS =
@@ -947,7 +991,13 @@ TradeScreen AI — Demo Export`;
   );
 }
 
-function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
+function ScenarioCard({
+  scenario,
+  playCue,
+}: {
+  scenario: (typeof SCENARIOS)[number];
+  playCue?: (cue: DemoSoundCue) => void;
+}) {
   const [phase1, setPhase1] = useState<"idle" | "running" | "complete">("idle");
   const [phase2, setPhase2] = useState<"locked" | "idle" | "running" | "complete">("locked");
   const [phase3, setPhase3] = useState<"locked" | "idle" | "running" | "complete">("locked");
@@ -963,6 +1013,7 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
   const timeoutIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const agentsWrapRef = useRef<HTMLDivElement>(null);
   const prevProcessingIndex = useRef<number>(-1);
+  const prevSoundPhasesRef = useRef<AgentPhase[] | null>(null);
 
   const [pdfOpen, setPdfOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
@@ -1004,6 +1055,9 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
       setPhases(["complete", "complete", "complete", "complete"]);
       setAgentProgress(100);
       setPhase3("complete");
+      const vCue: DemoSoundCue = scenario.result.risk === "HIGH" ? "verdictHigh" : "verdictOk";
+      const idVerdict = window.setTimeout(() => playCue?.(vCue), 140);
+      timeoutIdsRef.current.push(idVerdict);
     }, AGENT_STEP_MS * 4);
 
     const tick = (now: number) => {
@@ -1017,7 +1071,7 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
       }
     };
     rafRef.current = requestAnimationFrame(tick);
-  }, [clearTimers, stopRaf]);
+  }, [clearTimers, stopRaf, playCue, scenario.result.risk]);
 
   useEffect(
     () => () => {
@@ -1026,6 +1080,20 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
     },
     [stopRaf, clearTimers]
   );
+
+  useEffect(() => {
+    if (!playCue || phase3 !== "running") {
+      if (phase3 === "idle" || phase3 === "locked") prevSoundPhasesRef.current = null;
+      return;
+    }
+    const prev = prevSoundPhasesRef.current;
+    if (prev) {
+      phases.forEach((p, i) => {
+        if (p === "complete" && prev[i] !== "complete") playCue("agentTick");
+      });
+    }
+    prevSoundPhasesRef.current = [...phases];
+  }, [phases, phase3, playCue]);
 
   /* Auto-scroll when agents advance so the user sees each step */
   useEffect(() => {
@@ -1061,6 +1129,7 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
     setAgentProgress(0);
     setPhases(initialPhases());
     prevProcessingIndex.current = -1;
+    prevSoundPhasesRef.current = null;
     setAuditId(formatAuditId());
   };
 
@@ -1083,6 +1152,7 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
     const idComplete = setTimeout(() => {
       setPhase1("complete");
       setPhase2("idle");
+      playCue?.("phase1");
     }, rowsDoneMs + 550);
     timeoutIdsRef.current.push(idComplete);
   };
@@ -1092,12 +1162,14 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
     const id = setTimeout(() => {
       setPhase2("complete");
       setPhase3("idle");
+      playCue?.("phase2");
     }, PHASE2_PROCESS_MS);
     timeoutIdsRef.current.push(id);
   };
 
   const runPhase3 = () => {
     prevProcessingIndex.current = -1;
+    prevSoundPhasesRef.current = null;
     setPhase3("running");
     runAgentPipeline();
   };
@@ -1527,9 +1599,45 @@ function ScenarioCard({ scenario }: { scenario: (typeof SCENARIOS)[number] }) {
 }
 
 export default function LiveDemo() {
+  const [soundOn, setSoundOn] = useState(false);
+  const soundOnRef = useRef(false);
+  soundOnRef.current = soundOn;
+  const audioRef = useRef<AudioContext | null>(null);
+
+  const ensureCtx = useCallback(() => {
+    if (!audioRef.current) audioRef.current = new AudioContext();
+    void audioRef.current.resume();
+    return audioRef.current;
+  }, []);
+
+  const playCue = useCallback((cue: DemoSoundCue) => {
+    if (!soundOnRef.current) return;
+    try {
+      playWebAudioCue(ensureCtx(), cue);
+    } catch {
+      /* ignore */
+    }
+  }, [ensureCtx]);
+
   return (
     <div className="w-full min-w-0 max-w-full space-y-8">
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-4 pr-14 sm:pr-16">
+        <button
+          type="button"
+          onClick={() => {
+            setSoundOn((v) => {
+              const next = !v;
+              if (next) ensureCtx();
+              return next;
+            });
+          }}
+          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-cyan-300 hover:bg-cyan-50/80 hover:text-cyan-800"
+          title={soundOn ? "Mute sounds" : "Enable sounds"}
+          aria-label={soundOn ? "Mute sounds" : "Enable sounds"}
+          aria-pressed={soundOn}
+        >
+          {soundOn ? <Volume2 className="h-5 w-5" strokeWidth={2} /> : <VolumeX className="h-5 w-5" strokeWidth={2} />}
+        </button>
         <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold font-display uppercase tracking-wide text-emerald-400">
           <WifiOff className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
           No internet required
@@ -1550,7 +1658,7 @@ export default function LiveDemo() {
         </p>
         <div className="flex w-full min-w-0 flex-col gap-10">
           {SCENARIOS.map((s) => (
-            <ScenarioCard key={s.id} scenario={s} />
+            <ScenarioCard key={s.id} scenario={s} playCue={playCue} />
           ))}
         </div>
       </div>
