@@ -209,7 +209,7 @@ export default function Landing() {
             transition={{ duration: 0.75, delay: 1.2 }}
             className="mx-auto mb-8 max-w-3xl font-body text-lg leading-snug text-white sm:text-xl md:text-2xl md:leading-snug"
           >
-            Find What Others Miss — <span className="font-semibold text-cyan-400">in 60 Seconds</span>
+            See What Others Miss — <span className="font-semibold text-cyan-400">in 60 Seconds</span>
           </motion.p>
 
           <motion.div
