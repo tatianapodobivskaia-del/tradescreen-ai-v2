@@ -234,12 +234,6 @@ function parseAmountUsd(raw: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function formatConfidencePct(confidence: number | undefined): number {
-  const c = confidence ?? 0;
-  if (c <= 1 && c >= 0) return Math.round(c * 100);
-  return Math.round(c);
-}
-
 function tierStyle(tier: string): string {
   const u = tier.toUpperCase();
   if (u === "HIGH") return "text-red-700 bg-red-50 border-red-200";
@@ -247,7 +241,84 @@ function tierStyle(tier: string): string {
   return "text-emerald-800 bg-emerald-50 border-emerald-200";
 }
 
-type AIResultRow = Awaited<ReturnType<typeof runAIDeepAnalysis>>["results"][number];
+/** Normalized AI Deep Analysis row (handles API alias field names) */
+type NormalizedAIResult = {
+  vendor_name: string;
+  risk_level: string;
+  true_positive: boolean;
+  confidence: number;
+  reasoning: string;
+  action: string;
+  compliance_note: string;
+  evasion_indicators: string[];
+};
+
+type RawAIResult = Record<string, unknown>;
+
+function str(v: unknown): string {
+  if (v === null || v === undefined) return "";
+  return String(v).trim();
+}
+
+function parseTruePositive(raw: RawAIResult): boolean {
+  if (typeof raw.true_positive === "boolean") return raw.true_positive;
+  const a = str(raw.assessment).toUpperCase();
+  if (a === "TRUE_POSITIVE") return true;
+  if (a === "FALSE_POSITIVE") return false;
+  return false;
+}
+
+function confidenceFromRaw(raw: RawAIResult, truePositive: boolean): number {
+  const c = raw.confidence;
+  if (c === null || c === undefined || c === "") {
+    return truePositive ? 95 : 15;
+  }
+  const n = typeof c === "number" ? c : parseFloat(String(c));
+  if (!Number.isFinite(n)) return truePositive ? 95 : 15;
+  if (n >= 0 && n <= 1) return Math.round(n * 100);
+  return Math.round(Math.min(100, Math.max(0, n)));
+}
+
+function normalizeAIResult(raw: RawAIResult): NormalizedAIResult {
+  const truePositive = parseTruePositive(raw);
+  const vendorName = str(raw.vendor_name) || str(raw.vendor) || "—";
+  const riskLevel = str(raw.risk_level) || str(raw.risk) || "LOW";
+  const action = str(raw.action) || "—";
+  const reasoning = str(raw.reasoning) || str(raw.analysis) || str(raw.ai_reasoning) || "—";
+  const complianceNote = str(raw.compliance_note) || str(raw.compliance_note_text) || "";
+
+  let evasion: string[] = [];
+  const ev = raw.evasion_indicators;
+  if (Array.isArray(ev)) {
+    evasion = ev.map((x) => str(x)).filter(Boolean);
+  }
+
+  return {
+    vendor_name: vendorName,
+    risk_level: riskLevel,
+    true_positive: truePositive,
+    confidence: confidenceFromRaw(raw, truePositive),
+    reasoning,
+    action,
+    compliance_note: complianceNote,
+    evasion_indicators: evasion,
+  };
+}
+
+function riskBadgeClasses(level: string): string {
+  const u = level.toUpperCase();
+  if (u === "HIGH") return "border-red-300 bg-red-100 text-red-900";
+  if (u === "MEDIUM") return "border-amber-300 bg-amber-100 text-amber-950";
+  return "border-emerald-300 bg-emerald-100 text-emerald-900";
+}
+
+function actionBadgeClasses(action: string): string {
+  const u = action.toUpperCase();
+  if (u === "BLOCK") return "border-red-300 bg-red-100 text-red-900";
+  if (u === "FLAG" || u === "REVIEW") return "border-amber-300 bg-amber-100 text-amber-950";
+  if (u === "APPROVE") return "border-emerald-300 bg-emerald-100 text-emerald-900";
+  return "border-slate-300 bg-slate-100 text-slate-800";
+}
 
 export default function Screening() {
   const [activeTab, setActiveTab] = useState<"upload" | "manual">("upload");
@@ -268,7 +339,7 @@ export default function Screening() {
 
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiResults, setAiResults] = useState<AIResultRow[] | null>(null);
+  const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
 
   const handleScreen = () => {
     if (!vendorName.trim()) return;
@@ -307,7 +378,8 @@ export default function Screening() {
 
     try {
       const data = await runAIDeepAnalysis(vendors);
-      setAiResults(data.results ?? []);
+      const rows = data.results ?? [];
+      setAiResults(rows.map((row) => normalizeAIResult(row as unknown as RawAIResult)));
     } catch {
       setAiError(
         "AI analysis unavailable — check your internet connection. Screening results above are still valid."
@@ -604,7 +676,7 @@ export default function Screening() {
           {aiResults && aiResults.length > 0 && (
             <div className="mt-6 space-y-4">
               {aiResults.map((r, idx) => {
-                const riskU = (r.risk_level || "").toUpperCase();
+                const riskU = (r.risk_level || "LOW").toUpperCase();
                 const riskClass =
                   riskU === "HIGH"
                     ? "border-red-200 bg-red-50"
@@ -615,61 +687,69 @@ export default function Screening() {
                 return (
                   <div
                     key={`${r.vendor_name}-${idx}`}
-                    className={cn("rounded-xl border-2 p-4 shadow-sm", riskClass)}
+                    className={cn("rounded-xl border-2 p-5 shadow-sm", riskClass)}
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Vendor</p>
-                        <p className="text-base font-bold text-slate-900 font-display">{r.vendor_name}</p>
+                        <p className="mt-1 text-xl font-extrabold leading-tight text-slate-900 font-display">
+                          {r.vendor_name}
+                        </p>
                       </div>
                       <span
                         className={cn(
-                          "shrink-0 rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
+                          "shrink-0 rounded-md border px-3 py-1.5 text-[11px] font-bold font-display uppercase tracking-wide",
                           r.true_positive
-                            ? "border-red-300 bg-red-100 text-red-900"
-                            : "border-slate-300 bg-white text-slate-700"
+                            ? "border-red-400 bg-red-100 text-red-900"
+                            : "border-emerald-400 bg-emerald-100 text-emerald-900"
                         )}
                       >
                         {r.true_positive ? "TRUE POSITIVE" : "FALSE POSITIVE"}
                       </span>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-3 text-sm">
-                      <span className="text-slate-600">
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                      <span className="text-slate-600 font-body">
                         Confidence:{" "}
-                        <span className="font-data font-extrabold text-slate-900">
-                          {formatConfidencePct(r.confidence)}%
-                        </span>
+                        <span className="font-data text-base font-extrabold text-slate-900">{r.confidence}%</span>
                       </span>
                       <span
                         className={cn(
-                          "rounded-md border px-2 py-0.5 text-xs font-bold",
-                          riskU === "HIGH" && "border-red-300 bg-red-100 text-red-900",
-                          riskU === "MEDIUM" && "border-amber-300 bg-amber-100 text-amber-950",
-                          (riskU === "LOW" || !riskU) && "border-emerald-300 bg-emerald-100 text-emerald-900"
+                          "rounded-md border px-2.5 py-1 text-xs font-bold font-display uppercase",
+                          riskBadgeClasses(riskU)
                         )}
                       >
-                        Risk: {riskU || "—"}
+                        {riskU} risk
                       </span>
-                      <span className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-bold text-slate-900">
-                        Action: {actionU}
+                      <span
+                        className={cn(
+                          "rounded-md border px-2.5 py-1 text-xs font-bold font-display uppercase",
+                          actionBadgeClasses(actionU)
+                        )}
+                      >
+                        {actionU}
                       </span>
                     </div>
-                    <div className="mt-4 rounded-lg border border-slate-200/80 bg-white/80 p-3">
+                    <div className="mt-5 rounded-lg border border-slate-200/90 bg-white/90 p-4">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">AI reasoning</p>
-                      <p className="mt-1 text-sm leading-relaxed text-slate-800 font-body">{r.reasoning}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-800 font-body">{r.reasoning}</p>
                     </div>
                     {r.compliance_note ? (
-                      <div className="mt-3 rounded-lg border border-cyan-100 bg-cyan-50/50 p-3">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-800">Compliance note</p>
-                        <p className="mt-1 text-sm leading-relaxed text-slate-800 font-body">{r.compliance_note}</p>
+                      <div className="mt-4 rounded-lg border border-slate-200 bg-white/80 p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Compliance note</p>
+                        <p className="mt-2 text-sm leading-relaxed text-slate-800 font-body">{r.compliance_note}</p>
                       </div>
                     ) : null}
-                    {r.evasion_indicators && r.evasion_indicators.length > 0 ? (
-                      <ul className="mt-3 list-inside list-disc text-xs text-slate-700 font-body">
-                        {r.evasion_indicators.map((ev) => (
-                          <li key={ev}>{ev}</li>
-                        ))}
-                      </ul>
+                    {r.evasion_indicators.length > 0 ? (
+                      <div className="mt-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Evasion indicators
+                        </p>
+                        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-700 font-body">
+                          {r.evasion_indicators.map((ev) => (
+                            <li key={ev}>{ev}</li>
+                          ))}
+                        </ul>
+                      </div>
                     ) : null}
                   </div>
                 );
