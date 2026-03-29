@@ -4,10 +4,10 @@
  * Premium: enlarged spacing, stronger headings, premium cards, glow effects
  * Typography: Inter display + JetBrains Mono data
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { useInView } from "@/hooks/useCountUp";
+import { useInView, useCountUp } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
 import {
@@ -46,6 +46,94 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
 };
 
+const LANDING_SECTION_ORDER = [
+  "landing-hero",
+  "landing-why-it-matters",
+  "landing-how-it-works",
+  "landing-core-capabilities",
+  "landing-see-it-in-action",
+  "landing-comparison",
+  "landing-data-sources",
+  "landing-performance",
+  "landing-privacy",
+  "landing-footer",
+] as const;
+
+const heroDifferentiatorGlow: CSSProperties = {
+  textShadow:
+    "0 0 28px rgba(34, 211, 238, 0.45), 0 0 56px rgba(34, 211, 238, 0.2), 0 0 96px rgba(6, 182, 212, 0.12)",
+};
+
+function SectionScrollArrow({
+  sectionId,
+  variant = "inline",
+}: {
+  sectionId: (typeof LANDING_SECTION_ORDER)[number];
+  variant?: "inline" | "floating";
+}) {
+  const idx = LANDING_SECTION_ORDER.indexOf(sectionId);
+  const nextId = idx >= 0 ? LANDING_SECTION_ORDER[idx + 1] : undefined;
+
+  const scrollNext = () => {
+    if (nextId) {
+      document.getElementById(nextId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const label = nextId ? "Scroll to next section" : "Back to top";
+
+  const button = (
+    <button
+      type="button"
+      onClick={scrollNext}
+      aria-label={label}
+      className="rounded-full p-2 text-slate-500 transition-colors hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60"
+    >
+      <motion.div
+        animate={{ y: [0, 4, 0], opacity: [0.55, 1, 0.55] }}
+        transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+      >
+        <ChevronDown className="h-5 w-5" strokeWidth={2} />
+      </motion.div>
+    </button>
+  );
+
+  if (variant === "floating") {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.25, duration: 0.5 }}
+        className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 md:bottom-8"
+      >
+        {button}
+      </motion.div>
+    );
+  }
+
+  return <div className="flex justify-center pb-6 pt-2 md:pb-8 md:pt-4">{button}</div>;
+}
+
+function WhyItMattersStatCount({ value }: { value: string }) {
+  const isPercent = value.endsWith("%");
+  const numeric = isPercent
+    ? parseInt(value.slice(0, -1), 10)
+    : parseInt(value.replace(/,/g, ""), 10);
+  const end = Number.isFinite(numeric) ? numeric : 0;
+  const useComma = value.includes(",") && !isPercent;
+  const { count, ref } = useCountUp(end, 2000);
+  const display = useComma ? count.toLocaleString("en-US") : String(count);
+
+  return (
+    <div ref={ref} className="mb-3 font-data text-4xl font-extrabold tabular-nums text-white md:text-5xl">
+      {display}
+      {isPercent ? "%" : ""}
+    </div>
+  );
+}
+
 const HERO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/hero-globe-Hs5QvnPaBrKy3WbVNY2vHm.webp";
 const PATTERN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/data-pattern-M5u9jMgYtxdMLTqSeDkH66.webp";
 
@@ -68,10 +156,6 @@ export default function Landing() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const scrollToNextSection = () => {
-    document.getElementById("landing-why-it-matters")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -105,42 +189,34 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="mb-4 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
+            className="mb-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
           >
             AI-Powered Sanctions Screening
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.75, delay: 0.22 }}
-            className="mx-auto mb-3 max-w-3xl font-body text-xl leading-snug text-slate-200 sm:text-2xl md:text-3xl md:leading-tight"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.85, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            style={heroDifferentiatorGlow}
+            className="mx-auto mb-5 max-w-4xl font-display text-2xl font-bold leading-snug tracking-tight text-cyan-300 sm:text-3xl md:text-4xl md:leading-tight"
           >
-            Find What Others Miss — <span className="font-semibold text-cyan-400/95">in 60 Seconds</span>
+            Find Risks Hidden in Name Variations Across Languages
           </motion.p>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.75, delay: 0.32 }}
-            className="mx-auto mb-3 max-w-2xl text-base font-body leading-relaxed text-slate-400 md:text-lg"
+            transition={{ duration: 0.75, delay: 1.2 }}
+            className="mx-auto mb-8 max-w-3xl font-body text-lg leading-snug text-white sm:text-xl md:text-2xl md:leading-snug"
           >
-            Find risks hidden in name variations across languages
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.75, delay: 0.42 }}
-            className="mx-auto mb-8 max-w-2xl text-base font-body leading-relaxed text-slate-400 md:text-lg"
-          >
-            Check vendors. Analyze risk. Generate compliance-ready reports.
+            Find What Others Miss — <span className="font-semibold text-cyan-400">in 60 Seconds</span>
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            transition={{ duration: 0.6, delay: 1.35 }}
             className="mb-8 flex flex-col items-center gap-2"
           >
             <div className="ai-glow-dark inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full px-6 py-3 sm:px-8 sm:py-4">
@@ -157,7 +233,7 @@ export default function Landing() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.65 }}
+            transition={{ duration: 0.6, delay: 1.5 }}
             className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
           >
             <Link href="/app/screening" className="btn-premium btn-premium-primary group flex items-center gap-2.5 text-base">
@@ -174,21 +250,7 @@ export default function Landing() {
           </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.1 }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-8"
-        >
-          <button
-            type="button"
-            onClick={scrollToNextSection}
-            aria-label="Scroll to next section"
-            className="rounded-full p-2 text-slate-500 transition-colors hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60"
-          >
-            <ChevronDown className="h-7 w-7 animate-bounce" />
-          </button>
-        </motion.div>
+        <SectionScrollArrow sectionId="landing-hero" variant="floating" />
       </section>
 
       {showBackTop && (
@@ -211,7 +273,10 @@ export default function Landing() {
       <DataSourcesSection />
       <PerformanceBenchmarksSection />
       <PrivacySection />
-      <Footer variant="dark" />
+      <section id="landing-footer" className="relative" aria-label="Site footer">
+        <Footer variant="dark" />
+        <SectionScrollArrow sectionId="landing-footer" />
+      </section>
     </div>
   );
 }
@@ -243,13 +308,14 @@ function WhyItMatters() {
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10 transition-colors group-hover:bg-cyan-500/20">
                   <Icon className="w-7 h-7 text-cyan-400" />
                 </div>
-                <div className="text-4xl md:text-5xl font-extrabold font-data text-white mb-3">{stat.value}</div>
+                <WhyItMattersStatCount value={stat.value} />
                 <div className="text-sm font-bold text-slate-200 mb-1.5 tracking-wide uppercase">{stat.label}</div>
                 <div className="text-xs text-slate-500 font-body">{stat.sublabel}</div>
               </motion.div>
             );
           })}
         </div>
+        <SectionScrollArrow sectionId="landing-why-it-matters" />
       </div>
     </section>
   );
@@ -258,7 +324,11 @@ function WhyItMatters() {
 function HowItWorks() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative bg-[#060a16] py-16 md:py-24">
+    <section
+      id="landing-how-it-works"
+      ref={ref as React.Ref<HTMLElement>}
+      className="relative bg-[#060a16] py-16 md:py-24"
+    >
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Three steps from vendor name to compliance decision">How It Works</PremiumHeading>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -293,6 +363,7 @@ function HowItWorks() {
             );
           })}
         </div>
+        <SectionScrollArrow sectionId="landing-how-it-works" />
       </div>
     </section>
   );
@@ -301,7 +372,7 @@ function HowItWorks() {
 function CoreCapabilities() {
   const { isInView, ref } = useInView(0.15);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative py-16 md:py-24">
+    <section id="landing-core-capabilities" ref={ref as React.Ref<HTMLElement>} className="relative py-16 md:py-24">
       <ScanningLine />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">Core Capabilities</PremiumHeading>
@@ -328,6 +399,7 @@ function CoreCapabilities() {
             );
           })}
         </div>
+        <SectionScrollArrow sectionId="landing-core-capabilities" />
       </div>
     </section>
   );
@@ -336,7 +408,7 @@ function CoreCapabilities() {
 function SeeItInAction() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative bg-[#0a0e1a] py-16 md:py-24">
+    <section id="landing-see-it-in-action" ref={ref as React.Ref<HTMLElement>} className="relative bg-[#0a0e1a] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">See It In Action</PremiumHeading>
 
@@ -363,6 +435,7 @@ function SeeItInAction() {
             <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">Demo Video Coming Soon</p>
           </div>
         </motion.div>
+        <SectionScrollArrow sectionId="landing-see-it-in-action" />
       </div>
     </section>
   );
@@ -371,7 +444,7 @@ function SeeItInAction() {
 function ComparisonSection() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="bg-[#060a16] py-16 md:py-24">
+    <section id="landing-comparison" ref={ref as React.Ref<HTMLElement>} className="bg-[#060a16] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">How It Compares</PremiumHeading>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
@@ -408,6 +481,7 @@ function ComparisonSection() {
             </table>
           </div>
         </motion.div>
+        <SectionScrollArrow sectionId="landing-comparison" />
       </div>
     </section>
   );
@@ -425,6 +499,7 @@ function PerformanceBenchmarksSection() {
   const { isInView, ref } = useInView(0.2);
   return (
     <section
+      id="landing-performance"
       ref={ref as React.Ref<HTMLElement>}
       className="relative border-t border-slate-800/50 bg-[#0a0e1a] py-16 md:py-24"
       aria-labelledby="performance-benchmarks-heading"
@@ -509,6 +584,7 @@ function PerformanceBenchmarksSection() {
         <p className="text-center text-xs text-slate-500 font-body leading-relaxed max-w-2xl mx-auto px-2">
           Results based on controlled experimental datasets. Real-world performance may vary.
         </p>
+        <SectionScrollArrow sectionId="landing-performance" />
       </div>
     </section>
   );
@@ -517,7 +593,7 @@ function PerformanceBenchmarksSection() {
 function DataSourcesSection() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="py-16 md:py-24">
+    <section id="landing-data-sources" ref={ref as React.Ref<HTMLElement>} className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">Trusted Data Sources</PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -547,6 +623,7 @@ function DataSourcesSection() {
             </motion.a>
           ))}
         </div>
+        <SectionScrollArrow sectionId="landing-data-sources" />
       </div>
     </section>
   );
@@ -554,7 +631,7 @@ function DataSourcesSection() {
 
 function PrivacySection() {
   return (
-    <section className="bg-[#060a16] py-14 md:py-20">
+    <section id="landing-privacy" className="bg-[#060a16] py-14 md:py-20">
       <div className="mx-auto max-w-4xl px-4">
         <PremiumHeading dark subtitle="Transparency and responsible use">Data Privacy & Disclaimer</PremiumHeading>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -587,6 +664,7 @@ function PrivacySection() {
             </div>
           </div>
         </div>
+        <SectionScrollArrow sectionId="landing-privacy" />
       </div>
     </section>
   );
