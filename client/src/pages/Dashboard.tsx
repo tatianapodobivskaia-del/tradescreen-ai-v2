@@ -5,7 +5,7 @@
 import { motion } from "framer-motion";
 import { CountUpNumber, RiskBadge, StatusDot, ScanningLine } from "@/components/shared";
 import { dashboardStats, screeningActivityData, listDistribution, recentScreenings, systemStatus } from "@/lib/mockData";
-import { TrendingUp, TrendingDown, Clock, Shield, Users, AlertTriangle, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, Shield, AlertTriangle, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const fadeIn = {
@@ -15,14 +15,28 @@ const fadeIn = {
 
 const statIcons = [Activity, Shield, AlertTriangle, Clock];
 
+/** Subtitles aligned to dashboardStats order from mockData */
+const STAT_CARD_SUBTITLES = [
+  "Vendors processed through sanctions screening",
+  "Known sanctioned entities correctly identified in tests",
+  "Entities with score > 70 matched against sanctions lists",
+  "Average time to complete an automated screening run",
+];
+
+const STAT_CARD_TITLES = ["Total Screened", "Detection Rate", "High Risk", "Avg. Processing Time"] as const;
+
 export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold font-display text-slate-900 tracking-tight">Intelligence Dashboard</h1>
-          <p className="text-sm text-slate-500 font-body mt-2">Real-time sanctions screening overview</p>
+          <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">
+            Intelligence Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 font-body">
+            Screening activity overview — aggregated metrics from all completed screenings
+          </p>
         </div>
         <div className="text-xs font-data text-slate-400 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">Last updated: {new Date().toLocaleString()}</div>
       </div>
@@ -52,10 +66,15 @@ export default function Dashboard() {
                     {stat.change}
                   </div>
                 </div>
-                <div className="text-3xl font-extrabold font-data text-slate-900">
+                <div className="font-data text-3xl font-extrabold text-slate-900">
                   {typeof stat.value === "number" ? <CountUpNumber value={stat.value} /> : stat.value}
                 </div>
-                <div className="text-xs text-slate-500 font-body mt-2 font-medium">{stat.label}</div>
+                <div className="mt-2 font-display text-xs font-bold uppercase tracking-wide text-slate-800">
+                  {STAT_CARD_TITLES[i]}
+                </div>
+                <p className="mt-1.5 text-[11px] leading-snug text-slate-500 font-body">
+                  {STAT_CARD_SUBTITLES[i]}
+                </p>
                 {/* Mini sparkline */}
                 <div className="mt-4 h-10">
                   <ResponsiveContainer width="100%" height="100%">

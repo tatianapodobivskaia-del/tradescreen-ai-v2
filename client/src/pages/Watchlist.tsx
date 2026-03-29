@@ -2,19 +2,22 @@
  * WATCHLIST EXPLORER — Search 45,296 entities
  * Filters by list, entity type, country. Entity detail cards on click.
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RiskBadge } from "@/components/shared";
 import { watchlistEntities, dataSources } from "@/lib/mockData";
-import { Search, Filter, Globe, User, Building2, Ship, X, ChevronDown, ExternalLink } from "lucide-react";
+import { Search, Globe, User, Building2, Ship, X } from "lucide-react";
 
 const entityTypeIcons: Record<string, React.ElementType> = { Individual: User, Organization: Building2, Vessel: Ship };
+
+const PAGE_SIZE = 25;
 
 export default function Watchlist() {
   const [search, setSearch] = useState("");
   const [listFilter, setListFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedEntity, setSelectedEntity] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     return watchlistEntities.filter((e) => {
@@ -25,13 +28,29 @@ export default function Watchlist() {
     });
   }, [search, listFilter, typeFilter]);
 
-  const selected = watchlistEntities.find(e => e.id === selectedEntity);
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE));
+  useEffect(() => {
+    setPage(1);
+  }, [search, listFilter, typeFilter]);
+  const pageSafe = Math.min(page, totalPages);
+  const startIdx = (pageSafe - 1) * PAGE_SIZE;
+  const endIdx = Math.min(startIdx + PAGE_SIZE, totalFiltered);
+  const paginatedRows = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+  const selected = watchlistEntities.find((e) => e.id === selectedEntity);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Watchlist Explorer</h1>
-        <p className="text-sm text-slate-500 font-body mt-1">Search and explore 45,296 sanctioned entities across all monitored lists</p>
+        <p className="mt-1 text-sm text-slate-500 font-body">
+          Search and explore 45,296 sanctioned entities across all monitored lists
+        </p>
+        <p className="mt-3 text-xs leading-relaxed text-slate-600 font-body">
+          <span className="font-semibold text-slate-700">Last Updated:</span> Sanctions data last refreshed: March 29,
+          2026 — Auto-updates every 6 hours from OFAC, EU, UN, UK OFSI
+        </p>
       </div>
 
       {/* List proportion bars */}
@@ -95,8 +114,35 @@ export default function Watchlist() {
             <option value="Vessel">Vessel</option>
           </select>
         </div>
-        <div className="mt-3 text-xs text-slate-400 font-data">
-          Showing {filtered.length} of {watchlistEntities.length} entities (demo subset)
+        <div className="mt-3 flex flex-col gap-2 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-data">
+            {totalFiltered === 0
+              ? "No matching entities"
+              : `Showing ${startIdx + 1}–${endIdx} of ${totalFiltered} matching entries (${watchlistEntities.length.toLocaleString()} total indexed)`}
+          </span>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={pageSafe <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-md border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <span className="font-data text-slate-500">
+                Page {pageSafe} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={pageSafe >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-md border border-slate-200 bg-white px-3 py-1 font-medium text-slate-700 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,7 +162,7 @@ export default function Watchlist() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((entity, i) => {
+                {paginatedRows.map((entity) => {
                   const TypeIcon = entityTypeIcons[entity.type] || Globe;
                   return (
                     <tr

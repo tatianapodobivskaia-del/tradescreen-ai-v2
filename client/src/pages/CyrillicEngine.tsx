@@ -15,9 +15,13 @@ export default function CyrillicEngine() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Cyrillic Transliteration Engine</h1>
-        <p className="text-sm text-slate-500 font-body mt-1">Generate all standard Latin variants of Russian names for comprehensive sanctions matching</p>
+        <p className="mt-1 text-sm text-slate-500 font-body">
+          Generate all standard Latin variants of Russian names for comprehensive sanctions matching
+        </p>
       </div>
 
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="min-w-0 space-y-8 lg:col-span-8">
       {/* Tabs */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit mb-6">
@@ -156,11 +160,25 @@ export default function CyrillicEngine() {
             </tbody>
           </table>
         </div>
-        <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
           <p className="text-xs text-amber-700 font-body">
             <span className="font-semibold">Key insight:</span> The same Russian name can appear in 4+ different Latin spellings across international documents. Traditional screening systems that rely on exact matching will miss these variants.
           </p>
         </div>
+      </div>
+        </div>
+
+        <aside className="lg:col-span-4">
+          <div className="premium-card sticky top-6 rounded-xl p-6 lg:top-24">
+            <h2 className="text-sm font-bold font-display text-slate-900">Why Cyrillic Transliteration Matters</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600 font-body">
+              A single Russian company name like &apos;Рособоронэкспорт&apos; can be written as Rosoboronexport,
+              Rosoboroneksport, or other Latin spellings depending on the transliteration standard. Traditional screening
+              tools check only one spelling — missing matches on other lists. This engine generates ALL variants across
+              4 standards (ISO 9, ICAO, BGN/PCGN, Informal).
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );
