@@ -4,6 +4,7 @@
  * Premium: enlarged spacing, stronger headings, premium cards, glow effects
  * Typography: Inter display + JetBrains Mono data
  */
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useCountUp";
@@ -16,7 +17,7 @@ import {
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database, Check, X,
-  ArrowRight, ChevronDown, Lock, ExternalLink, GraduationCap, Play,
+  ArrowRight, ChevronDown, ChevronUp, Lock, ExternalLink, GraduationCap, Play,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -35,64 +36,121 @@ const PATTERN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iR
 /* ===== SECTION HEADING — premium version ===== */
 function PremiumHeading({ children, subtitle, dark }: { children: React.ReactNode; subtitle?: string; dark?: boolean }) {
   return (
-    <div className="text-center mb-16 md:mb-20">
+    <div className="mb-9 text-center md:mb-12">
       <h2 className={`section-heading ${dark ? "text-white" : "text-slate-900"}`}>{children}</h2>
-      {subtitle && <p className={`mt-4 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}>{subtitle}</p>}
+      {subtitle && <p className={`mt-3 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}>{subtitle}</p>}
     </div>
   );
 }
 
 export default function Landing() {
+  const [showBackTop, setShowBackTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowBackTop(window.scrollY > window.innerHeight * 0.45);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrollToNextSection = () => {
+    document.getElementById("landing-why-it-matters")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   return (
-    <div className="bg-[#0a0e1a] text-white overflow-hidden">
+    <div className="overflow-hidden bg-[#0a0e1a] text-white">
+      <header className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-end gap-2 border-b border-white/10 bg-[#0a0e1a]/90 px-4 py-3 backdrop-blur-md sm:px-6">
+        <Link
+          href="/app/architecture"
+          className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 font-display text-sm font-bold text-cyan-300 transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/15"
+        >
+          Open App
+          <ArrowRight className="h-4 w-4" strokeWidth={2} />
+        </Link>
+      </header>
+
       {/* ===== HERO ===== */}
-      <section className="relative min-h-screen flex items-center justify-center">
+      <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-14">
         <HeroNetworkAnimation />
         <div className="absolute inset-0">
-          <img src={HERO_IMG} alt="" className="w-full h-full object-cover opacity-60" />
+          <img src={HERO_IMG} alt="" className="h-full w-full object-cover opacity-60" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e1a]/40 via-[#0a0e1a]/20 to-[#0a0e1a]" />
         </div>
         <ScanningLine />
 
-        <div className="relative z-10 text-center max-w-5xl mx-auto px-4 py-36">
+        <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:py-24">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <AcademicBadge className="border-cyan-500/30 text-cyan-400 mb-10" />
+            <AcademicBadge className="mb-6 border-cyan-500/30 text-cyan-400" />
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl font-extrabold font-display tracking-tight leading-[1.05] mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-4 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
           >
-            <span className="text-cyan-400">AI-Powered</span><br />
-            Sanctions Screening
+            AI-Powered Sanctions Screening
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-lg md:text-xl text-slate-400 font-body max-w-2xl mx-auto mb-10 leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.75, delay: 0.22 }}
+            className="mx-auto mb-3 max-w-3xl font-body text-xl leading-snug text-slate-200 sm:text-2xl md:text-3xl md:leading-tight"
           >
-            Multi-list compliance intelligence with Cyrillic transliteration and AI deep analysis
+            Find What Others Miss — <span className="font-semibold text-cyan-400/95">in 60 Seconds</span>
           </motion.p>
 
-          {/* Entity counter with AI glow */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.7 }}
-            className="ai-glow-dark inline-flex items-center gap-4 px-8 py-4 rounded-full mb-14"
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.75, delay: 0.32 }}
+            className="mx-auto mb-3 max-w-2xl text-base font-body leading-relaxed text-slate-400 md:text-lg"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-sm text-slate-400 font-body">Monitoring</span>
-            <CountUpNumber value={heroStats.totalEntities} className="text-3xl font-bold text-cyan-400" />
-            <span className="text-sm text-slate-400 font-body">sanctioned entities</span>
+            Find risks hidden in name variations across languages
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.75, delay: 0.42 }}
+            className="mx-auto mb-8 max-w-2xl text-base font-body leading-relaxed text-slate-400 md:text-lg"
+          >
+            Check vendors. Analyze risk. Generate compliance-ready reports.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mb-8 flex flex-col items-center gap-2"
+          >
+            <div className="ai-glow-dark inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full px-6 py-3 sm:px-8 sm:py-4">
+              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-cyan-400" />
+              <span className="text-sm text-slate-400 font-body">Monitoring</span>
+              <CountUpNumber value={heroStats.totalEntities} className="text-3xl font-bold text-cyan-400" />
+              <span className="text-sm text-slate-400 font-body">sanctioned entities</span>
+              <span className="w-full shrink-0 text-center font-body text-[11px] leading-tight text-slate-500 sm:ml-1 sm:w-auto sm:text-left">
+                Auto-updated every 6 hours
+              </span>
+            </div>
           </motion.div>
 
-          {/* Premium CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.9 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-5"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.65 }}
+            className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
           >
             <Link href="/app/screening" className="btn-premium btn-premium-primary group flex items-center gap-2.5 text-base">
               Start Screening
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link href="/app/live-demo" className="btn-premium btn-premium-primary flex items-center gap-2.5 text-base">
+              <Play className="h-5 w-5 shrink-0 fill-current" strokeWidth={2} />
+              Try Live Demo
             </Link>
             <Link href="/app/architecture" className="btn-premium btn-premium-outline flex items-center gap-2.5 text-base">
               Explore Prototype
@@ -101,12 +159,32 @@ export default function Landing() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 md:bottom-8"
         >
-          <ChevronDown className="w-7 h-7 text-slate-500 animate-bounce" />
+          <button
+            type="button"
+            onClick={scrollToNextSection}
+            aria-label="Scroll to next section"
+            className="rounded-full p-2 text-slate-500 transition-colors hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60"
+          >
+            <ChevronDown className="h-7 w-7 animate-bounce" />
+          </button>
         </motion.div>
       </section>
+
+      {showBackTop && (
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label="Back to top"
+          className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-cyan-500/40 bg-[#0a0e1a]/95 text-cyan-300 shadow-lg shadow-black/40 backdrop-blur-sm transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/10"
+        >
+          <ChevronUp className="h-5 w-5" strokeWidth={2} />
+        </button>
+      )}
 
       {/* ===== WHY IT MATTERS ===== */}
       <WhyItMatters />
@@ -125,11 +203,16 @@ export default function Landing() {
 function WhyItMatters() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative py-32 md:py-44" style={{ backgroundImage: `url(${PATTERN_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+    <section
+      id="landing-why-it-matters"
+      ref={ref as React.Ref<HTMLElement>}
+      className="relative py-16 md:py-24"
+      style={{ backgroundImage: `url(${PATTERN_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}
+    >
       <div className="absolute inset-0 bg-[#0a0e1a]/90" />
-      <div className="relative z-10 max-w-6xl mx-auto px-4">
+      <div className="relative z-10 mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="The challenge of sanctions compliance grows more complex every year">Why It Matters</PremiumHeading>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
           {whyItMattersStats.map((stat, i) => {
             const Icon = iconMap[stat.icon];
             return (
@@ -139,9 +222,9 @@ function WhyItMatters() {
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
                 variants={fadeUp}
-                className="premium-card-dark rounded-xl p-8 text-center group"
+                className="premium-card-dark rounded-xl p-6 text-center group"
               >
-                <div className="w-14 h-14 rounded-xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-cyan-500/20 transition-colors">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10 transition-colors group-hover:bg-cyan-500/20">
                   <Icon className="w-7 h-7 text-cyan-400" />
                 </div>
                 <div className="text-4xl md:text-5xl font-extrabold font-data text-white mb-3">{stat.value}</div>
@@ -159,10 +242,10 @@ function WhyItMatters() {
 function HowItWorks() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative py-32 md:py-44 bg-[#060a16]">
-      <div className="max-w-6xl mx-auto px-4">
+    <section ref={ref as React.Ref<HTMLElement>} className="relative bg-[#060a16] py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Three steps from vendor name to compliance decision">How It Works</PremiumHeading>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {howItWorksSteps.map((step, i) => {
             const Icon = iconMap[step.icon];
             return (
@@ -174,12 +257,15 @@ function HowItWorks() {
                 variants={fadeUp}
                 className="relative"
               >
-                <div className="premium-card-dark rounded-xl p-10 text-center h-full group">
-                  <div className="text-7xl font-extrabold font-data text-cyan-500/8 absolute top-4 right-6">{step.step}</div>
-                  <div className="w-18 h-18 rounded-2xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-8 group-hover:bg-cyan-500/20 transition-colors" style={{ width: "4.5rem", height: "4.5rem" }}>
-                    <Icon className="w-9 h-9 text-cyan-400" />
+                <div className="premium-card-dark h-full rounded-xl p-7 text-center group">
+                  <div className="absolute right-6 top-4 font-data text-7xl font-extrabold text-cyan-500/8">{step.step}</div>
+                  <div
+                    className="mx-auto mb-5 flex items-center justify-center rounded-2xl bg-cyan-500/10 transition-colors group-hover:bg-cyan-500/20"
+                    style={{ width: "4.5rem", height: "4.5rem" }}
+                  >
+                    <Icon className="h-9 w-9 text-cyan-400" />
                   </div>
-                  <h3 className="text-2xl font-extrabold font-display text-white mb-4">{step.title}</h3>
+                  <h3 className="mb-3 font-display text-2xl font-extrabold text-white">{step.title}</h3>
                   <p className="text-sm text-slate-400 font-body leading-relaxed">{step.description}</p>
                 </div>
                 {i < 2 && (
@@ -199,11 +285,11 @@ function HowItWorks() {
 function CoreCapabilities() {
   const { isInView, ref } = useInView(0.15);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative py-32 md:py-44">
+    <section ref={ref as React.Ref<HTMLElement>} className="relative py-16 md:py-24">
       <ScanningLine />
-      <div className="relative z-10 max-w-6xl mx-auto px-4">
+      <div className="relative z-10 mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">Core Capabilities</PremiumHeading>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {coreCapabilities.map((cap, i) => {
             const Icon = iconMap[cap.icon];
             return (
@@ -229,17 +315,11 @@ function CoreCapabilities() {
   );
 }
 
-const seeItInActionSteps = [
-  { title: "Upload Document", Icon: Upload },
-  { title: "AI Screens 4 Lists", Icon: Search },
-  { title: "Get Compliance Report", Icon: FileText },
-] as const;
-
 function SeeItInAction() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="relative py-32 md:py-44 bg-[#0a0e1a]">
-      <div className="max-w-6xl mx-auto px-4">
+    <section ref={ref as React.Ref<HTMLElement>} className="relative bg-[#0a0e1a] py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">See It In Action</PremiumHeading>
 
         <motion.div
@@ -249,7 +329,7 @@ function SeeItInAction() {
           variants={fadeUp}
           role="img"
           aria-label="Demo video placeholder. Demo video coming soon."
-          className="relative mx-auto flex max-w-4xl flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/90 to-[#050810] px-6 shadow-2xl shadow-black/40 aspect-video"
+          className="relative mx-auto flex aspect-video max-w-4xl flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/90 to-[#050810] px-6 shadow-2xl shadow-black/40"
         >
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -262,32 +342,9 @@ function SeeItInAction() {
             <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-cyan-500/35 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
               <Play className="h-14 w-14 translate-x-1 text-cyan-400" strokeWidth={1.25} fill="currentColor" aria-hidden />
             </div>
-            <p className="text-center text-sm font-semibold tracking-wide text-slate-400 font-display">
-              Demo Video Coming Soon
-            </p>
+            <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">Demo Video Coming Soon</p>
           </div>
         </motion.div>
-
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {seeItInActionSteps.map((step, i) => {
-            const StepIcon = step.Icon;
-            return (
-              <motion.div
-                key={step.title}
-                custom={i + 1}
-                initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                variants={fadeUp}
-                className="premium-card-dark rounded-xl border border-cyan-500/10 p-8 text-center"
-              >
-                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10">
-                  <StepIcon className="h-7 w-7 text-cyan-400" strokeWidth={2} aria-hidden />
-                </div>
-                <h3 className="text-base font-extrabold font-display text-white">{step.title}</h3>
-              </motion.div>
-            );
-          })}
-        </div>
       </div>
     </section>
   );
@@ -296,8 +353,8 @@ function SeeItInAction() {
 function ComparisonSection() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="py-32 md:py-44 bg-[#060a16]">
-      <div className="max-w-6xl mx-auto px-4">
+    <section ref={ref as React.Ref<HTMLElement>} className="bg-[#060a16] py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">How It Compares</PremiumHeading>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
           <div className="premium-card-dark rounded-xl overflow-hidden">
@@ -351,11 +408,11 @@ function PerformanceBenchmarksSection() {
   return (
     <section
       ref={ref as React.Ref<HTMLElement>}
-      className="relative py-32 md:py-44 border-t border-slate-800/50 bg-[#0a0e1a]"
+      className="relative border-t border-slate-800/50 bg-[#0a0e1a] py-16 md:py-24"
       aria-labelledby="performance-benchmarks-heading"
     >
       <div className="max-w-6xl mx-auto px-4">
-        <p className="text-center text-[11px] font-bold tracking-[0.2em] uppercase text-cyan-500/65 mb-4 font-data">
+        <p className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-500/65">
           Performance Benchmarks
         </p>
         <PremiumHeading
@@ -365,15 +422,15 @@ function PerformanceBenchmarksSection() {
           <span id="performance-benchmarks-heading">Measured Performance</span>
         </PremiumHeading>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-14 md:mb-16">
+        <div className="mb-8 grid grid-cols-1 gap-5 md:mb-10 md:grid-cols-3">
           <motion.div
             custom={0}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUp}
-            className="premium-card-dark rounded-xl p-10 text-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:border-cyan-500/35 transition-colors"
+            className="premium-card-dark rounded-xl border border-cyan-500/20 p-7 text-center shadow-lg shadow-cyan-500/5 transition-colors hover:border-cyan-500/35"
           >
-            <div className="text-5xl md:text-6xl font-extrabold font-data text-cyan-400 mb-3 tabular-nums">97%</div>
+            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-400 md:text-6xl">97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
           </motion.div>
           <motion.div
@@ -381,9 +438,9 @@ function PerformanceBenchmarksSection() {
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUp}
-            className="premium-card-dark rounded-xl p-10 text-center border border-emerald-500/20 shadow-lg shadow-emerald-500/5 hover:border-emerald-500/35 transition-colors"
+            className="premium-card-dark rounded-xl border border-emerald-500/20 p-7 text-center shadow-lg shadow-emerald-500/5 transition-colors hover:border-emerald-500/35"
           >
-            <div className="text-5xl md:text-6xl font-extrabold font-data text-emerald-400 mb-3 tabular-nums">~8%</div>
+            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-emerald-400 md:text-6xl">~8%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
           </motion.div>
           <motion.div
@@ -391,9 +448,9 @@ function PerformanceBenchmarksSection() {
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUp}
-            className="premium-card-dark rounded-xl p-10 text-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5 hover:border-cyan-500/35 transition-colors"
+            className="premium-card-dark rounded-xl border border-cyan-500/20 p-7 text-center shadow-lg shadow-cyan-500/5 transition-colors hover:border-cyan-500/35"
           >
-            <div className="text-5xl md:text-6xl font-extrabold font-data text-cyan-400 mb-3 tabular-nums">&lt;2 min</div>
+            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-400 md:text-6xl">&lt;2 min</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
@@ -442,10 +499,10 @@ function PerformanceBenchmarksSection() {
 function DataSourcesSection() {
   const { isInView, ref } = useInView(0.2);
   return (
-    <section ref={ref as React.Ref<HTMLElement>} className="py-32 md:py-44">
-      <div className="max-w-6xl mx-auto px-4">
+    <section ref={ref as React.Ref<HTMLElement>} className="py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">Trusted Data Sources</PremiumHeading>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {dataSources.map((source, i) => (
             <motion.a
               key={i}
@@ -456,9 +513,9 @@ function DataSourcesSection() {
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
               variants={fadeUp}
-              className="premium-card-dark rounded-xl p-8 text-center group cursor-pointer block"
+              className="premium-card-dark group block cursor-pointer rounded-xl p-6 text-center"
             >
-              <div className="text-5xl mb-5">{source.flag}</div>
+              <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-400 transition-colors">{source.name}</h3>
               <p className="text-xs text-slate-500 font-body mb-5 leading-relaxed">{source.fullName}</p>
               <div className="text-3xl font-extrabold font-data text-cyan-400">
@@ -479,13 +536,13 @@ function DataSourcesSection() {
 
 function PrivacySection() {
   return (
-    <section className="py-28 md:py-36 bg-[#060a16]">
-      <div className="max-w-4xl mx-auto px-4">
+    <section className="bg-[#060a16] py-14 md:py-20">
+      <div className="mx-auto max-w-4xl px-4">
         <PremiumHeading dark subtitle="Transparency and responsible use">Data Privacy & Disclaimer</PremiumHeading>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Data Privacy */}
-          <div className="premium-card-dark rounded-xl p-10">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="premium-card-dark rounded-xl p-7">
+            <div className="mb-4 flex items-center gap-3">
               <div className="w-11 h-11 rounded-lg bg-cyan-500/10 flex items-center justify-center">
                 <Lock className="w-5 h-5 text-cyan-400" />
               </div>
@@ -498,10 +555,10 @@ function PrivacySection() {
             </div>
           </div>
           {/* Terms of Use */}
-          <div className="premium-card-dark rounded-xl p-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-11 h-11 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-cyan-400" />
+          <div className="premium-card-dark rounded-xl p-7">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-500/10">
+                <GraduationCap className="h-5 w-5 text-cyan-400" />
               </div>
               <h3 className="text-lg font-extrabold font-display text-white">Terms of Use</h3>
             </div>
