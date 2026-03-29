@@ -76,7 +76,7 @@ export async function runVisionScan(imageBase64: string): Promise<{
 // Check if API is reachable (for offline mode detection)
 export async function checkAPIHealth(): Promise<boolean> {
   try {
-    const response = await fetch(AZURE_API, { method: "HEAD", mode: "cors" });
+    const response = await fetch(`${AZURE_API}/health`, { method: "GET", mode: "cors" });
     return response.ok;
   } catch {
     return false;
