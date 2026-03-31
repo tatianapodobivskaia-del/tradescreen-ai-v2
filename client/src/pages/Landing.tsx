@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
+import TopNavbar from "@/components/TopNavbar";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
 import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
@@ -210,6 +211,7 @@ export default function Landing() {
 
   return (
     <div className="overflow-hidden bg-[#0a0e1a] text-white">
+      <TopNavbar />
       {/* ===== HERO ===== */}
       <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-20">
         <HeroNetworkAnimation />
