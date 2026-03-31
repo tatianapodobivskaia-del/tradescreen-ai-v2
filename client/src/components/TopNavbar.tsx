@@ -1,13 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
 type DropdownKey = "solutions" | "research";
 
 export default function TopNavbar({ className }: { className?: string }) {
-  const [location] = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<DropdownKey | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -36,12 +35,13 @@ export default function TopNavbar({ className }: { className?: string }) {
     setMobileNavOpen(false);
   };
 
-  const handleHowItWorks = (event?: React.MouseEvent) => {
-    if (location === "/") {
+  const handleHowItWorks = (event?: React.MouseEvent<HTMLAnchorElement>) => {
+    const pathname = window.location.pathname;
+    if (pathname === "/") {
       event?.preventDefault();
-      document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      closeMenus();
+      document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
     }
+    closeMenus();
   };
 
   return (
@@ -76,17 +76,13 @@ export default function TopNavbar({ className }: { className?: string }) {
                   <Link href="/app/live-demo" onClick={closeMenus} className="block text-lg font-semibold text-white hover:text-amber-400">Live Demo</Link>
                 </div>
                 <div className="h-px bg-slate-800" />
-                {location === "/" ? (
-                  <Link
-                    href="/#how-it-works"
-                    onClick={(e) => handleHowItWorks(e)}
-                    className="block text-lg font-semibold text-white hover:text-amber-400"
-                  >
-                    How It Works
-                  </Link>
-                ) : (
-                  <Link href="/app/architecture" onClick={closeMenus} className="block text-lg font-semibold text-white hover:text-amber-400">How It Works</Link>
-                )}
+                <Link
+                  href="/#how-it-works"
+                  onClick={(e) => handleHowItWorks(e)}
+                  className="block text-lg font-semibold text-white hover:text-amber-400"
+                >
+                  How It Works
+                </Link>
                 <p className="pt-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">Research</p>
                 <div className="space-y-3">
                   <Link href="/app/architecture" onClick={closeMenus} className="block text-lg font-semibold text-white hover:text-amber-400">Architecture</Link>
@@ -136,7 +132,11 @@ export default function TopNavbar({ className }: { className?: string }) {
           </div>
 
           <div ref={dropdownWrapRef} className="hidden items-center gap-7 lg:flex">
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown("solutions")}
+              onMouseLeave={() => setOpenDropdown((prev) => (prev === "solutions" ? null : prev))}
+            >
               <button
                 type="button"
                 onClick={() => setOpenDropdown(openDropdown === "solutions" ? null : "solutions")}
@@ -162,21 +162,19 @@ export default function TopNavbar({ className }: { className?: string }) {
               </AnimatePresence>
             </div>
 
-            {location === "/" ? (
-              <Link
-                href="/#how-it-works"
-                onClick={(e) => handleHowItWorks(e)}
-                className="text-sm font-semibold text-slate-200 transition-colors hover:text-amber-400"
-              >
-                How It Works
-              </Link>
-            ) : (
-              <Link href="/app/architecture" onClick={closeMenus} className="text-sm font-semibold text-slate-200 transition-colors hover:text-amber-400">
-                How It Works
-              </Link>
-            )}
+            <Link
+              href="/#how-it-works"
+              onClick={(e) => handleHowItWorks(e)}
+              className="text-sm font-semibold text-slate-200 transition-colors hover:text-amber-400"
+            >
+              How It Works
+            </Link>
 
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown("research")}
+              onMouseLeave={() => setOpenDropdown((prev) => (prev === "research" ? null : prev))}
+            >
               <button
                 type="button"
                 onClick={() => setOpenDropdown(openDropdown === "research" ? null : "research")}

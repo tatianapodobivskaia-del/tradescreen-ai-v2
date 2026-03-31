@@ -67,7 +67,7 @@ const fadeUpStaggerScroll = {
 const LANDING_SECTION_ORDER = [
   "landing-hero",
   "landing-why-it-matters",
-  "landing-how-it-works",
+  "how-it-works",
   "landing-core-capabilities",
   "landing-see-it-in-action",
   "landing-comparison",
@@ -365,7 +365,7 @@ function HowItWorks() {
   const { isInView, ref } = useInView(0.2);
   return (
     <section
-      id="landing-how-it-works"
+      id="how-it-works"
       ref={ref as React.Ref<HTMLElement>}
       className="relative bg-[#060a16] py-16 md:py-24"
     >
@@ -405,7 +405,7 @@ function HowItWorks() {
             );
           })}
         </div>
-        <SectionScrollArrow sectionId="landing-how-it-works" />
+        <SectionScrollArrow sectionId="how-it-works" />
       </div>
     </section>
   );
