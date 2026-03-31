@@ -68,7 +68,7 @@ export default function Watchlist() {
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 1, delay: i * 0.15 }}
-                    className="h-full rounded-full bg-cyan-500"
+                    className="h-full rounded-full bg-[#D4A843]"
                     style={{ opacity: 1 - i * 0.15 }}
                   />
                 </div>
@@ -89,13 +89,13 @@ export default function Watchlist() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or alias..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
             />
           </div>
           <select
             value={listFilter}
             onChange={(e) => setListFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
           >
             <option value="all">All Lists</option>
             <option value="OFAC SDN">OFAC SDN</option>
@@ -106,7 +106,7 @@ export default function Watchlist() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
           >
             <option value="all">All Types</option>
             <option value="Individual">Individual</option>
@@ -168,7 +168,7 @@ export default function Watchlist() {
                     <tr
                       key={entity.id}
                       onClick={() => setSelectedEntity(entity.id)}
-                      className={`border-t border-slate-100 cursor-pointer transition-colors ${selectedEntity === entity.id ? "bg-cyan-50/50" : "hover:bg-slate-50/50"}`}
+                      className={`border-t border-slate-100 cursor-pointer transition-colors ${selectedEntity === entity.id ? "bg-amber-50/50" : "hover:bg-slate-50/50"}`}
                     >
                       <td className="py-2.5 px-4 font-data text-[11px] text-slate-400">{entity.id}</td>
                       <td className="py-2.5 px-4">
@@ -180,7 +180,7 @@ export default function Watchlist() {
                           <span className="text-xs text-slate-500 font-body">{entity.type}</span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-xs font-data text-cyan-600">{entity.list}</td>
+                      <td className="py-2.5 px-4 text-xs font-data text-amber-600">{entity.list}</td>
                       <td className="py-2.5 px-4 text-xs text-slate-500 font-body">{entity.country}</td>
                     </tr>
                   );
@@ -218,7 +218,7 @@ export default function Watchlist() {
                   </div>
                   <div>
                     <div className="text-xs text-slate-500 font-body mb-1">Sanctions List</div>
-                    <div className="text-sm font-data text-cyan-600">{selected.list}</div>
+                    <div className="text-sm font-data text-amber-600">{selected.list}</div>
                   </div>
                   <div>
                     <div className="text-xs text-slate-500 font-body mb-1">Program</div>

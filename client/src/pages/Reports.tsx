@@ -60,7 +60,7 @@ function PdfReportPreviewModal({ open, onClose }: { open: boolean; onClose: () =
               onClick={() => alert("In production, this would download the screening report as a PDF.")}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition-opacity hover:opacity-90"
             >
-              <Download className="h-4 w-4 shrink-0 text-cyan-600" strokeWidth={2} />
+              <Download className="h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
               Download PDF
             </button>
             <button
@@ -87,7 +87,7 @@ function PdfReportPreviewModal({ open, onClose }: { open: boolean; onClose: () =
             TradeScreenAI — Academic Research Demo — Screening Report
           </h1>
 
-          <div className="mt-6 rounded-md bg-cyan-600 px-4 py-3 text-center">
+          <div className="mt-6 rounded-md bg-[#B8922D] px-4 py-3 text-center">
             <p className="text-[10px] font-bold font-display leading-relaxed tracking-wide text-white sm:text-[11px]">
               ACADEMIC RESEARCH PROTOTYPE — FOR EDUCATIONAL USE ONLY — NOT A COMMERCIAL COMPLIANCE TOOL
             </p>
@@ -203,7 +203,7 @@ export default function Reports() {
         {/* Screening Trends */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-cyan-500" />
+            <TrendingUp className="w-4 h-4 text-amber-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Screening Trends</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Weekly screening volume by risk level</p>
@@ -226,7 +226,7 @@ export default function Reports() {
         {/* Geographic Distribution */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
-            <Globe className="w-4 h-4 text-cyan-500" />
+            <Globe className="w-4 h-4 text-amber-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Geographic Distribution</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Sanctioned entities by country of origin</p>
@@ -241,7 +241,7 @@ export default function Reports() {
                     transition={{ duration: 0.8, delay: i * 0.08 }}
                     className="h-full rounded-md"
                     style={{
-                      background: `linear-gradient(90deg, #22d3ee ${Math.min(item.percentage * 2, 100)}%, #0891b2)`,
+                      background: `linear-gradient(90deg, #F5C542 ${Math.min(item.percentage * 2, 100)}%, #B8922D)`,
                       opacity: 1 - i * 0.08,
                     }}
                   />
@@ -260,7 +260,7 @@ export default function Reports() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-cyan-500" />
+            <FileText className="w-4 h-4 text-amber-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Reports Archive</h3>
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
@@ -282,7 +282,7 @@ export default function Reports() {
             </thead>
             <tbody>
               {reportsArchive.map((report, i) => (
-                <tr key={i} className="border-t border-slate-100 hover:bg-cyan-50/20 transition-colors">
+                <tr key={i} className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors">
                   <td className="py-3 px-5 font-data text-xs text-slate-400">{report.id}</td>
                   <td className="py-3 px-5 text-slate-800 font-medium font-body">{report.title}</td>
                   <td className="py-3 px-5 font-data text-xs text-slate-500">{report.date}</td>
@@ -295,7 +295,7 @@ export default function Reports() {
                     <button
                       type="button"
                       onClick={() => setPdfPreviewOpen(true)}
-                      className="flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700 font-medium"
+                      className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium"
                     >
                       <FileText className="w-3 h-3" /> PDF
                     </button>
@@ -310,7 +310,7 @@ export default function Reports() {
       {/* Performance Metrics */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-1">
-          <Award className="w-4 h-4 text-cyan-500" />
+          <Award className="w-4 h-4 text-amber-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Performance Metrics</h3>
         </div>
         <p className="text-xs text-slate-500 font-body mb-4">Comparison: TradeScreenAI vs. manual review vs. rule-based systems</p>
@@ -319,16 +319,16 @@ export default function Reports() {
             <thead>
               <tr className="bg-slate-50/50">
                 <th className="text-left py-3 px-5 text-xs font-semibold text-slate-500 font-display">Metric</th>
-                <th className="text-center py-3 px-5 text-xs font-semibold text-cyan-600 font-display">TradeScreenAI</th>
+                <th className="text-center py-3 px-5 text-xs font-semibold text-amber-600 font-display">TradeScreenAI</th>
                 <th className="text-center py-3 px-5 text-xs font-semibold text-slate-500 font-display">Manual Review</th>
                 <th className="text-center py-3 px-5 text-xs font-semibold text-slate-500 font-display">Rule-Based</th>
               </tr>
             </thead>
             <tbody>
               {performanceMetrics.map((row, i) => (
-                <tr key={i} className="border-t border-slate-100 hover:bg-cyan-50/20 transition-colors">
+                <tr key={i} className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors">
                   <td className="py-3 px-5 text-slate-800 font-medium font-body">{row.metric}</td>
-                  <td className="py-3 px-5 text-center font-data font-semibold text-cyan-600">{row.tradescreen}</td>
+                  <td className="py-3 px-5 text-center font-data font-semibold text-amber-600">{row.tradescreen}</td>
                   <td className="py-3 px-5 text-center font-data text-slate-500">{row.manual}</td>
                   <td className="py-3 px-5 text-center font-data text-slate-500">{row.ruleBased}</td>
                 </tr>

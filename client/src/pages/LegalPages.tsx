@@ -29,13 +29,13 @@ export default function LegalPages() {
   return (
     <div className="mx-auto max-w-4xl">
       <motion.div {...fadeIn}>
-        <Link href="/app" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-cyan-600">
+        <Link href="/app" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-amber-600">
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
 
-        <div className="mb-6 rounded-xl border border-cyan-500/20 bg-cyan-50/60 px-4 py-3 text-center">
-          <p className="text-xs font-bold font-display uppercase tracking-wide text-cyan-900">
+        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-50/60 px-4 py-3 text-center">
+          <p className="text-xs font-bold font-display uppercase tracking-wide text-amber-900">
             Academic Research Prototype — For educational use only — Not a commercial compliance product
           </p>
         </div>
@@ -54,7 +54,7 @@ export default function LegalPages() {
                 onClick={() => setLocation(t.href)}
                 className={`inline-flex items-center gap-2 rounded-t-lg border border-b-0 px-4 py-3 text-sm font-semibold transition-colors ${
                   isActive
-                    ? "border-slate-200 bg-white text-cyan-700 shadow-sm"
+                    ? "border-slate-200 bg-white text-amber-700 shadow-sm"
                     : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                 } `}
               >

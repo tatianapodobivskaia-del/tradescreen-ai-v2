@@ -182,7 +182,7 @@ export default function DocumentScanner() {
           onDrop={onDrop}
           className={cn(
             "group w-full cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-colors",
-            isDragging ? "border-cyan-500 bg-cyan-50/30" : "border-slate-200 hover:border-cyan-500/40",
+            isDragging ? "border-amber-500 bg-amber-50/30" : "border-slate-200 hover:border-amber-500/40",
             phase === "scanning" && "pointer-events-none opacity-80"
           )}
         >
@@ -194,9 +194,9 @@ export default function DocumentScanner() {
             />
             <div className="relative flex min-h-[300px] flex-col items-center justify-center px-4 py-12">
               {phase === "scanning" ? (
-                <Loader2 className="mb-3 h-10 w-10 animate-spin text-cyan-600" strokeWidth={2} />
+                <Loader2 className="mb-3 h-10 w-10 animate-spin text-amber-600" strokeWidth={2} />
               ) : (
-                <Upload className="mb-3 h-10 w-10 text-slate-300 transition-colors group-hover:text-cyan-500" />
+                <Upload className="mb-3 h-10 w-10 text-slate-300 transition-colors group-hover:text-amber-500" />
               )}
               <p className="text-center text-sm font-medium text-slate-600 font-body">
                 {phase === "scanning" ? "Scanning document…" : "Drop document or click browse or take picture"}
@@ -242,7 +242,7 @@ export default function DocumentScanner() {
                   className={cn(
                     "flex gap-3 rounded-xl border-2 p-4 transition-all",
                     isComplete && "border-emerald-400 bg-emerald-50/40",
-                    isScanning && isActive && "border-cyan-500 bg-cyan-50/50 shadow-sm ring-2 ring-cyan-200",
+                    isScanning && isActive && "border-amber-500 bg-amber-50/50 shadow-sm ring-2 ring-amber-200",
                     isScanning && isFuture && "border-slate-100 bg-slate-50/60 opacity-90",
                     isScanning && isPastAnim && "border-slate-200 bg-white"
                   )}
@@ -251,13 +251,13 @@ export default function DocumentScanner() {
                     className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
                       isComplete ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
-                      isActive && "border-cyan-400 bg-cyan-50"
+                      isActive && "border-amber-400 bg-amber-50"
                     )}
                   >
                     {isComplete ? (
                       <CheckCircle className="h-5 w-5 text-emerald-600" strokeWidth={2} />
                     ) : isActive ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-cyan-700" strokeWidth={2} />
+                      <Loader2 className="h-5 w-5 animate-spin text-amber-700" strokeWidth={2} />
                     ) : isPastAnim ? (
                       <CheckCircle className="h-5 w-5 text-emerald-500/90" strokeWidth={2} />
                     ) : (

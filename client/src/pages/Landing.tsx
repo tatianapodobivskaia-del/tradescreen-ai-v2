@@ -77,7 +77,7 @@ const LANDING_SECTION_ORDER = [
 
 const heroDifferentiatorGlow: CSSProperties = {
   textShadow:
-    "0 0 28px rgba(34, 211, 238, 0.45), 0 0 56px rgba(34, 211, 238, 0.2), 0 0 96px rgba(6, 182, 212, 0.12)",
+    "0 0 28px rgba(212, 168, 67, 0.45), 0 0 56px rgba(212, 168, 67, 0.2), 0 0 96px rgba(184, 146, 45, 0.12)",
 };
 
 function SectionScrollArrow({
@@ -105,7 +105,7 @@ function SectionScrollArrow({
       type="button"
       onClick={scrollNext}
       aria-label={label}
-      className="rounded-full p-2 text-slate-500 transition-colors hover:text-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60"
+      className="rounded-full p-2 text-slate-500 transition-colors hover:text-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
     >
       <motion.div
         animate={{ y: [0, 4, 0], opacity: [0.55, 1, 0.55] }}
@@ -213,7 +213,7 @@ export default function Landing() {
       <header className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-end gap-2 border-b border-white/10 bg-[#0a0e1a]/90 px-4 py-3 backdrop-blur-md sm:px-6">
         <Link
           href="/app/architecture"
-          className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 font-display text-sm font-bold text-cyan-300 transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/15"
+          className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 bg-[#D4A843]/10 px-4 py-2 font-display text-sm font-bold text-amber-300 transition-colors hover:border-amber-400/60 hover:bg-[#D4A843]/15"
         >
           Open App
           <ArrowRight className="h-4 w-4" strokeWidth={2} />
@@ -231,7 +231,7 @@ export default function Landing() {
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:py-24">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <AcademicBadge className="mb-6 border-cyan-500/30 text-cyan-400" />
+            <AcademicBadge className="mb-6 border-amber-500/30 text-amber-400" />
           </motion.div>
 
           <motion.h1
@@ -248,7 +248,7 @@ export default function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
             style={heroDifferentiatorGlow}
-            className="mx-auto mb-5 max-w-4xl font-display text-2xl font-bold leading-snug tracking-tight text-cyan-300 sm:text-3xl md:text-4xl md:leading-tight"
+            className="mx-auto mb-5 max-w-4xl font-display text-2xl font-bold leading-snug tracking-tight text-amber-300 sm:text-3xl md:text-4xl md:leading-tight"
           >
             Find Risks Hidden in Name Variations Across Languages
           </motion.p>
@@ -259,7 +259,7 @@ export default function Landing() {
             transition={{ duration: 0.75, delay: 1.2 }}
             className="mx-auto mb-8 max-w-3xl font-body text-lg leading-snug text-white sm:text-xl md:text-2xl md:leading-snug"
           >
-            See What Others Miss — <span className="font-semibold text-cyan-400">in 60 Seconds</span>
+            See What Others Miss — <span className="font-semibold text-amber-400">in 60 Seconds</span>
           </motion.p>
 
           <motion.div
@@ -269,9 +269,9 @@ export default function Landing() {
             className="mb-8 flex flex-col items-center gap-2"
           >
             <div className="ai-glow-dark inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full px-6 py-3 sm:px-8 sm:py-4">
-              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-cyan-400" />
+              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#F5C542]" />
               <span className="text-sm text-slate-400 font-body">Monitoring</span>
-              <CountUpNumber value={heroStats.totalEntities} className="text-3xl font-bold text-cyan-400" />
+              <CountUpNumber value={heroStats.totalEntities} className="text-3xl font-bold text-amber-400" />
               <span className="text-sm text-slate-400 font-body">sanctioned entities</span>
               <span className="w-full shrink-0 text-center font-body text-[11px] leading-tight text-slate-500 sm:ml-1 sm:w-auto sm:text-left">
                 Auto-updated every 6 hours
@@ -307,7 +307,7 @@ export default function Landing() {
           type="button"
           onClick={scrollToTop}
           aria-label="Back to top"
-          className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-cyan-500/40 bg-[#0a0e1a]/95 text-cyan-300 shadow-lg shadow-black/40 backdrop-blur-sm transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/10"
+          className="fixed bottom-6 right-6 z-[70] flex h-11 w-11 items-center justify-center rounded-full border border-amber-500/40 bg-[#0a0e1a]/95 text-amber-300 shadow-lg shadow-black/40 backdrop-blur-sm transition-colors hover:border-amber-400/60 hover:bg-[#D4A843]/10"
         >
           <ChevronUp className="h-5 w-5" strokeWidth={2} />
         </button>
@@ -353,8 +353,8 @@ function WhyItMatters() {
                 variants={fadeUp}
                 className="premium-card-dark rounded-xl p-6 text-center group"
               >
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-500/10 transition-colors group-hover:bg-cyan-500/20">
-                  <Icon className="w-7 h-7 text-cyan-400" />
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#D4A843]/10 transition-colors group-hover:bg-[#D4A843]/20">
+                  <Icon className="w-7 h-7 text-amber-400" />
                 </div>
                 <WhyItMattersStatCount value={stat.value} />
                 <div className="text-sm font-bold text-slate-200 mb-1.5 tracking-wide uppercase">{stat.label}</div>
@@ -392,12 +392,12 @@ function HowItWorks() {
                 className="relative"
               >
                 <div className="premium-card-dark h-full rounded-xl p-7 text-center group">
-                  <div className="absolute right-6 top-4 font-data text-7xl font-extrabold text-cyan-500/8">{step.step}</div>
+                  <div className="absolute right-6 top-4 font-data text-7xl font-extrabold text-amber-500/8">{step.step}</div>
                   <div
-                    className="mx-auto mb-5 flex items-center justify-center rounded-2xl bg-cyan-500/10 transition-colors group-hover:bg-cyan-500/20"
+                    className="mx-auto mb-5 flex items-center justify-center rounded-2xl bg-[#D4A843]/10 transition-colors group-hover:bg-[#D4A843]/20"
                     style={{ width: "4.5rem", height: "4.5rem" }}
                   >
-                    <Icon className="h-9 w-9 text-cyan-400" />
+                    <Icon className="h-9 w-9 text-amber-400" />
                   </div>
                   <h3 className="mb-3 font-display text-2xl font-extrabold text-white">{step.title}</h3>
                   <p className="text-sm text-slate-400 font-body leading-relaxed">
@@ -406,7 +406,7 @@ function HowItWorks() {
                 </div>
                 {i < 2 && (
                   <div className="hidden md:block absolute top-1/2 -right-5 transform -translate-y-1/2 z-10">
-                    <ArrowRight className="w-7 h-7 text-cyan-500/30" />
+                    <ArrowRight className="w-7 h-7 text-amber-500/30" />
                   </div>
                 )}
               </motion.div>
@@ -438,8 +438,8 @@ function CoreCapabilities() {
                 variants={fadeUpStaggerScroll}
                 className="premium-card-dark rounded-xl p-8 group"
               >
-                <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mb-5 group-hover:bg-cyan-500/20 transition-colors">
-                  <Icon className="w-6 h-6 text-cyan-400" />
+                <div className="w-12 h-12 rounded-lg bg-[#D4A843]/10 flex items-center justify-center mb-5 group-hover:bg-[#D4A843]/20 transition-colors">
+                  <Icon className="w-6 h-6 text-amber-400" />
                 </div>
                 <h3 className="text-xl font-extrabold font-display text-white mb-3">{cap.title}</h3>
                 <p className="text-sm text-slate-400 font-body leading-relaxed">
@@ -474,13 +474,13 @@ function SeeItInAction() {
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
             style={{
-              backgroundImage: `linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(rgba(212,168,67,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.15) 1px, transparent 1px)`,
               backgroundSize: "32px 32px",
             }}
           />
           <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-cyan-500/35 bg-cyan-500/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-              <Play className="h-14 w-14 translate-x-1 text-cyan-400" strokeWidth={1.25} fill="currentColor" aria-hidden />
+            <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-amber-500/35 bg-[#D4A843]/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+              <Play className="h-14 w-14 translate-x-1 text-amber-400" strokeWidth={1.25} fill="currentColor" aria-hidden />
             </div>
             <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">Demo Video Coming Soon</p>
           </div>
@@ -504,7 +504,7 @@ function ComparisonSection() {
                 <tr className="border-b border-slate-700/50">
                   <th className="text-left py-5 px-8 text-slate-400 font-bold font-display text-base">Feature</th>
                   <th className="text-center py-5 px-8 text-slate-400 font-bold font-display text-base">Traditional</th>
-                  <th className="text-center py-5 px-8 text-cyan-400 font-bold font-display text-base">TradeScreenAI</th>
+                  <th className="text-center py-5 px-8 text-amber-400 font-bold font-display text-base">TradeScreenAI</th>
                 </tr>
               </thead>
               <tbody>
@@ -520,9 +520,9 @@ function ComparisonSection() {
                     </td>
                     <td className="py-4.5 px-8 text-center">
                       {typeof row.tradescreen === "boolean" ? (
-                        row.tradescreen ? <Check className="w-5 h-5 text-cyan-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />
+                        row.tradescreen ? <Check className="w-5 h-5 text-amber-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />
                       ) : (
-                        <span className="text-cyan-400 font-bold font-body">{row.tradescreen}</span>
+                        <span className="text-amber-400 font-bold font-body">{row.tradescreen}</span>
                       )}
                     </td>
                   </tr>
@@ -555,7 +555,7 @@ function PerformanceBenchmarksSection() {
       aria-labelledby="performance-benchmarks-heading"
     >
       <div className="max-w-6xl mx-auto px-4">
-        <p className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-500/65">
+        <p className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-amber-500/65">
           Performance Benchmarks
         </p>
         <PremiumHeading
@@ -571,9 +571,9 @@ function PerformanceBenchmarksSection() {
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUp}
-            className="premium-card-dark rounded-xl border border-cyan-500/20 p-7 text-center shadow-lg shadow-cyan-500/5 transition-colors hover:border-cyan-500/35"
+            className="premium-card-dark rounded-xl border border-amber-500/20 p-7 text-center shadow-lg shadow-[#D4A843]/20 transition-colors hover:border-amber-500/35"
           >
-            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-400 md:text-6xl">97%</div>
+            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-amber-400 md:text-6xl">97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
           </motion.div>
           <motion.div
@@ -591,9 +591,9 @@ function PerformanceBenchmarksSection() {
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUp}
-            className="premium-card-dark rounded-xl border border-cyan-500/20 p-7 text-center shadow-lg shadow-cyan-500/5 transition-colors hover:border-cyan-500/35"
+            className="premium-card-dark rounded-xl border border-amber-500/20 p-7 text-center shadow-lg shadow-[#D4A843]/20 transition-colors hover:border-amber-500/35"
           >
-            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-400 md:text-6xl">&lt;2 min</div>
+            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-amber-400 md:text-6xl">&lt;2 min</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
@@ -612,7 +612,7 @@ function PerformanceBenchmarksSection() {
               <thead>
                 <tr className="border-b border-slate-700/50 bg-slate-900/40">
                   <th className="text-left py-5 px-6 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Metric</th>
-                  <th className="text-center py-5 px-4 text-cyan-400 font-bold font-display text-xs uppercase tracking-wider">TradeScreenAI</th>
+                  <th className="text-center py-5 px-4 text-amber-400 font-bold font-display text-xs uppercase tracking-wider">TradeScreenAI</th>
                   <th className="text-center py-5 px-4 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Manual Review</th>
                   <th className="text-center py-5 px-4 text-slate-400 font-bold font-display text-xs uppercase tracking-wider">Rule-Based Tools</th>
                 </tr>
@@ -621,7 +621,7 @@ function PerformanceBenchmarksSection() {
                 {performanceBenchmarkRows.map((row) => (
                   <tr key={row.metric} className="border-b border-slate-800/60 hover:bg-slate-800/25 transition-colors">
                     <td className="py-4 px-6 text-slate-300 font-body font-medium">{row.metric}</td>
-                    <td className="py-4 px-4 text-center text-cyan-400 font-bold font-data">{row.tradescreen}</td>
+                    <td className="py-4 px-4 text-center text-amber-400 font-bold font-data">{row.tradescreen}</td>
                     <td className="py-4 px-4 text-center text-slate-500 font-body">{row.manual}</td>
                     <td className="py-4 px-4 text-center text-slate-500 font-body">{row.rules}</td>
                   </tr>
@@ -660,13 +660,13 @@ function DataSourcesSection() {
               className="premium-card-dark group block cursor-pointer rounded-xl p-6 text-center"
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
-              <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-400 transition-colors">{source.name}</h3>
+              <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-amber-400 transition-colors">{source.name}</h3>
               <p className="text-xs text-slate-500 font-body mb-5 leading-relaxed">{source.fullName}</p>
-              <div className="text-3xl font-extrabold font-data text-cyan-400">
+              <div className="text-3xl font-extrabold font-data text-amber-400">
                 <CountUpNumber value={source.count} />
               </div>
               <div className="text-xs text-slate-500 font-body mt-1.5">entities</div>
-              <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 group-hover:text-cyan-400 transition-colors">
+              <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-600 group-hover:text-amber-400 transition-colors">
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Official Source</span>
               </div>
@@ -688,8 +688,8 @@ function PrivacySection() {
           {/* Data Privacy */}
           <div className="premium-card-dark rounded-xl p-7">
             <div className="mb-4 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-cyan-400" />
+              <div className="w-11 h-11 rounded-lg bg-[#D4A843]/10 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-amber-400" />
               </div>
               <h3 className="text-lg font-extrabold font-display text-white">Data Privacy</h3>
             </div>
@@ -702,8 +702,8 @@ function PrivacySection() {
           {/* Terms of Use */}
           <div className="premium-card-dark rounded-xl p-7">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-cyan-500/10">
-                <GraduationCap className="h-5 w-5 text-cyan-400" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#D4A843]/10">
+                <GraduationCap className="h-5 w-5 text-amber-400" />
               </div>
               <h3 className="text-lg font-extrabold font-display text-white">Terms of Use</h3>
             </div>

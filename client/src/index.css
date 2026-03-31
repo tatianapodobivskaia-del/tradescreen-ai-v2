@@ -44,7 +44,7 @@
   --font-mono: 'JetBrains Mono', monospace;
   --font-body: 'Inter', system-ui, sans-serif;
   /* Custom colors */
-  --color-cyan-accent: oklch(0.82 0.15 195);
+  --color-amber-accent: oklch(0.82 0.15 195);
   --color-navy-deep: oklch(0.15 0.03 260);
   --color-navy-darker: oklch(0.12 0.025 260);
   --color-navy-card: oklch(0.18 0.03 260);

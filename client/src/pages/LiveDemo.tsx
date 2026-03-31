@@ -461,7 +461,7 @@ function TypingText({ text, active }: { text: string; active: boolean }) {
       className="mt-2 min-h-[2.75rem] break-words text-left text-[11px] leading-relaxed text-slate-700 font-body"
     >
       {text.slice(0, n)}
-      {n < text.length ? <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-cyan-600" /> : null}
+      {n < text.length ? <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-[#B8922D]" /> : null}
     </motion.p>
   );
 }
@@ -518,7 +518,7 @@ function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 }) {
             className={cn(
               "rounded-full px-2.5 py-1 transition-colors duration-300",
               activeStep === s.n
-                ? "bg-cyan-600 text-white shadow-sm"
+                ? "bg-[#B8922D] text-white shadow-sm"
                 : "text-slate-500"
             )}
           >
@@ -557,7 +557,7 @@ function NameVariantGenerationBlock({
 
       {genLoading && (
         <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-800 font-body">
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-600" strokeWidth={2} />
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-600" strokeWidth={2} />
           <span>Generating name variants…</span>
         </div>
       )}
@@ -585,7 +585,7 @@ function NameVariantGenerationBlock({
         <p className="mt-4 text-sm leading-relaxed text-slate-700 font-body">
           {meta.summaryCount != null ? (
             <>
-              <span className="font-data text-lg font-extrabold tabular-nums text-cyan-600">{meta.summaryCount}</span>
+              <span className="font-data text-lg font-extrabold tabular-nums text-amber-600">{meta.summaryCount}</span>
               <span>{` ${meta.summary}`}</span>
             </>
           ) : (
@@ -599,7 +599,7 @@ function NameVariantGenerationBlock({
           {screeningLineComplete ? (
             <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
           ) : (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-700" strokeWidth={2} />
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" strokeWidth={2} />
           )}
           <span>Screening all variants…</span>
         </div>
@@ -643,7 +643,7 @@ function AgentPipeline({
               className={cn(
                 "flex min-h-[200px] min-w-0 w-full flex-col rounded-xl border-2 border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow duration-300",
                 isProcessing &&
-                  "border-cyan-500 shadow-md ring-2 ring-cyan-400/50 ring-offset-2 ring-offset-white animate-pulse",
+                  "border-amber-500 shadow-md ring-2 ring-[#D4A843]/50 ring-offset-2 ring-offset-white animate-pulse",
                 isComplete && "border-emerald-400 bg-emerald-50/40",
                 isPending && "border-slate-200 bg-slate-50 opacity-90"
               )}
@@ -652,13 +652,13 @@ function AgentPipeline({
                 <div
                   className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
-                    isProcessing && "border-cyan-300 bg-cyan-50",
+                    isProcessing && "border-amber-300 bg-amber-50",
                     isComplete && "border-emerald-300 bg-emerald-100",
                     isPending && "border-slate-200 bg-white"
                   )}
                 >
                   {isProcessing ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-cyan-700" strokeWidth={2} />
+                    <Loader2 className="h-5 w-5 animate-spin text-amber-700" strokeWidth={2} />
                   ) : isComplete ? (
                     <CheckCircle className="h-5 w-5 text-emerald-600" strokeWidth={2} />
                   ) : (
@@ -1383,8 +1383,8 @@ function ScenarioCard({
           onClick={runPhase1}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-lg shadow-cyan-500/25",
-            "transition-colors duration-200 hover:from-cyan-400 hover:to-teal-400"
+            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
+            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
           )}
         >
           <Play className="h-4 w-4 fill-current" strokeWidth={2} />
@@ -1408,8 +1408,8 @@ function ScenarioCard({
           onClick={runPhase2}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-lg shadow-cyan-500/25",
-            "transition-colors duration-200 hover:from-cyan-400 hover:to-teal-400"
+            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
+            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
           )}
         >
           Run AI Deep Analysis
@@ -1432,8 +1432,8 @@ function ScenarioCard({
           onClick={runPhase3}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-lg shadow-cyan-500/25",
-            "transition-colors duration-200 hover:from-cyan-400 hover:to-teal-400"
+            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
+            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
           )}
         >
           Scan Document with AI
@@ -1515,7 +1515,7 @@ function ScenarioCard({
 
                   {phase1 === "running" && screeningSpinner && showPhase1Table && visibleRows < listRows.length && (
                     <div className="flex items-center gap-2 text-sm text-slate-800">
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-700" strokeWidth={2} />
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" strokeWidth={2} />
                       <span>Screening lists…</span>
                     </div>
                   )}
@@ -1644,7 +1644,7 @@ function ScenarioCard({
               >
                 {phase2 === "running" && (
                   <div className="flex items-center gap-2 text-sm text-slate-800">
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-cyan-700" strokeWidth={2} />
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" strokeWidth={2} />
                     <span>Running AI deep analysis…</span>
                   </div>
                 )}
@@ -1665,7 +1665,7 @@ function ScenarioCard({
                       <button
                         type="button"
                         onClick={() => setAnalysisExpanded(true)}
-                        className="mt-3 text-xs font-semibold text-cyan-800 underline-offset-2 hover:underline"
+                        className="mt-3 text-xs font-semibold text-amber-800 underline-offset-2 hover:underline"
                       >
                         Show More ▼
                       </button>
@@ -1801,7 +1801,7 @@ export default function LiveDemo() {
               return next;
             });
           }}
-          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-cyan-300 hover:bg-cyan-50/80 hover:text-cyan-800"
+          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-amber-300 hover:bg-amber-50/80 hover:text-amber-800"
           title={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-label={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-pressed={soundOn}
@@ -1821,7 +1821,7 @@ export default function LiveDemo() {
         </div>
       </div>
 
-      <div className="w-full min-w-0 max-w-full rounded-2xl border border-cyan-500/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl shadow-cyan-500/5 lg:p-8">
+      <div className="w-full min-w-0 max-w-full rounded-2xl border border-amber-500/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl shadow-[#D4A843]/20 lg:p-8">
         <p className="mb-6 text-center text-xs text-slate-400 font-body lg:text-sm">
           Step 1: Screening → Step 2: AI Analysis → Step 3: Document Scan. Each scenario uses the full width of the content
           area below.

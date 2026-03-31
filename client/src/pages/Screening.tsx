@@ -422,8 +422,8 @@ export default function Screening() {
 
         {activeTab === "upload" ? (
           <div>
-            <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40">
-              <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
+            <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-amber-500/40">
+              <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-amber-500" />
               <p className="text-sm font-semibold text-slate-600 font-body">Drop CSV file here or click to browse</p>
               <p className="mt-2 text-xs text-slate-400 font-body">
                 Supports CSV and PDF. Excel coming soon.
@@ -456,7 +456,7 @@ export default function Screening() {
                 value={vendorName}
                 onChange={(e) => setVendorName(e.target.value)}
                 placeholder="Legal name of vendor or entity"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                 autoComplete="organization"
               />
             </div>
@@ -472,7 +472,7 @@ export default function Screening() {
                 id="country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               >
                 <option value="">Select country...</option>
                 {COUNTRY_OPTIONS.map((c) => (
@@ -497,7 +497,7 @@ export default function Screening() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 125000"
-                className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               />
             </div>
 
@@ -512,7 +512,7 @@ export default function Screening() {
                 id="doc-type"
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               >
                 <option value="">Select type...</option>
                 {DOCUMENT_TYPES.map((t) => (
@@ -536,7 +536,7 @@ export default function Screening() {
                 value={cyrillicName}
                 onChange={(e) => setCyrillicName(e.target.value)}
                 placeholder="e.g. Рособоронэкспорт"
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
               />
             </div>
 
@@ -583,7 +583,7 @@ export default function Screening() {
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold text-slate-500">Composite match score</span>
-                <span className="font-data text-lg font-extrabold text-cyan-700">
+                <span className="font-data text-lg font-extrabold text-amber-700">
                   {screeningResults.compositeScore}%
                 </span>
                 <span
@@ -662,7 +662,7 @@ export default function Screening() {
 
           {aiLoading && (
             <div className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-700 font-body">
-              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-cyan-600" strokeWidth={2} />
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-amber-600" strokeWidth={2} />
               <span>Analyzing with AI...</span>
             </div>
           )}

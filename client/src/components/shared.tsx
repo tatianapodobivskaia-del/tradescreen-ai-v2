@@ -36,7 +36,7 @@ export function StatusDot({ status }: { status: "operational" | "degraded" | "do
 export function AcademicBadge({ className }: { className?: string }) {
   return (
     <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded border text-[10px] font-semibold tracking-widest uppercase font-data", className)}>
-      <span className="w-1.5 h-1.5 rounded-full bg-cyan-accent animate-pulse" />
+      <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] animate-pulse" />
       Academic Research Prototype
     </div>
   );
@@ -66,15 +66,15 @@ export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
 
         {/* Legal links */}
         <div className="flex items-center justify-center gap-2 text-xs">
-          <Link href="/app/disclaimer" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/disclaimer" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
             Disclaimer
           </Link>
           <span className="text-slate-600/40">|</span>
-          <Link href="/app/privacy" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/privacy" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
             Privacy Policy
           </Link>
           <span className="text-slate-600/40">|</span>
-          <Link href="/app/terms" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/terms" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
             Terms of Use
           </Link>
         </div>
@@ -114,7 +114,7 @@ export function SectionTitle({ children, subtitle, className, dark = false }: { 
 export function ScanningLine({ className }: { className?: string }) {
   return (
     <div className={cn("absolute inset-0 overflow-hidden pointer-events-none", className)}>
-      <div className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent animate-scan" />
+      <div className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-[#F5C542]/10 to-transparent animate-scan" />
     </div>
   );
 }

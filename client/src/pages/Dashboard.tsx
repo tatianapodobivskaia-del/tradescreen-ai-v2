@@ -58,8 +58,8 @@ export default function Dashboard() {
               <ScanningLine className="opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl ${isHighlight ? "bg-cyan-100" : "bg-cyan-50"} flex items-center justify-center`}>
-                    <Icon className="w-5 h-5 text-cyan-600" />
+                  <div className={`w-11 h-11 rounded-xl ${isHighlight ? "bg-amber-100" : "bg-amber-50"} flex items-center justify-center`}>
+                    <Icon className="w-5 h-5 text-amber-600" />
                   </div>
                   <div className="flex items-center gap-1 text-xs font-data text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                     {stat.trend === "up" ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -81,11 +81,11 @@ export default function Dashboard() {
                     <AreaChart data={stat.sparkline.map((v, j) => ({ v, i: j }))}>
                       <defs>
                         <linearGradient id={`spark-${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                          <stop offset="0%" stopColor="#F5C542" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#F5C542" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <Area type="monotone" dataKey="v" stroke="#22d3ee" strokeWidth={1.5} fill={`url(#spark-${i})`} />
+                      <Area type="monotone" dataKey="v" stroke="#F5C542" strokeWidth={1.5} fill={`url(#spark-${i})`} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -109,8 +109,8 @@ export default function Dashboard() {
               <AreaChart data={screeningActivityData}>
                 <defs>
                   <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#F5C542" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#F5C542" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="flagGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.2} />
@@ -121,7 +121,7 @@ export default function Dashboard() {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fontFamily: "JetBrains Mono" }} stroke="#94a3b8" />
                 <YAxis tick={{ fontSize: 11, fontFamily: "JetBrains Mono" }} stroke="#94a3b8" />
                 <Tooltip contentStyle={{ fontSize: 12, fontFamily: "Inter", borderRadius: 8, border: "1px solid #e2e8f0" }} />
-                <Area type="monotone" dataKey="screenings" stroke="#22d3ee" strokeWidth={2} fill="url(#screenGrad)" name="Total Screenings" />
+                <Area type="monotone" dataKey="screenings" stroke="#F5C542" strokeWidth={2} fill="url(#screenGrad)" name="Total Screenings" />
                 <Area type="monotone" dataKey="flagged" stroke="#f59e0b" strokeWidth={2} fill="url(#flagGrad)" name="Flagged" />
               </AreaChart>
             </ResponsiveContainer>
@@ -184,7 +184,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {recentScreenings.map((row, i) => (
-                  <tr key={i} className="border-t border-slate-100 hover:bg-cyan-50/30 transition-colors">
+                  <tr key={i} className="border-t border-slate-100 hover:bg-amber-50/30 transition-colors">
                     <td className="py-4 px-6 font-data text-xs text-slate-400">{row.id}</td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2.5">
