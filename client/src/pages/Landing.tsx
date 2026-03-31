@@ -210,18 +210,8 @@ export default function Landing() {
 
   return (
     <div className="overflow-hidden bg-[#0a0e1a] text-white">
-      <header className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-end gap-2 border-b border-white/10 bg-[#0a0e1a]/90 px-4 py-3 backdrop-blur-md sm:px-6">
-        <Link
-          href="/app/architecture"
-          className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 bg-[#D4A843]/10 px-4 py-2 font-display text-sm font-bold text-amber-300 transition-colors hover:border-amber-400/60 hover:bg-[#D4A843]/15"
-        >
-          Open App
-          <ArrowRight className="h-4 w-4" strokeWidth={2} />
-        </Link>
-      </header>
-
       {/* ===== HERO ===== */}
-      <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-14">
+      <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-20">
         <HeroNetworkAnimation />
         <div className="absolute inset-0">
           <img src={HERO_IMG} alt="" className="h-full w-full object-cover opacity-60" />
