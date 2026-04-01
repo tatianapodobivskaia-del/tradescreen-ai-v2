@@ -7,7 +7,6 @@
 import { useState, useEffect, useRef, type CSSProperties } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { useInView } from "@/hooks/useCountUp";
 import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
 import TopNavbar from "@/components/TopNavbar";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
@@ -45,21 +44,24 @@ const coreCapabilityDescriptions: Record<string, string> = {
 const howItWorksScreenDescription =
   "Checks all name variations across 4 sanctions lists and 45,296 entities";
 
-const fadeUp = {
+const fadeUpOnLoad = {
   hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay, duration: 0.7, ease: "easeOut" },
+  }),
 };
 
-/** Fade-up with stagger 0ms / 200ms / 400ms (per card index) when section enters view */
-const fadeUpStaggerScroll = {
+const fadeUpInView = {
   hidden: { opacity: 0, y: 28 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.2,
-      duration: 0.65,
-      ease: [0, 0, 0.58, 1] as const,
+      delay: i * 0.1,
+      duration: 0.7,
+      ease: "easeOut",
     },
   }),
 };
@@ -191,8 +193,28 @@ const PATTERN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iR
 function PremiumHeading({ children, subtitle, dark }: { children: React.ReactNode; subtitle?: string; dark?: boolean }) {
   return (
     <div className="mb-9 text-center md:mb-12">
-      <h2 className={`section-heading ${dark ? "text-white" : "text-slate-900"}`}>{children}</h2>
-      {subtitle && <p className={`mt-3 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}>{subtitle}</p>}
+      <motion.h2
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeUpInView}
+        custom={0}
+        className={`section-heading ${dark ? "text-white" : "text-slate-900"}`}
+      >
+        {children}
+      </motion.h2>
+      {subtitle && (
+        <motion.p
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeUpInView}
+          custom={2}
+          className={`mt-3 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}
+        >
+          {subtitle}
+        </motion.p>
+      )}
     </div>
   );
 }
@@ -222,23 +244,30 @@ export default function Landing() {
         <ScanningLine />
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 text-center md:py-24">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpOnLoad}
+            custom={0.2}
+          >
             <AcademicBadge className="mb-6 border-amber-500/30 text-amber-400" />
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpOnLoad}
+            custom={0.4}
             className="mb-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
           >
             AI-Powered Sanctions Screening
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.85, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpOnLoad}
+            custom={0.6}
             style={heroDifferentiatorGlow}
             className="mx-auto mb-5 max-w-4xl font-display text-2xl font-bold leading-snug tracking-tight text-amber-300 sm:text-3xl md:text-4xl md:leading-tight"
           >
@@ -246,18 +275,19 @@ export default function Landing() {
           </motion.p>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.75, delay: 1.2 }}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpOnLoad}
+            custom={0.8}
             className="mx-auto mb-8 max-w-3xl font-body text-lg leading-snug text-white sm:text-xl md:text-2xl md:leading-snug"
           >
             See What Others Miss — <span className="font-semibold text-amber-400">in 60 Seconds</span>
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 1.35 }}
+            transition={{ duration: 0.7, delay: 1.0, ease: "easeOut" }}
             className="mb-8 flex flex-col items-center gap-2"
           >
             <div className="ai-glow-dark inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full px-6 py-3 sm:px-8 sm:py-4">
@@ -272,9 +302,10 @@ export default function Landing() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.5 }}
+            initial="hidden"
+            animate="visible"
+            variants={fadeUpOnLoad}
+            custom={1.2}
             className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4"
           >
             <Link href="/app/screening" className="btn-premium btn-premium-primary group flex items-center gap-2.5 text-base">
@@ -322,11 +353,9 @@ export default function Landing() {
 }
 
 function WhyItMatters() {
-  const { isInView, ref } = useInView(0.2);
   return (
     <section
       id="landing-why-it-matters"
-      ref={ref as React.Ref<HTMLElement>}
       className="relative py-16 md:py-24"
       style={{ backgroundImage: `url(${PATTERN_IMG})`, backgroundSize: "cover", backgroundPosition: "center" }}
     >
@@ -341,8 +370,9 @@ function WhyItMatters() {
                 key={i}
                 custom={i}
                 initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                variants={fadeUp}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={fadeUpInView}
                 className="premium-card-dark rounded-xl p-6 text-center group"
               >
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#D4A843]/10 transition-colors group-hover:bg-[#D4A843]/20">
@@ -362,11 +392,9 @@ function WhyItMatters() {
 }
 
 function HowItWorks() {
-  const { isInView, ref } = useInView(0.2);
   return (
     <section
       id="how-it-works"
-      ref={ref as React.Ref<HTMLElement>}
       className="relative bg-[#060a16] py-16 md:py-24"
     >
       <div className="mx-auto max-w-6xl px-4">
@@ -379,8 +407,9 @@ function HowItWorks() {
                 key={i}
                 custom={i}
                 initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                variants={fadeUpStaggerScroll}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={fadeUpInView}
                 className="relative"
               >
                 <div className="premium-card-dark h-full rounded-xl p-7 text-center group">
@@ -412,9 +441,8 @@ function HowItWorks() {
 }
 
 function CoreCapabilities() {
-  const { isInView, ref } = useInView(0.15);
   return (
-    <section id="landing-core-capabilities" ref={ref as React.Ref<HTMLElement>} className="relative py-16 md:py-24">
+    <section id="landing-core-capabilities" className="relative py-16 md:py-24">
       <ScanningLine />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">Core Capabilities</PremiumHeading>
@@ -426,8 +454,9 @@ function CoreCapabilities() {
                 key={i}
                 custom={i}
                 initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                variants={fadeUpStaggerScroll}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                variants={fadeUpInView}
                 className="premium-card-dark rounded-xl p-8 group"
               >
                 <div className="w-12 h-12 rounded-lg bg-[#D4A843]/10 flex items-center justify-center mb-5 group-hover:bg-[#D4A843]/20 transition-colors">
@@ -448,17 +477,17 @@ function CoreCapabilities() {
 }
 
 function SeeItInAction() {
-  const { isInView, ref } = useInView(0.2);
   return (
-    <section id="landing-see-it-in-action" ref={ref as React.Ref<HTMLElement>} className="relative bg-[#0a0e1a] py-16 md:py-24">
+    <section id="landing-see-it-in-action" className="relative bg-[#0a0e1a] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">See It In Action</PremiumHeading>
 
         <motion.div
           custom={0}
           initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          variants={fadeUp}
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeUpInView}
           role="img"
           aria-label="Demo video placeholder. Demo video coming soon."
           className="relative mx-auto flex aspect-video max-w-4xl flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/90 to-[#050810] px-6 shadow-2xl shadow-black/40"
@@ -484,12 +513,17 @@ function SeeItInAction() {
 }
 
 function ComparisonSection() {
-  const { isInView, ref } = useInView(0.2);
   return (
-    <section id="landing-comparison" ref={ref as React.Ref<HTMLElement>} className="bg-[#060a16] py-16 md:py-24">
+    <section id="landing-comparison" className="bg-[#060a16] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">How It Compares</PremiumHeading>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeUpInView}
+          custom={0}
+        >
           <div className="premium-card-dark rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -538,11 +572,9 @@ const performanceBenchmarkRows = [
 ] as const;
 
 function PerformanceBenchmarksSection() {
-  const { isInView, ref } = useInView(0.2);
   return (
     <section
       id="landing-performance"
-      ref={ref as React.Ref<HTMLElement>}
       className="relative border-t border-slate-800/50 bg-[#0a0e1a] py-16 md:py-24"
       aria-labelledby="performance-benchmarks-heading"
     >
@@ -561,8 +593,9 @@ function PerformanceBenchmarksSection() {
           <motion.div
             custom={0}
             initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUp}
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-amber-500/20 p-7 text-center shadow-lg shadow-[#D4A843]/20 transition-colors hover:border-amber-500/35"
           >
             <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-amber-400 md:text-6xl">97%</div>
@@ -571,8 +604,9 @@ function PerformanceBenchmarksSection() {
           <motion.div
             custom={1}
             initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUp}
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-emerald-500/20 p-7 text-center shadow-lg shadow-emerald-500/5 transition-colors hover:border-emerald-500/35"
           >
             <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-emerald-400 md:text-6xl">~8%</div>
@@ -581,8 +615,9 @@ function PerformanceBenchmarksSection() {
           <motion.div
             custom={2}
             initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            variants={fadeUp}
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-amber-500/20 p-7 text-center shadow-lg shadow-[#D4A843]/20 transition-colors hover:border-amber-500/35"
           >
             <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-amber-400 md:text-6xl">&lt;2 min</div>
@@ -594,9 +629,11 @@ function PerformanceBenchmarksSection() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.55, delay: 0.15 }}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeUpInView}
+          custom={1}
           className="premium-card-dark rounded-xl overflow-hidden border border-slate-700/40 mb-8"
         >
           <div className="overflow-x-auto">
@@ -633,9 +670,8 @@ function PerformanceBenchmarksSection() {
 }
 
 function DataSourcesSection() {
-  const { isInView, ref } = useInView(0.2);
   return (
-    <section id="landing-data-sources" ref={ref as React.Ref<HTMLElement>} className="py-16 md:py-24">
+    <section id="landing-data-sources" className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">Trusted Data Sources</PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -647,8 +683,9 @@ function DataSourcesSection() {
               rel="noopener noreferrer"
               custom={i}
               initial="hidden"
-              animate={isInView ? "visible" : "hidden"}
-              variants={fadeUp}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={fadeUpInView}
               className="premium-card-dark group block cursor-pointer rounded-xl p-6 text-center"
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
