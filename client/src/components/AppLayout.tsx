@@ -54,16 +54,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             collapsed ? "justify-center px-3 h-[80px]" : "gap-4 px-7 h-[80px]"
           )}
         >
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#F5C542] to-[#F5C542] flex items-center justify-center shrink-0 shadow-lg shadow-[#D4A843]/25">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#22d3ee] to-[#06b6d4] flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/25">
             <Shield className="w-6 h-6 text-white" strokeWidth={2.5} />
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
               <h1 className="text-[22px] font-extrabold font-display text-white tracking-tight leading-none">
-                TradeScreen<span className="text-amber-400">AI</span>
+                TradeScreen<span className="text-cyan-400">AI</span>
               </h1>
               <div className="flex items-center gap-2 mt-1.5">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold tracking-[0.12em] uppercase font-data bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold tracking-[0.12em] uppercase font-data bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   Prototype
                 </span>
                 <span className="text-[10px] font-data text-slate-500 tracking-wider">v1.0</span>
@@ -87,16 +87,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       "flex items-center gap-3.5 rounded-xl transition-all duration-200 group relative",
                       collapsed ? "justify-center px-3 py-3" : "px-5 py-3",
                       isActive
-                        ? "bg-[#D4A843]/12 text-amber-400 font-bold"
+                        ? "bg-cyan-500/12 text-cyan-400 font-bold"
                         : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 font-medium"
                     )}
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-[#F5C542]" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-cyan-300" />
                     )}
                     <Icon className={cn(
                       "w-5 h-5 shrink-0",
-                      isActive ? "text-amber-400" : "text-slate-500 group-hover:text-slate-300"
+                      isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
                     )} strokeWidth={isActive ? 2.2 : 1.8} />
                     {!collapsed && (
                       <span className="text-[15px] tracking-[-0.01em]">{item.label}</span>
@@ -125,7 +125,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <a
               href="/"
               className={cn(
-                "flex items-center gap-3 rounded-xl text-[13px] font-semibold text-slate-500 hover:text-amber-400 hover:bg-white/[0.06] transition-all duration-200",
+                "flex items-center gap-3 rounded-xl text-[13px] font-semibold text-slate-500 hover:text-cyan-400 hover:bg-white/[0.06] transition-all duration-200",
                 collapsed ? "justify-center px-3 py-2.5" : "px-5 py-2.5"
               )}
             >

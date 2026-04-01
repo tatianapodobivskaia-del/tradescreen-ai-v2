@@ -68,7 +68,7 @@ export default function Watchlist() {
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
                     transition={{ duration: 1, delay: i * 0.15 }}
-                    className="h-full rounded-full bg-[#D4A843]"
+                    className="h-full rounded-full bg-[#06b6d4]"
                     style={{ opacity: 1 - i * 0.15 }}
                   />
                 </div>
@@ -89,13 +89,13 @@ export default function Watchlist() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or alias..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
             />
           </div>
           <select
             value={listFilter}
             onChange={(e) => setListFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
           >
             <option value="all">All Lists</option>
             <option value="OFAC SDN">OFAC SDN</option>
@@ -106,7 +106,7 @@ export default function Watchlist() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
           >
             <option value="all">All Types</option>
             <option value="Individual">Individual</option>

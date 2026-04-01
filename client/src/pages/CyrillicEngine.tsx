@@ -41,10 +41,10 @@ export default function CyrillicEngine() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={activeTab === "cyr2lat" ? "Enter Cyrillic name (e.g., Щербаков)" : "Enter Latin name (e.g., Shcherbakov)"}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
             />
           </div>
-          <button className="px-6 py-3 bg-[#D4A843] hover:bg-[#B8922D] text-white font-semibold rounded-lg text-sm transition-colors">
+          <button className="px-6 py-3 bg-[#06b6d4] hover:bg-[#0ea5e9] text-white font-semibold rounded-lg text-sm transition-colors">
             Transliterate
           </button>
         </div>
@@ -54,7 +54,7 @@ export default function CyrillicEngine() {
       {/* Animated Transliteration Flow */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
-          <ArrowRight className="w-4 h-4 text-amber-500" />
+          <ArrowRight className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Transliteration Flow Visualization</h3>
         </div>
 
@@ -80,7 +80,7 @@ export default function CyrillicEngine() {
                   className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors"
                 >
                   <td className="py-3 px-4 font-semibold text-slate-900 font-body">{row.cyrillic}</td>
-                  <td className="py-3 px-1 text-center"><ArrowRight className="w-3 h-3 text-amber-400 mx-auto" /></td>
+                  <td className="py-3 px-1 text-center"><ArrowRight className="w-3 h-3 text-cyan-400 mx-auto" /></td>
                   <td className="py-3 px-4 font-data text-slate-700">{row.iso9}</td>
                   <td className="py-3 px-4 font-data text-slate-700">{row.icao}</td>
                   <td className="py-3 px-4 font-data text-slate-700">{row.bgn}</td>
@@ -95,7 +95,7 @@ export default function CyrillicEngine() {
       {/* Full Cyrillic Variants Reference */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
-          <BookOpen className="w-4 h-4 text-amber-500" />
+          <BookOpen className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Cyrillic Variants Reference</h3>
           <span className="text-xs text-slate-400 font-body">— Key letters with multiple transliteration forms</span>
         </div>
@@ -133,7 +133,7 @@ export default function CyrillicEngine() {
       {/* Trade Document Comparison */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
-          <FileText className="w-4 h-4 text-amber-500" />
+          <FileText className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">How Russian Names Appear in Trade Documents</h3>
           <span className="text-xs text-slate-400 font-body">— Same person, different spellings</span>
         </div>
@@ -160,7 +160,7 @@ export default function CyrillicEngine() {
             </tbody>
           </table>
         </div>
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+        <div className="mt-4 rounded-lg border border-cyan-200 bg-amber-50 p-3">
           <p className="text-xs text-amber-700 font-body">
             <span className="font-semibold">Key insight:</span> The same Russian name can appear in 4+ different Latin spellings across international documents. Traditional screening systems that rely on exact matching will miss these variants.
           </p>

@@ -26,7 +26,7 @@ export function CountUpNumber({ value, prefix = "", suffix = "", className, dura
 export function StatusDot({ status }: { status: "operational" | "degraded" | "down" }) {
   const colors = {
     operational: "bg-emerald-500 status-dot",
-    degraded: "bg-amber-500 animate-pulse",
+    degraded: "bg-cyan-500 animate-pulse",
     down: "bg-red-500",
   };
   return <span className={cn("inline-block w-2 h-2 rounded-full", colors[status])} />;
@@ -36,7 +36,7 @@ export function StatusDot({ status }: { status: "operational" | "degraded" | "do
 export function AcademicBadge({ className }: { className?: string }) {
   return (
     <div className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded border text-[10px] font-semibold tracking-widest uppercase font-data", className)}>
-      <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] animate-pulse" />
+      <span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4] animate-pulse" />
       Academic Research Prototype
     </div>
   );
@@ -44,7 +44,7 @@ export function AcademicBadge({ className }: { className?: string }) {
 
 export function DemoBadge({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider uppercase font-data border border-amber-500/30 bg-amber-500/10 text-amber-500", className)}>
+    <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider uppercase font-data border border-cyan-500/30 bg-cyan-500/10 text-cyan-500", className)}>
       DEMO
     </span>
   );
@@ -66,15 +66,15 @@ export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
 
         {/* Legal links */}
         <div className="flex items-center justify-center gap-2 text-xs">
-          <Link href="/app/disclaimer" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/disclaimer" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
             Disclaimer
           </Link>
           <span className="text-slate-600/40">|</span>
-          <Link href="/app/privacy" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/privacy" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
             Privacy Policy
           </Link>
           <span className="text-slate-600/40">|</span>
-          <Link href="/app/terms" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-amber-400" : "text-slate-500 hover:text-slate-700")}>
+          <Link href="/app/terms" className={cn("hover:underline transition-colors", isDark ? "text-slate-500 hover:text-cyan-400" : "text-slate-500 hover:text-slate-700")}>
             Terms of Use
           </Link>
         </div>
@@ -114,7 +114,7 @@ export function SectionTitle({ children, subtitle, className, dark = false }: { 
 export function ScanningLine({ className }: { className?: string }) {
   return (
     <div className={cn("absolute inset-0 overflow-hidden pointer-events-none", className)}>
-      <div className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-[#F5C542]/10 to-transparent animate-scan" />
+      <div className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-[#22d3ee]/10 to-transparent animate-scan" />
     </div>
   );
 }

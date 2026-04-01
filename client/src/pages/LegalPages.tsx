@@ -34,7 +34,7 @@ export default function LegalPages() {
           Back to Dashboard
         </Link>
 
-        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-50/60 px-4 py-3 text-center">
+        <div className="mb-6 rounded-xl border border-cyan-500/20 bg-amber-50/60 px-4 py-3 text-center">
           <p className="text-xs font-bold font-display uppercase tracking-wide text-amber-900">
             Academic Research Prototype — For educational use only — Not a commercial compliance product
           </p>

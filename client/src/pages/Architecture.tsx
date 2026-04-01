@@ -37,9 +37,9 @@ export default function Architecture() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.12 }}
-                    className="p-4 rounded-xl border border-slate-200 text-center h-full hover:border-amber-500/30 hover:shadow-md transition-all"
+                    className="p-4 rounded-xl border border-slate-200 text-center h-full hover:border-cyan-500/30 hover:shadow-md transition-all"
                   >
-                    <div className="text-3xl font-bold font-data text-amber-500/20 mb-2">{stage.id}</div>
+                    <div className="text-3xl font-bold font-data text-cyan-500/20 mb-2">{stage.id}</div>
                     <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mx-auto mb-3">
                       <Icon className="w-5 h-5 text-amber-600" />
                     </div>
@@ -48,7 +48,7 @@ export default function Architecture() {
                   </motion.div>
                   {i < 4 && (
                     <div className="hidden md:flex absolute top-1/2 -right-2 transform -translate-y-1/2 z-10">
-                      <ArrowRight className="w-4 h-4 text-amber-400" />
+                      <ArrowRight className="w-4 h-4 text-cyan-400" />
                     </div>
                   )}
                 </div>
@@ -91,7 +91,7 @@ export default function Architecture() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 hover:border-amber-500/25 hover:shadow-sm transition-all"
+                className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 hover:border-cyan-500/25 hover:shadow-sm transition-all"
               >
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
                   <Icon className="h-5 w-5 text-amber-600" />
@@ -107,12 +107,12 @@ export default function Architecture() {
       {/* Scoring Formula */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-6">
-          <Calculator className="w-4 h-4 text-amber-500" />
+          <Calculator className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Composite Risk Scoring Formula</h3>
         </div>
 
         <div className="p-4 rounded-lg bg-slate-900 text-center mb-6">
-          <code className="text-sm font-data text-amber-400">{scoringFormula.formula}</code>
+          <code className="text-sm font-data text-cyan-400">{scoringFormula.formula}</code>
         </div>
 
         <div className="space-y-4">
@@ -133,7 +133,7 @@ export default function Architecture() {
                     initial={{ width: 0 }}
                     animate={{ width: `${w.weight * 100}%` }}
                     transition={{ duration: 0.8, delay: i * 0.15 }}
-                    className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#F5C542]"
+                    className="h-full rounded-full bg-gradient-to-r from-[#06b6d4] to-[#22d3ee]"
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -149,7 +149,7 @@ export default function Architecture() {
       {/* Two-Pass Architecture */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Cpu className="w-4 h-4 text-amber-500" />
+          <Cpu className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Two-Pass Architecture</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -161,10 +161,10 @@ export default function Architecture() {
               <h4 className="text-base font-bold font-display text-slate-800">Pass 1: Fast Screening</h4>
             </div>
             <ul className="space-y-2 text-sm text-slate-600 font-body">
-              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />Fuzzy string matching using Levenshtein distance</li>
-              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />Cyrillic transliteration variant generation</li>
-              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />Multi-list parallel search across all 45,296 entities</li>
-              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-amber-400 mt-1 shrink-0" />Composite risk score calculation</li>
+              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Fuzzy string matching using Levenshtein distance</li>
+              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Cyrillic transliteration variant generation</li>
+              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Multi-list parallel search across all 45,296 entities</li>
+              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Composite risk score calculation</li>
             </ul>
           </div>
           <div className="p-5 rounded-xl border border-violet-200 bg-violet-50/30">
@@ -216,7 +216,7 @@ export default function Architecture() {
             </div>
           </div>
 
-          <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80 border-l-4 border-l-amber-500 shadow-lg">
+          <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800/80 border-l-4 border-l-cyan-500 shadow-lg">
             <div className="px-4 py-3.5 bg-gradient-to-r from-[#1f1706] via-emerald-950/80 to-[#2b2108] border-b border-amber-900/40">
               <h4 className="text-sm font-extrabold font-display text-amber-50 tracking-tight">TradeScreenAI 4-Agent AI Pipeline</h4>
             </div>
@@ -231,7 +231,7 @@ export default function Architecture() {
                   "Catches all Cyrillic name variants",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#F5C542]/90" />
+                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#22d3ee]/90" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -249,7 +249,7 @@ export default function Architecture() {
       {/* Why AI */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Brain className="w-4 h-4 text-amber-500" />
+          <Brain className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Why AI — Beyond Rule-Based Systems</h3>
         </div>
         <div className="overflow-x-auto">
@@ -285,7 +285,7 @@ export default function Architecture() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-4">
-            <Shield className="w-4 h-4 text-amber-500" />
+            <Shield className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Security & Scalability</h3>
           </div>
           <div className="space-y-3">
@@ -296,16 +296,16 @@ export default function Architecture() {
               { icon: Cpu, label: "Sub-second response time for single entity screening" },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <item.icon className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                <item.icon className="w-4 h-4 text-cyan-500 mt-0.5 shrink-0" />
                 <span className="text-sm text-slate-600 font-body">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="premium-card rounded-xl p-6 border-l-4 border-l-amber-400">
+        <div className="premium-card rounded-xl p-6 border-l-4 border-l-cyan-400">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <AlertTriangle className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Limitations of Current Prototype</h3>
           </div>
           <div className="space-y-3">
@@ -317,7 +317,7 @@ export default function Architecture() {
               "No persistent storage — all data resets on page reload",
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0" />
                 <span className="text-sm text-slate-600 font-body">{item}</span>
               </div>
             ))}

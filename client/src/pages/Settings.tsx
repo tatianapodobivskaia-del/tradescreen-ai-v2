@@ -29,7 +29,7 @@ export default function SettingsPage() {
       {/* Fuzzy Matching Threshold */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Sliders className="w-4 h-4 text-amber-500" />
+          <Sliders className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Fuzzy Matching Threshold</h3>
         </div>
         <p className="text-sm text-slate-500 font-body mb-4">
@@ -42,7 +42,7 @@ export default function SettingsPage() {
             max={99}
             value={threshold}
             onChange={(e) => setThreshold(Number(e.target.value))}
-            className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#D4A843]"
+            className="w-full h-2 bg-slate-200 rounded-full appearance-none cursor-pointer accent-[#06b6d4]"
           />
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400 font-data">30% (High Sensitivity)</span>
@@ -62,7 +62,7 @@ export default function SettingsPage() {
       {/* Notifications */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Bell className="w-4 h-4 text-amber-500" />
+          <Bell className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Notifications</h3>
         </div>
         <div className="space-y-3">
@@ -79,7 +79,7 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={() => setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key as keyof typeof prev] }))}
-                className={`relative w-11 h-6 rounded-full transition-colors ${notifications[item.key as keyof typeof notifications] ? "bg-[#D4A843]" : "bg-slate-200"}`}
+                className={`relative w-11 h-6 rounded-full transition-colors ${notifications[item.key as keyof typeof notifications] ? "bg-[#06b6d4]" : "bg-slate-200"}`}
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${notifications[item.key as keyof typeof notifications] ? "translate-x-5" : ""}`} />
               </button>
@@ -94,7 +94,7 @@ export default function SettingsPage() {
       {/* About / Version */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Info className="w-4 h-4 text-amber-500" />
+          <Info className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">About</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -120,26 +120,26 @@ export default function SettingsPage() {
       {/* Data Handling Policy */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-4 h-4 text-amber-500" />
+          <Shield className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Data Handling Policy</h3>
         </div>
         <div className="space-y-3 text-sm text-slate-600 font-body leading-relaxed">
           <p>This is an academic research prototype. All data processing occurs locally in the browser.</p>
           <ul className="space-y-2 ml-4">
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F5C542] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] mt-2 shrink-0" />
               No vendor names or screening results are stored on external servers
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F5C542] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] mt-2 shrink-0" />
               Uploaded documents are processed in-memory and discarded after analysis
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F5C542] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] mt-2 shrink-0" />
               Sanctions list data is sourced from publicly available government databases
             </li>
             <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#F5C542] mt-2 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] mt-2 shrink-0" />
               All session data is cleared when the browser tab is closed
             </li>
           </ul>
@@ -150,7 +150,7 @@ export default function SettingsPage() {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className="px-6 py-2.5 bg-[#D4A843] hover:bg-[#B8922D] text-white font-semibold rounded-lg text-sm transition-colors"
+          className="px-6 py-2.5 bg-[#06b6d4] hover:bg-[#0ea5e9] text-white font-semibold rounded-lg text-sm transition-colors"
         >
           Save Settings
         </button>

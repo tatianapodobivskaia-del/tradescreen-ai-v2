@@ -364,7 +364,9 @@ function WhyItMatters() {
     >
       <div className="absolute inset-0 bg-[#0a0e1a]/90" />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="The challenge of sanctions compliance grows more complex every year">Why It Matters</PremiumHeading>
+        <PremiumHeading dark subtitle="The challenge of sanctions compliance grows more complex every year">
+          Comprehensive Coverage, <span className="text-cyan-300">Unmatched Accuracy</span>
+        </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
           {whyItMattersStats.map((stat, i) => {
             const Icon = iconMap[stat.icon];
@@ -401,7 +403,9 @@ function HowItWorks() {
       className="relative bg-[#060a16] py-16 md:py-24"
     >
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Three steps from vendor name to compliance decision">How It Works</PremiumHeading>
+        <PremiumHeading dark subtitle="Three steps from vendor name to compliance decision">
+          Three Simple Steps to <span className="text-cyan-300">Complete Compliance</span>
+        </PremiumHeading>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {howItWorksSteps.map((step, i) => {
             const Icon = iconMap[step.icon];
@@ -448,7 +452,9 @@ function CoreCapabilities() {
     <section id="landing-core-capabilities" className="relative py-16 md:py-24">
       <ScanningLine />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">Core Capabilities</PremiumHeading>
+        <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">
+          Enterprise-Grade Features, <span className="text-cyan-300">Research Innovation</span>
+        </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {coreCapabilities.map((cap, i) => {
             const Icon = iconMap[cap.icon];
@@ -483,7 +489,9 @@ function SeeItInAction() {
   return (
     <section id="landing-see-it-in-action" className="relative bg-[#0a0e1a] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">See It In Action</PremiumHeading>
+        <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">
+          Watch How TradeScreen AI <span className="text-cyan-300">Finds Hidden Risks</span>
+        </PremiumHeading>
 
         <motion.div
           custom={0}
@@ -498,7 +506,7 @@ function SeeItInAction() {
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
             style={{
-              backgroundImage: `linear-gradient(rgba(212,168,67,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(212,168,67,0.15) 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)`,
               backgroundSize: "32px 32px",
             }}
           />
@@ -519,7 +527,9 @@ function ComparisonSection() {
   return (
     <section id="landing-comparison" className="bg-[#060a16] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">How It Compares</PremiumHeading>
+        <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">
+          TradeScreen AI vs <span className="text-cyan-300">Traditional Systems</span>
+        </PremiumHeading>
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -589,7 +599,9 @@ function PerformanceBenchmarksSection() {
           dark
           subtitle="Benchmark results on controlled test dataset of 100 vendor records including 7 known sanctioned entities"
         >
-          <span id="performance-benchmarks-heading">Measured Performance</span>
+          <span id="performance-benchmarks-heading">
+            Measured Results, <span className="text-cyan-300">Proven Performance</span>
+          </span>
         </PremiumHeading>
 
         <div className="mb-8 grid grid-cols-1 gap-5 md:mb-10 md:grid-cols-3">
@@ -603,6 +615,9 @@ function PerformanceBenchmarksSection() {
           >
             <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-300 md:text-6xl">97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
+            <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
+              <div className="h-full w-[97%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
+            </div>
           </motion.div>
           <motion.div
             custom={1}
@@ -614,6 +629,9 @@ function PerformanceBenchmarksSection() {
           >
             <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-emerald-400 md:text-6xl">~8%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
+            <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
+              <div className="h-full w-[8%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
+            </div>
           </motion.div>
           <motion.div
             custom={2}
@@ -627,6 +645,9 @@ function PerformanceBenchmarksSection() {
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
+            </div>
+            <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
+              <div className="h-full w-[33%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
             </div>
           </motion.div>
         </div>
@@ -673,10 +694,20 @@ function PerformanceBenchmarksSection() {
 }
 
 function DataSourcesSection() {
+  const sourceHighlight = (name: string, idx: number) => {
+    if (/OFAC|US/i.test(name) || idx === 0) return "border-red-400/20 bg-red-400/[0.03]";
+    if (/EU/i.test(name) || idx === 1) return "border-blue-400/25 bg-blue-400/[0.04]";
+    if (/UN/i.test(name) || idx === 2) return "border-cyan-300/25 bg-cyan-300/[0.04]";
+    if (/UK|OFSI/i.test(name) || idx === 3) return "border-indigo-300/20 bg-indigo-300/[0.03]";
+    return "border-cyan-400/15 bg-cyan-400/[0.02]";
+  };
+
   return (
     <section id="landing-data-sources" className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">Trusted Data Sources</PremiumHeading>
+        <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">
+          Official Sanctions Lists, <span className="text-cyan-300">Always Current</span>
+        </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {dataSources.map((source, i) => (
             <motion.a
@@ -689,7 +720,7 @@ function DataSourcesSection() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeUpInView}
-              className="premium-card-dark group block cursor-pointer rounded-xl p-6 text-center"
+              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}`}
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-300 transition-colors">{source.name}</h3>
@@ -704,6 +735,10 @@ function DataSourcesSection() {
               </div>
             </motion.a>
           ))}
+        </div>
+        <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
+          <span>All sources synchronized • Last update: 6 hours ago</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>

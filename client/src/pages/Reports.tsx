@@ -87,7 +87,7 @@ function PdfReportPreviewModal({ open, onClose }: { open: boolean; onClose: () =
             TradeScreenAI — Academic Research Demo — Screening Report
           </h1>
 
-          <div className="mt-6 rounded-md bg-[#B8922D] px-4 py-3 text-center">
+          <div className="mt-6 rounded-md bg-[#0ea5e9] px-4 py-3 text-center">
             <p className="text-[10px] font-bold font-display leading-relaxed tracking-wide text-white sm:text-[11px]">
               ACADEMIC RESEARCH PROTOTYPE — FOR EDUCATIONAL USE ONLY — NOT A COMMERCIAL COMPLIANCE TOOL
             </p>
@@ -165,7 +165,7 @@ function PdfReportPreviewModal({ open, onClose }: { open: boolean; onClose: () =
             </div>
           </section>
 
-          <footer className="mt-10 flex gap-3 rounded-lg border border-amber-200/80 bg-amber-50/80 px-4 py-4">
+          <footer className="mt-10 flex gap-3 rounded-lg border border-cyan-200/80 bg-amber-50/80 px-4 py-4">
             <ShieldAlert className="h-5 w-5 shrink-0 text-amber-700 mt-0.5" strokeWidth={2} />
             <div>
               <h3 className="text-xs font-bold font-display uppercase tracking-wide text-amber-900">Compliance disclaimer</h3>
@@ -203,7 +203,7 @@ export default function Reports() {
         {/* Screening Trends */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-amber-500" />
+            <TrendingUp className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Screening Trends</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Weekly screening volume by risk level</p>
@@ -226,7 +226,7 @@ export default function Reports() {
         {/* Geographic Distribution */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
-            <Globe className="w-4 h-4 text-amber-500" />
+            <Globe className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Geographic Distribution</h3>
           </div>
           <p className="text-xs text-slate-500 font-body mb-4">Sanctioned entities by country of origin</p>
@@ -241,7 +241,7 @@ export default function Reports() {
                     transition={{ duration: 0.8, delay: i * 0.08 }}
                     className="h-full rounded-md"
                     style={{
-                      background: `linear-gradient(90deg, #F5C542 ${Math.min(item.percentage * 2, 100)}%, #B8922D)`,
+                      background: `linear-gradient(90deg, #22d3ee ${Math.min(item.percentage * 2, 100)}%, #0ea5e9)`,
                       opacity: 1 - i * 0.08,
                     }}
                   />
@@ -260,7 +260,7 @@ export default function Reports() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-amber-500" />
+            <FileText className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Reports Archive</h3>
           </div>
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
@@ -310,7 +310,7 @@ export default function Reports() {
       {/* Performance Metrics */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-1">
-          <Award className="w-4 h-4 text-amber-500" />
+          <Award className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Performance Metrics</h3>
         </div>
         <p className="text-xs text-slate-500 font-body mb-4">Comparison: TradeScreenAI vs. manual review vs. rule-based systems</p>

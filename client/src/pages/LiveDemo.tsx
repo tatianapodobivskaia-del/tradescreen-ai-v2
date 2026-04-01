@@ -276,7 +276,7 @@ function tierBadgeClass(tier: RiskTier): string {
     case "HIGH":
       return "bg-red-100 text-red-900 border-red-300";
     case "MEDIUM":
-      return "bg-amber-100 text-amber-950 border-amber-300";
+      return "bg-amber-100 text-amber-950 border-cyan-300";
     default:
       return "bg-emerald-100 text-emerald-900 border-emerald-300";
   }
@@ -298,7 +298,7 @@ function tierVerdictBox(tier: RiskTier): string {
     case "HIGH":
       return "border-red-300 bg-red-50 text-red-950";
     case "MEDIUM":
-      return "border-amber-300 bg-amber-50 text-amber-950";
+      return "border-cyan-300 bg-amber-50 text-amber-950";
     default:
       return "border-emerald-300 bg-emerald-50 text-emerald-950";
   }
@@ -363,7 +363,7 @@ function RiskCapsBadge({ level }: { level: "high" | "medium" | "low" }) {
       className={cn(
         "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold font-display uppercase tracking-widest",
         level === "high" && "border-red-300 bg-red-100 text-red-800",
-        level === "medium" && "border-amber-300 bg-amber-100 text-amber-950",
+        level === "medium" && "border-cyan-300 bg-amber-100 text-amber-950",
         level === "low" && "border-emerald-300 bg-emerald-100 text-emerald-800"
       )}
     >
@@ -461,7 +461,7 @@ function TypingText({ text, active }: { text: string; active: boolean }) {
       className="mt-2 min-h-[2.75rem] break-words text-left text-[11px] leading-relaxed text-slate-700 font-body"
     >
       {text.slice(0, n)}
-      {n < text.length ? <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-[#B8922D]" /> : null}
+      {n < text.length ? <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-[#0ea5e9]" /> : null}
     </motion.p>
   );
 }
@@ -518,7 +518,7 @@ function StepIndicator({ activeStep }: { activeStep: 1 | 2 | 3 }) {
             className={cn(
               "rounded-full px-2.5 py-1 transition-colors duration-300",
               activeStep === s.n
-                ? "bg-[#B8922D] text-white shadow-sm"
+                ? "bg-[#0ea5e9] text-white shadow-sm"
                 : "text-slate-500"
             )}
           >
@@ -643,7 +643,7 @@ function AgentPipeline({
               className={cn(
                 "flex min-h-[200px] min-w-0 w-full flex-col rounded-xl border-2 border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow duration-300",
                 isProcessing &&
-                  "border-amber-500 shadow-md ring-2 ring-[#D4A843]/50 ring-offset-2 ring-offset-white animate-pulse",
+                  "border-cyan-500 shadow-md ring-2 ring-[#06b6d4]/50 ring-offset-2 ring-offset-white animate-pulse",
                 isComplete && "border-emerald-400 bg-emerald-50/40",
                 isPending && "border-slate-200 bg-slate-50 opacity-90"
               )}
@@ -652,7 +652,7 @@ function AgentPipeline({
                 <div
                   className={cn(
                     "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
-                    isProcessing && "border-amber-300 bg-amber-50",
+                    isProcessing && "border-cyan-300 bg-amber-50",
                     isComplete && "border-emerald-300 bg-emerald-100",
                     isPending && "border-slate-200 bg-white"
                   )}
@@ -1383,8 +1383,8 @@ function ScenarioCard({
           onClick={runPhase1}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
-            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
+            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
           )}
         >
           <Play className="h-4 w-4 fill-current" strokeWidth={2} />
@@ -1408,8 +1408,8 @@ function ScenarioCard({
           onClick={runPhase2}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
-            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
+            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
           )}
         >
           Run AI Deep Analysis
@@ -1432,8 +1432,8 @@ function ScenarioCard({
           onClick={runPhase3}
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#D4A843] to-[#F5C542] text-slate-950 shadow-lg shadow-[#D4A843]/25",
-            "transition-colors duration-200 hover:from-[#F5C542] hover:to-[#F5C542]"
+            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
           )}
         >
           Scan Document with AI
@@ -1620,7 +1620,7 @@ function ScenarioCard({
                             className={cn(
                               "mt-1 inline-flex rounded-md border px-2.5 py-1 text-xs font-bold",
                               scenario.result.action === "BLOCK" && "border-red-300 bg-red-100 text-red-900",
-                              scenario.result.action === "REVIEW" && "border-amber-300 bg-amber-100 text-amber-950",
+                              scenario.result.action === "REVIEW" && "border-cyan-300 bg-amber-100 text-amber-950",
                               scenario.result.action === "APPROVE" && "border-emerald-300 bg-emerald-100 text-emerald-900"
                             )}
                           >
@@ -1801,7 +1801,7 @@ export default function LiveDemo() {
               return next;
             });
           }}
-          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-amber-300 hover:bg-amber-50/80 hover:text-amber-800"
+          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-cyan-300 hover:bg-amber-50/80 hover:text-amber-800"
           title={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-label={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-pressed={soundOn}
@@ -1821,7 +1821,7 @@ export default function LiveDemo() {
         </div>
       </div>
 
-      <div className="w-full min-w-0 max-w-full rounded-2xl border border-amber-500/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl shadow-[#D4A843]/20 lg:p-8">
+      <div className="w-full min-w-0 max-w-full rounded-2xl border border-cyan-500/15 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl shadow-[#06b6d4]/20 lg:p-8">
         <p className="mb-6 text-center text-xs text-slate-400 font-body lg:text-sm">
           Step 1: Screening → Step 2: AI Analysis → Step 3: Document Scan. Each scenario uses the full width of the content
           area below.

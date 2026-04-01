@@ -37,14 +37,14 @@ type VisionResponse = Awaited<ReturnType<typeof runVisionScan>>;
 function riskBadgeClass(risk: string): string {
   const u = risk.toUpperCase();
   if (u === "HIGH") return "border-red-300 bg-red-100 text-red-900";
-  if (u === "MEDIUM") return "border-amber-300 bg-amber-100 text-amber-950";
+  if (u === "MEDIUM") return "border-cyan-300 bg-amber-100 text-amber-950";
   return "border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
 function docRiskBorder(risk: string): string {
   const u = risk.toUpperCase();
   if (u === "HIGH") return "border-red-400 ring-1 ring-red-200";
-  if (u === "MEDIUM") return "border-amber-400 ring-1 ring-amber-200";
+  if (u === "MEDIUM") return "border-cyan-400 ring-1 ring-cyan-200";
   return "border-emerald-400 ring-1 ring-emerald-200";
 }
 
@@ -182,7 +182,7 @@ export default function DocumentScanner() {
           onDrop={onDrop}
           className={cn(
             "group w-full cursor-pointer overflow-hidden rounded-xl border-2 border-dashed transition-colors",
-            isDragging ? "border-amber-500 bg-amber-50/30" : "border-slate-200 hover:border-amber-500/40",
+            isDragging ? "border-cyan-500 bg-amber-50/30" : "border-slate-200 hover:border-cyan-500/40",
             phase === "scanning" && "pointer-events-none opacity-80"
           )}
         >
@@ -196,7 +196,7 @@ export default function DocumentScanner() {
               {phase === "scanning" ? (
                 <Loader2 className="mb-3 h-10 w-10 animate-spin text-amber-600" strokeWidth={2} />
               ) : (
-                <Upload className="mb-3 h-10 w-10 text-slate-300 transition-colors group-hover:text-amber-500" />
+                <Upload className="mb-3 h-10 w-10 text-slate-300 transition-colors group-hover:text-cyan-500" />
               )}
               <p className="text-center text-sm font-medium text-slate-600 font-body">
                 {phase === "scanning" ? "Scanning document…" : "Drop document or click browse or take picture"}
@@ -242,7 +242,7 @@ export default function DocumentScanner() {
                   className={cn(
                     "flex gap-3 rounded-xl border-2 p-4 transition-all",
                     isComplete && "border-emerald-400 bg-emerald-50/40",
-                    isScanning && isActive && "border-amber-500 bg-amber-50/50 shadow-sm ring-2 ring-amber-200",
+                    isScanning && isActive && "border-cyan-500 bg-amber-50/50 shadow-sm ring-2 ring-cyan-200",
                     isScanning && isFuture && "border-slate-100 bg-slate-50/60 opacity-90",
                     isScanning && isPastAnim && "border-slate-200 bg-white"
                   )}
@@ -251,7 +251,7 @@ export default function DocumentScanner() {
                     className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
                       isComplete ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
-                      isActive && "border-amber-400 bg-amber-50"
+                      isActive && "border-cyan-400 bg-amber-50"
                     )}
                   >
                     {isComplete ? (

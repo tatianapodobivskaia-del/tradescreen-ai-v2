@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 
 const severityConfig = {
   high: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle },
-  medium: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", icon: ShieldAlert },
+  medium: { color: "text-amber-600", bg: "bg-amber-50", border: "border-cyan-200", icon: ShieldAlert },
   low: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: Info },
   info: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", icon: Info },
 };
@@ -51,13 +51,13 @@ export default function AuditLog() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by entity or details..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
             />
           </div>
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-body bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
           >
             <option value="all">All Severity</option>
             <option value="high">High</option>

@@ -87,10 +87,10 @@ export const screeningActivityData = [
 ];
 
 export const listDistribution = [
-  { name: "OFAC SDN", value: 18714, color: "#F5C542" },
-  { name: "UK OFSI", value: 19761, color: "#D4A843" },
-  { name: "EU Consolidated", value: 5819, color: "#B8922D" },
-  { name: "UN Security Council", value: 1002, color: "#B8922D" },
+  { name: "OFAC SDN", value: 18714, color: "#22d3ee" },
+  { name: "UK OFSI", value: 19761, color: "#06b6d4" },
+  { name: "EU Consolidated", value: 5819, color: "#0ea5e9" },
+  { name: "UN Security Council", value: 1002, color: "#0ea5e9" },
 ];
 
 export const recentScreenings = [

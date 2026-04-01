@@ -237,7 +237,7 @@ function parseAmountUsd(raw: string): number {
 function tierStyle(tier: string): string {
   const u = tier.toUpperCase();
   if (u === "HIGH") return "text-red-700 bg-red-50 border-red-200";
-  if (u === "MEDIUM") return "text-amber-900 bg-amber-50 border-amber-200";
+  if (u === "MEDIUM") return "text-amber-900 bg-amber-50 border-cyan-200";
   return "text-emerald-800 bg-emerald-50 border-emerald-200";
 }
 
@@ -308,14 +308,14 @@ function normalizeAIResult(raw: RawAIResult): NormalizedAIResult {
 function riskBadgeClasses(level: string): string {
   const u = level.toUpperCase();
   if (u === "HIGH") return "border-red-300 bg-red-100 text-red-900";
-  if (u === "MEDIUM") return "border-amber-300 bg-amber-100 text-amber-950";
+  if (u === "MEDIUM") return "border-cyan-300 bg-amber-100 text-amber-950";
   return "border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
 function actionBadgeClasses(action: string): string {
   const u = action.toUpperCase();
   if (u === "BLOCK") return "border-red-300 bg-red-100 text-red-900";
-  if (u === "FLAG" || u === "REVIEW") return "border-amber-300 bg-amber-100 text-amber-950";
+  if (u === "FLAG" || u === "REVIEW") return "border-cyan-300 bg-amber-100 text-amber-950";
   if (u === "APPROVE") return "border-emerald-300 bg-emerald-100 text-emerald-900";
   return "border-slate-300 bg-slate-100 text-slate-800";
 }
@@ -422,8 +422,8 @@ export default function Screening() {
 
         {activeTab === "upload" ? (
           <div>
-            <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-amber-500/40">
-              <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-amber-500" />
+            <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40">
+              <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
               <p className="text-sm font-semibold text-slate-600 font-body">Drop CSV file here or click to browse</p>
               <p className="mt-2 text-xs text-slate-400 font-body">
                 Supports CSV and PDF. Excel coming soon.
@@ -456,7 +456,7 @@ export default function Screening() {
                 value={vendorName}
                 onChange={(e) => setVendorName(e.target.value)}
                 placeholder="Legal name of vendor or entity"
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                 autoComplete="organization"
               />
             </div>
@@ -472,7 +472,7 @@ export default function Screening() {
                 id="country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
               >
                 <option value="">Select country...</option>
                 {COUNTRY_OPTIONS.map((c) => (
@@ -497,7 +497,7 @@ export default function Screening() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 125000"
-                className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
               />
             </div>
 
@@ -512,7 +512,7 @@ export default function Screening() {
                 id="doc-type"
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
               >
                 <option value="">Select type...</option>
                 {DOCUMENT_TYPES.map((t) => (
@@ -536,7 +536,7 @@ export default function Screening() {
                 value={cyrillicName}
                 onChange={(e) => setCyrillicName(e.target.value)}
                 placeholder="e.g. Рособоронэкспорт"
-                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
               />
             </div>
 
@@ -590,7 +590,7 @@ export default function Screening() {
                   className={cn(
                     "rounded-md border px-2 py-0.5 text-[10px] font-bold font-display uppercase",
                     screeningResults.risk === "HIGH" && "border-red-200 bg-red-100 text-red-800",
-                    screeningResults.risk === "MEDIUM" && "border-amber-200 bg-amber-100 text-amber-950",
+                    screeningResults.risk === "MEDIUM" && "border-cyan-200 bg-amber-100 text-amber-950",
                     screeningResults.risk === "LOW" && "border-emerald-200 bg-emerald-100 text-emerald-900"
                   )}
                 >
@@ -668,7 +668,7 @@ export default function Screening() {
           )}
 
           {aiError && (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-body">
+            <p className="mt-4 rounded-lg border border-cyan-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-body">
               {aiError}
             </p>
           )}
@@ -681,7 +681,7 @@ export default function Screening() {
                   riskU === "HIGH"
                     ? "border-red-200 bg-red-50"
                     : riskU === "MEDIUM"
-                      ? "border-amber-200 bg-amber-50"
+                      ? "border-cyan-200 bg-amber-50"
                       : "border-emerald-200 bg-emerald-50";
                 const actionU = (r.action || "—").toUpperCase();
                 return (

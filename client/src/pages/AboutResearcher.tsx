@@ -26,16 +26,16 @@ export default function AboutResearcher() {
       {/* Profile Card */}
       <motion.div custom={1} initial="hidden" animate="visible" variants={fadeIn}>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-[#D4A843] via-[#F5C542] to-[#F5C542]" />
+          <div className="h-2 bg-gradient-to-r from-[#06b6d4] via-[#22d3ee] to-[#22d3ee]" />
           <div className="p-8">
             <div className="flex items-start gap-6">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center shrink-0 shadow-lg">
-                <User className="w-9 h-9 text-amber-400" />
+                <User className="w-9 h-9 text-cyan-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-3xl font-extrabold font-display tracking-tight text-slate-900 tracking-tight">{researcherInfo.name}</h2>
                 <div className="flex items-center gap-2 mt-2">
-                  <Shield className="w-4 h-4 text-amber-500" />
+                  <Shield className="w-4 h-4 text-cyan-500" />
                   <span className="text-sm font-medium text-amber-600 font-body">Researcher</span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-2">
@@ -52,7 +52,7 @@ export default function AboutResearcher() {
       <motion.div custom={2} initial="hidden" animate="visible" variants={fadeIn}>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-6">
-            <GraduationCap className="w-5 h-5 text-amber-500" />
+            <GraduationCap className="w-5 h-5 text-cyan-500" />
             <h3 className="text-lg font-bold font-display text-slate-900">Education</h3>
           </div>
           <div className="space-y-4">
@@ -79,7 +79,7 @@ export default function AboutResearcher() {
       <motion.div custom={3} initial="hidden" animate="visible" variants={fadeIn}>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-6">
-            <FileText className="w-5 h-5 text-amber-500" />
+            <FileText className="w-5 h-5 text-cyan-500" />
             <h3 className="text-lg font-bold font-display text-slate-900">Publications</h3>
           </div>
           <div className="space-y-5">
@@ -88,7 +88,7 @@ export default function AboutResearcher() {
               href="https://medium.com/@tatiana.podobivskaia/the-hidden-sanctions-loophole-that-costs-u-s-businesses-millions-and-how-ai-closes-it-ba5ea9f496a5"
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-5 rounded-xl bg-slate-50 border border-slate-100 hover:border-amber-300 hover:bg-amber-50/30 transition-all group"
+              className="block p-5 rounded-xl bg-slate-50 border border-slate-100 hover:border-cyan-300 hover:bg-amber-50/30 transition-all group"
             >
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-50 to-amber-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:from-amber-100 group-hover:to-amber-100 transition-colors">
@@ -99,10 +99,10 @@ export default function AboutResearcher() {
                     <h4 className="text-[15px] font-semibold text-slate-800 font-display leading-snug group-hover:text-amber-700 transition-colors">
                       The Hidden Sanctions Loophole That Costs U.S. Businesses Millions — and How AI Closes It
                     </h4>
-                    <ExternalLink className="w-4 h-4 text-slate-300 shrink-0 mt-0.5 group-hover:text-amber-500 transition-colors" />
+                    <ExternalLink className="w-4 h-4 text-slate-300 shrink-0 mt-0.5 group-hover:text-cyan-500 transition-colors" />
                   </div>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase font-data bg-[#D4A843]/10 text-amber-600 border border-amber-500/20">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase font-data bg-[#06b6d4]/10 text-amber-600 border border-cyan-500/20">
                       Article
                     </span>
                     <span className="text-xs text-slate-400 font-data">March 2026</span>
@@ -131,7 +131,7 @@ export default function AboutResearcher() {
       <motion.div custom={4} initial="hidden" animate="visible" variants={fadeIn}>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-5">
-            <BookOpen className="w-5 h-5 text-amber-500" />
+            <BookOpen className="w-5 h-5 text-cyan-500" />
             <h3 className="text-lg font-bold font-display text-slate-900">Research Focus</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -179,7 +179,7 @@ export default function AboutResearcher() {
               href="https://www.tradescreenai.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium text-sm hover:border-amber-300 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
+              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium text-sm hover:border-cyan-300 hover:text-amber-700 hover:bg-amber-50/50 transition-all"
             >
               <Shield className="w-4.5 h-4.5" />
               TradeScreenAI.com
@@ -191,7 +191,7 @@ export default function AboutResearcher() {
 
       {/* Disclaimer */}
       <motion.div custom={6} initial="hidden" animate="visible" variants={fadeIn}>
-        <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-6">
+        <div className="rounded-xl border border-cyan-200/60 bg-amber-50/50 p-6">
           <p className="text-sm text-amber-700 font-body leading-relaxed">
             <span className="font-semibold">Academic Disclaimer:</span> TradeScreen AI is an academic research prototype developed at Atlantis University. For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.
           </p>
