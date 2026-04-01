@@ -238,8 +238,8 @@ export default function Landing() {
       <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-20">
         <HeroNetworkAnimation />
         <div className="absolute inset-0">
-          <img src={HERO_IMG} alt="" className="h-full w-full object-cover opacity-24" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0A1324]/78 via-[#0A1324]/55 to-[#0A1324]/92" />
+          <img src={HERO_IMG} alt="" className="h-full w-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e1a]/40 via-[#0a0e1a]/20 to-[#0a0e1a]" />
         </div>
         <ScanningLine />
 
