@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const nodes = [
   { x: 18, y: 25 }, { x: 28, y: 55 }, { x: 35, y: 75 },
@@ -9,16 +9,80 @@ const nodes = [
   { x: 38, y: 50 }, { x: 58, y: 32 }, { x: 78, y: 45 },
 ];
 
-const edges = [
-  [0,1],[0,4],[0,14],[1,2],[1,14],[1,15],[3,4],[3,5],[3,16],
-  [4,5],[4,7],[4,15],[5,9],[5,16],[6,7],[6,8],[6,11],[7,8],
-  [7,10],[7,16],[8,10],[8,11],[9,10],[9,12],[9,17],[10,11],
-  [10,12],[10,17],[11,13],[12,13],[12,17],[13,17],[14,15],[15,16],
-];
+type ActiveFlow = {
+  id: number;
+  from: number;
+  to: number;
+  startedAt: number;
+  durationMs: number;
+};
 
 export default function HeroNetworkAnimation() {
-  const reducedEdges = edges.filter((_, i) => i % 2 === 0);
-  const reducedNodes = nodes.filter((_, i) => i % 2 === 0);
+  const [activeFlows, setActiveFlows] = useState<ActiveFlow[]>([]);
+  const flowIdRef = useRef(0);
+  const nextSpawnAtRef = useRef(0);
+
+  const directionalRoutes = useMemo(
+    () =>
+      [
+        [0, 4],
+        [4, 7],
+        [7, 10],
+        [10, 12],
+        [1, 15],
+        [15, 16],
+        [16, 7],
+        [3, 5],
+        [5, 9],
+        [9, 17],
+        [6, 8],
+        [8, 11],
+      ] as const,
+    [],
+  );
+
+  useEffect(() => {
+    let raf = 0;
+    let cancelled = false;
+    nextSpawnAtRef.current = performance.now() + 350;
+
+    const getRandomBetween = (min: number, max: number) => min + Math.random() * (max - min);
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+
+      setActiveFlows((prev) => {
+        const ongoing = prev.filter((flow) => now - flow.startedAt < flow.durationMs);
+
+        if (now < nextSpawnAtRef.current || ongoing.length >= 5) {
+          return ongoing;
+        }
+
+        const route = directionalRoutes[Math.floor(Math.random() * directionalRoutes.length)];
+        const [from, to] = route;
+
+        const next: ActiveFlow = {
+          id: flowIdRef.current++,
+          from,
+          to,
+          startedAt: now,
+          durationMs: getRandomBetween(1700, 2500),
+        };
+
+        // Spawn at irregular cadence between 0.8s and 2s.
+        nextSpawnAtRef.current = now + getRandomBetween(800, 2000);
+        return [...ongoing, next];
+      });
+
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    raf = window.requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(raf);
+    };
+  }, [directionalRoutes]);
 
   return (
     <svg
@@ -29,40 +93,60 @@ export default function HeroNetworkAnimation() {
         height: '100%',
         pointerEvents: 'none',
         zIndex: 1,
-        opacity: 0.75,
+        opacity: 0.72,
       }}
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
     >
-      {reducedEdges.map(([a, b], i) => (
-        <line
-          key={`edge-${i}`}
-          x1={nodes[a].x} y1={nodes[a].y}
-          x2={nodes[b].x} y2={nodes[b].y}
-          stroke="rgba(56,189,248,0.14)"
-          strokeWidth="0.12"
-        >
-          <animate
-            attributeName="stroke-opacity"
-            values="0.08;0.22;0.08"
-            dur={`${5 + (i % 4)}s`}
-            repeatCount="indefinite"
-            begin={`${(i * 0.55) % 4}s`}
-          />
-        </line>
-      ))}
-      {reducedNodes.map((n, i) => (
+      {activeFlows.map((flow) => {
+        const from = nodes[flow.from];
+        const to = nodes[flow.to];
+        const elapsed = performance.now() - flow.startedAt;
+        const progress = Math.max(0, Math.min(1, elapsed / flow.durationMs));
+        const envelope = progress < 0.18
+          ? progress / 0.18
+          : progress > 0.88
+            ? (1 - progress) / 0.12
+            : 1;
+        const pulseX = from.x + (to.x - from.x) * progress;
+        const pulseY = from.y + (to.y - from.y) * progress;
+
+        return (
+          <g key={flow.id}>
+            <line
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              stroke="rgba(56,189,248,0.42)"
+              strokeWidth="0.16"
+              strokeOpacity={0.12 + envelope * 0.42}
+            />
+            <circle
+              cx={pulseX}
+              cy={pulseY}
+              r="0.45"
+              fill="rgba(125,211,252,0.95)"
+              opacity={0.35 + envelope * 0.6}
+            />
+          </g>
+        );
+      })}
+
+      {nodes.map((n, i) => (
         <circle
           key={`node-${i}`}
-          cx={n.x} cy={n.y} r="0.4"
-          fill="rgba(125,211,252,0.42)"
+          cx={n.x}
+          cy={n.y}
+          r={i % 4 === 0 ? "0.5" : "0.36"}
+          fill="rgba(125,211,252,0.55)"
         >
           <animate
             attributeName="opacity"
-            values="0.26;0.6;0.26"
-            dur={`${4 + (i % 3)}s`}
+            values={i % 3 === 0 ? "0.22;0.56;0.22" : "0.18;0.42;0.18"}
+            dur={`${4.5 + (i % 5)}s`}
             repeatCount="indefinite"
-            begin={`${(i * 0.4) % 3}s`}
+            begin={`${(i * 0.37) % 4}s`}
           />
         </circle>
       ))}
