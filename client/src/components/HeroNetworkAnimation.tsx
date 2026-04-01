@@ -17,6 +17,9 @@ const edges = [
 ];
 
 export default function HeroNetworkAnimation() {
+  const reducedEdges = edges.filter((_, i) => i % 2 === 0);
+  const reducedNodes = nodes.filter((_, i) => i % 2 === 0);
+
   return (
     <svg
       style={{
@@ -26,39 +29,40 @@ export default function HeroNetworkAnimation() {
         height: '100%',
         pointerEvents: 'none',
         zIndex: 1,
+        opacity: 0.75,
       }}
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
     >
-      {edges.map(([a, b], i) => (
+      {reducedEdges.map(([a, b], i) => (
         <line
           key={`edge-${i}`}
           x1={nodes[a].x} y1={nodes[a].y}
           x2={nodes[b].x} y2={nodes[b].y}
-          stroke="rgba(0,210,211,0.2)"
-          strokeWidth="0.15"
+          stroke="rgba(56,189,248,0.14)"
+          strokeWidth="0.12"
         >
           <animate
             attributeName="stroke-opacity"
-            values="0.15;0.35;0.15"
-            dur={`${3 + (i % 5)}s`}
+            values="0.08;0.22;0.08"
+            dur={`${5 + (i % 4)}s`}
             repeatCount="indefinite"
-            begin={`${(i * 0.4) % 3}s`}
+            begin={`${(i * 0.55) % 4}s`}
           />
         </line>
       ))}
-      {nodes.map((n, i) => (
+      {reducedNodes.map((n, i) => (
         <circle
           key={`node-${i}`}
           cx={n.x} cy={n.y} r="0.4"
-          fill="rgba(0,210,211,0.6)"
+          fill="rgba(125,211,252,0.42)"
         >
           <animate
             attributeName="opacity"
-            values="0.5;1;0.5"
-            dur={`${2 + (i % 3)}s`}
+            values="0.26;0.6;0.26"
+            dur={`${4 + (i % 3)}s`}
             repeatCount="indefinite"
-            begin={`${(i * 0.3) % 2}s`}
+            begin={`${(i * 0.4) % 3}s`}
           />
         </circle>
       ))}
