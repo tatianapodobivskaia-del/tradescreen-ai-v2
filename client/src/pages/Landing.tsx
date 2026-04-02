@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, type CSSProperties } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { CountUpNumber, AcademicBadge, Footer, ScanningLine } from "@/components/shared";
+import { CountUpNumber, AcademicBadge, ScanningLine } from "@/components/shared";
 import TopNavbar from "@/components/TopNavbar";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
 import {
@@ -17,7 +17,7 @@ import {
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database, Check, X,
-  ArrowRight, ChevronDown, ChevronUp, Lock, ExternalLink, GraduationCap, Play,
+  ArrowRight, ChevronDown, ChevronUp, Github, Linkedin, Lock, ExternalLink, GraduationCap, Play, Twitter,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -370,9 +370,7 @@ export default function Landing() {
       <DataSourcesSection />
       <PerformanceBenchmarksSection />
       <PrivacySection />
-      <section id="landing-footer" className="relative" aria-label="Site footer">
-        <Footer variant="dark" />
-      </section>
+      <LandingFooter />
     </div>
   );
 }
@@ -879,5 +877,108 @@ function PrivacySection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function LandingFooter() {
+  const footerColumns = [
+    {
+      title: "Product",
+      links: [
+        { label: "Features", href: "/app/screening" },
+        { label: "Pricing", href: "#" },
+        { label: "API Documentation", href: "/app/architecture" },
+        { label: "Integrations", href: "#" },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { label: "About", href: "/app/about" },
+        { label: "Research", href: "/app/reports" },
+        { label: "Careers", href: "#" },
+        { label: "Contact", href: "#" },
+      ],
+    },
+    {
+      title: "Resources",
+      links: [
+        { label: "Blog", href: "#" },
+        { label: "Case Studies", href: "#" },
+        { label: "Compliance Guide", href: "/app/reports" },
+        { label: "Help Center", href: "#" },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { label: "Privacy Policy", href: "/app/privacy" },
+        { label: "Terms of Service", href: "/app/terms" },
+        { label: "Cookie Policy", href: "#" },
+        { label: "Security", href: "/app/disclaimer" },
+      ],
+    },
+  ] as const;
+
+  return (
+    <footer id="landing-footer" className="border-t border-slate-800 bg-[#050810]" aria-label="Site footer">
+      <div className="mx-auto max-w-7xl px-4 py-14">
+        <div className="grid grid-cols-1 gap-10 border-b border-slate-800/80 pb-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+          <div>
+            <Link href="/" className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/20">
+                <Shield className="h-4 w-4 text-cyan-400" />
+              </span>
+              <span className="text-white">TradeScreen</span>
+              <span className="text-cyan-400">AI</span>
+            </Link>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
+              AI-powered sanctions screening for financial compliance. Find risks hidden in name variations across languages.
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              {[
+                { Icon: Twitter, href: "#" },
+                { Icon: Linkedin, href: "#" },
+                { Icon: Github, href: "#" },
+              ].map(({ Icon, href }) => (
+                <a
+                  key={Icon.displayName || Icon.name}
+                  href={href}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-colors hover:border-slate-500 hover:text-white"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {footerColumns.map((col) => (
+            <div key={col.title}>
+              <h4 className="text-sm font-semibold text-white">{col.title}</h4>
+              <ul className="mt-4 space-y-2.5">
+                {col.links.map((item) => (
+                  <li key={item.label}>
+                    {item.href.startsWith("/app") || item.href === "/" ? (
+                      <Link href={item.href} className="text-sm text-slate-400 transition-colors hover:text-white">
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <a href={item.href} className="text-sm text-slate-400 transition-colors hover:text-white">
+                        {item.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col items-start justify-between gap-3 pt-6 text-xs text-slate-500 md:flex-row md:items-center">
+          <p>Academic Research Prototype — Atlantis University</p>
+          <p>© 2026 TradeScreen AI. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
   );
 }
