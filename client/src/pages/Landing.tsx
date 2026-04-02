@@ -664,7 +664,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-7xl font-black tabular-nums text-cyan-200 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>97%</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[97%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -678,7 +678,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-emerald-500/20 p-7 text-center shadow-lg shadow-emerald-500/5 transition-colors hover:border-emerald-500/35"
           >
-            <div className="mb-2 font-data text-7xl font-black tabular-nums text-emerald-300 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>8%</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-emerald-300 md:text-7xl">8%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[8%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -692,7 +692,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-7xl font-black tabular-nums text-cyan-200 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>2min</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">2min</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
@@ -724,10 +724,10 @@ function PerformanceBenchmarksSection() {
               <tbody>
                 {performanceBenchmarkRows.map((row) => (
                   <tr key={row.metric} className="border-b border-slate-800/60 hover:bg-slate-800/25 transition-colors">
-                    <td className="py-5 px-6 text-slate-300 font-body font-medium">{row.metric}</td>
-                    <td className="py-5 px-4 text-center text-cyan-300 text-base font-bold font-data">{row.tradescreen}</td>
-                    <td className="py-5 px-4 text-center text-slate-500 font-body">{row.manual}</td>
-                    <td className="py-5 px-4 text-center text-slate-500 font-body">{row.rules}</td>
+                    <td className="py-4 px-6 text-slate-300 font-body font-medium">{row.metric}</td>
+                    <td className="py-4 px-4 text-center text-cyan-300 font-bold font-data">{row.tradescreen}</td>
+                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.manual}</td>
+                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.rules}</td>
                   </tr>
                 ))}
               </tbody>
@@ -747,7 +747,6 @@ function PerformanceBenchmarksSection() {
 function DataSourcesSection() {
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
   const [nextCheckLabel, setNextCheckLabel] = useState("checking...");
-  const [activeSource, setActiveSource] = useState<number | null>(null);
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
@@ -825,9 +824,7 @@ function DataSourcesSection() {
           Official Sanctions Lists, <span className="text-cyan-300">Always Current</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {dataSources.map((source, i) => {
-            const isActive = activeSource === i;
-            return (
+          {dataSources.map((source, i) => (
             <motion.a
               key={i}
               href={source.url}
@@ -838,17 +835,7 @@ function DataSourcesSection() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeUpInView}
-              onClick={(event) => {
-                event.preventDefault();
-                setActiveSource((prev) => (prev === i ? null : i));
-              }}
-              className={cn(
-                "premium-card-dark group block cursor-pointer rounded-xl p-6 text-center transition-all duration-300",
-                isActive
-                  ? "scale-[1.05] border-2 border-cyan-400/60 shadow-[0_0_40px_rgba(34,211,238,0.25)]"
-                  : "scale-100 border border-slate-700 shadow-none",
-                sourceHighlight(source.name, i),
-              )}
+              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}`}
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-300 transition-colors">{source.name}</h3>
@@ -862,18 +849,11 @@ function DataSourcesSection() {
                 <span>Official Source</span>
               </div>
             </motion.a>
-            );
-          })}
+          ))}
         </div>
         <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
-              <span>All sources synchronized</span>
-            </div>
-            <span>Updated: {lastUpdatedLabel}</span>
-            <span>Next check: {nextCheckLabel}</span>
-          </div>
+          <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
+          <span>All sources synchronized • Last synchronized: {lastUpdatedLabel} • Next check: {nextCheckLabel}</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>
