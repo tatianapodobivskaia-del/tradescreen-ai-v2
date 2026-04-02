@@ -190,15 +190,37 @@ const HERO_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGV
 const PATTERN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/data-pattern-M5u9jMgYtxdMLTqSeDkH66.webp";
 
 /* ===== SECTION HEADING — premium version ===== */
-function PremiumHeading({ children, subtitle, dark }: { children: React.ReactNode; subtitle?: string; dark?: boolean }) {
+function PremiumHeading({
+  children,
+  subtitle,
+  dark,
+  label,
+}: {
+  children: React.ReactNode;
+  subtitle?: string;
+  dark?: boolean;
+  label?: string;
+}) {
   return (
     <div className="mb-9 text-center md:mb-12">
+      {label && (
+        <motion.p
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={fadeUpInView}
+          custom={0}
+          className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400/80"
+        >
+          {label}
+        </motion.p>
+      )}
       <motion.h2
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         variants={fadeUpInView}
-        custom={0}
+        custom={label ? 1 : 0}
         className={`section-heading ${dark ? "text-white" : "text-slate-900"}`}
       >
         {children}
@@ -209,7 +231,7 @@ function PremiumHeading({ children, subtitle, dark }: { children: React.ReactNod
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
           variants={fadeUpInView}
-          custom={2}
+          custom={label ? 3 : 2}
           className={`mt-3 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}
         >
           {subtitle}
@@ -364,7 +386,11 @@ function WhyItMatters() {
     >
       <div className="absolute inset-0 bg-[#0a0e1a]/90" />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="The challenge of sanctions compliance grows more complex every year">
+        <PremiumHeading
+          dark
+          label="WHY IT MATTERS"
+          subtitle="The challenge of sanctions compliance grows more complex every year"
+        >
           Comprehensive Coverage, <span className="text-cyan-300">Unmatched Accuracy</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
@@ -403,7 +429,11 @@ function HowItWorks() {
       className="relative bg-[#060a16] py-16 md:py-24"
     >
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Three steps from vendor name to compliance decision">
+        <PremiumHeading
+          dark
+          label="HOW IT WORKS"
+          subtitle="Three steps from vendor name to compliance decision"
+        >
           Three Simple Steps to <span className="text-cyan-300">Complete Compliance</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -452,7 +482,11 @@ function CoreCapabilities() {
     <section id="landing-core-capabilities" className="relative py-16 md:py-24">
       <ScanningLine />
       <div className="relative z-10 mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Purpose-built for sanctions compliance intelligence">
+        <PremiumHeading
+          dark
+          label="CORE CAPABILITIES"
+          subtitle="Purpose-built for sanctions compliance intelligence"
+        >
           Enterprise-Grade Features, <span className="text-cyan-300">Research Innovation</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -489,7 +523,11 @@ function SeeItInAction() {
   return (
     <section id="landing-see-it-in-action" className="relative bg-[#0a0e1a] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Full screening cycle in 60 seconds">
+        <PremiumHeading
+          dark
+          label="SEE IT IN ACTION"
+          subtitle="Full screening cycle in 60 seconds"
+        >
           Watch How TradeScreen AI <span className="text-cyan-300">Finds Hidden Risks</span>
         </PremiumHeading>
 
@@ -527,7 +565,11 @@ function ComparisonSection() {
   return (
     <section id="landing-comparison" className="bg-[#060a16] py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Why intelligent screening outperforms legacy approaches">
+        <PremiumHeading
+          dark
+          label="COMPARISON"
+          subtitle="Why intelligent screening outperforms legacy approaches"
+        >
           TradeScreen AI vs <span className="text-cyan-300">Traditional Systems</span>
         </PremiumHeading>
         <motion.div
@@ -592,11 +634,9 @@ function PerformanceBenchmarksSection() {
       aria-labelledby="performance-benchmarks-heading"
     >
       <div className="max-w-6xl mx-auto px-4">
-        <p className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400/65">
-          Performance Benchmarks
-        </p>
         <PremiumHeading
           dark
+          label="PERFORMANCE BENCHMARKS"
           subtitle="Benchmark results on controlled test dataset of 100 vendor records including 7 known sanctioned entities"
         >
           <span id="performance-benchmarks-heading">
@@ -694,18 +734,74 @@ function PerformanceBenchmarksSection() {
 }
 
 function DataSourcesSection() {
+  const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
+
+  const formatTimeAgo = (date: Date) => {
+    const diffMs = Date.now() - date.getTime();
+    if (!Number.isFinite(diffMs) || diffMs < 0) return "checking...";
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncHealthTimestamp = async () => {
+      try {
+        const res = await fetch("/api/health");
+        if (!res.ok) throw new Error("health unavailable");
+        const data = await res.json();
+        const ts = data?.ts;
+        if (!ts) throw new Error("timestamp missing");
+        const parsed =
+          typeof ts === "number"
+            ? new Date(ts > 1e12 ? ts : ts * 1000)
+            : new Date(String(ts));
+        if (Number.isNaN(parsed.getTime())) throw new Error("invalid timestamp");
+        if (!cancelled) setLastUpdatedLabel(formatTimeAgo(parsed));
+      } catch {
+        if (!cancelled) setLastUpdatedLabel("checking...");
+      }
+    };
+
+    void syncHealthTimestamp();
+    const intervalId = window.setInterval(syncHealthTimestamp, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const sourceHighlight = (name: string, idx: number) => {
-    if (/OFAC|US/i.test(name) || idx === 0) return "border-red-400/20 bg-red-400/[0.03]";
-    if (/EU/i.test(name) || idx === 1) return "border-blue-400/25 bg-blue-400/[0.04]";
-    if (/UN/i.test(name) || idx === 2) return "border-cyan-300/25 bg-cyan-300/[0.04]";
-    if (/UK|OFSI/i.test(name) || idx === 3) return "border-indigo-300/20 bg-indigo-300/[0.03]";
-    return "border-cyan-400/15 bg-cyan-400/[0.02]";
+    const base = "transition-all duration-300";
+    if (/OFAC|US/i.test(name) || idx === 0) {
+      return `${base} border-blue-400/20 bg-red-400/[0.02] hover:border-red-300/35 hover:shadow-[0_0_36px_rgba(239,68,68,0.18),0_0_26px_rgba(59,130,246,0.14)]`;
+    }
+    if (/EU/i.test(name) || idx === 1) {
+      return `${base} border-blue-400/25 bg-blue-400/[0.04] hover:border-blue-300/45 hover:shadow-[0_0_32px_rgba(59,130,246,0.22)]`;
+    }
+    if (/UN/i.test(name) || idx === 2) {
+      return `${base} border-cyan-300/25 bg-cyan-300/[0.04] hover:border-cyan-200/45 hover:shadow-[0_0_32px_rgba(34,211,238,0.22)]`;
+    }
+    if (/UK|OFSI/i.test(name) || idx === 3) {
+      return `${base} border-indigo-300/20 bg-indigo-300/[0.03] hover:border-indigo-200/40 hover:shadow-[0_0_30px_rgba(99,102,241,0.18),0_0_24px_rgba(239,68,68,0.12)]`;
+    }
+    return `${base} border-cyan-400/15 bg-cyan-400/[0.02]`;
   };
 
   return (
     <section id="landing-data-sources" className="py-16 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
-        <PremiumHeading dark subtitle="Comprehensive coverage across major international sanctions programs">
+        <PremiumHeading
+          dark
+          label="TRUSTED DATA SOURCES"
+          subtitle="Comprehensive coverage across major international sanctions programs"
+        >
           Official Sanctions Lists, <span className="text-cyan-300">Always Current</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -738,7 +834,7 @@ function DataSourcesSection() {
         </div>
         <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
           <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
-          <span>All sources synchronized • Last update: 6 hours ago</span>
+          <span>All sources synchronized • Last update: {lastUpdatedLabel}</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>

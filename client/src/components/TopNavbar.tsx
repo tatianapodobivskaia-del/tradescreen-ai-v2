@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, ScanSearch, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,11 @@ export default function TopNavbar({ className }: { className?: string }) {
             className="fixed inset-0 z-[70] bg-[#0B0F1A]/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex h-20 items-center justify-between border-b border-cyan-500/20 px-6">
-              <span className="text-xl font-extrabold tracking-tight text-white">TradeScreen AI</span>
+              <span className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
+                <ScanSearch className="h-5 w-5 text-cyan-400" />
+                <span className="text-white">TradeScreen</span>
+                <span className="text-cyan-400">AI</span>
+              </span>
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(false)}
@@ -126,8 +130,10 @@ export default function TopNavbar({ className }: { className?: string }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link href="/" className="text-xl font-extrabold tracking-tight text-white">
-              TradeScreen AI
+            <Link href="/" className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
+              <ScanSearch className="h-5 w-5 text-cyan-400" />
+              <span className="text-white">TradeScreen</span>
+              <span className="text-cyan-400">AI</span>
             </Link>
           </div>
 
