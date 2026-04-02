@@ -19,7 +19,6 @@ import {
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
   ArrowRight, ChevronDown, ChevronUp, Github, Linkedin, Lock, ExternalLink, GraduationCap, Play, Twitter,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ElementType> = {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
@@ -748,7 +747,6 @@ function PerformanceBenchmarksSection() {
 function DataSourcesSection() {
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
   const [nextCheckLabel, setNextCheckLabel] = useState("checking...");
-  const [activeSource, setActiveSource] = useState<number | null>(null);
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
@@ -799,7 +797,7 @@ function DataSourcesSection() {
   }, []);
 
   const sourceHighlight = (name: string, idx: number) => {
-    const base = "transition-all duration-300";
+    const base = "transition-all duration-300 hover:scale-[1.02]";
     if (/OFAC|US/i.test(name) || idx === 0) {
       return `${base} border-blue-400/20 bg-red-400/[0.02] hover:border-red-300/45 hover:bg-gradient-to-br hover:from-red-500/18 hover:to-blue-500/20 hover:shadow-[0_0_40px_rgba(239,68,68,0.24),0_0_30px_rgba(59,130,246,0.18)]`;
     }
@@ -813,21 +811,6 @@ function DataSourcesSection() {
       return `${base} border-indigo-300/20 bg-indigo-300/[0.03] hover:border-indigo-200/45 hover:bg-gradient-to-br hover:from-red-500/14 hover:to-indigo-500/20 hover:shadow-[0_0_34px_rgba(99,102,241,0.24),0_0_24px_rgba(239,68,68,0.14)]`;
     }
     return `${base} border-cyan-400/15 bg-cyan-400/[0.02]`;
-  };
-
-  const activeSourceGlow = (i: number) => {
-    switch (i) {
-      case 0:
-        return "border-red-400 shadow-[0_0_40px_rgba(239,68,68,0.35)]";
-      case 1:
-        return "border-blue-400 shadow-[0_0_40px_rgba(59,130,246,0.35)]";
-      case 2:
-        return "border-cyan-300 shadow-[0_0_40px_rgba(34,211,238,0.35)]";
-      case 3:
-        return "border-indigo-400 shadow-[0_0_40px_rgba(99,102,241,0.35)]";
-      default:
-        return "";
-    }
   };
 
   return (
@@ -847,20 +830,12 @@ function DataSourcesSection() {
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => {
-                e.preventDefault();
-                setActiveSource(activeSource === i ? null : i);
-              }}
               custom={i}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeUpInView}
-              className={cn(
-                "premium-card-dark group block cursor-pointer rounded-xl border p-6 text-center transition-all duration-300",
-                sourceHighlight(source.name, i),
-                activeSource === i && activeSourceGlow(i),
-              )}
+              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}`}
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-300 transition-colors">{source.name}</h3>
