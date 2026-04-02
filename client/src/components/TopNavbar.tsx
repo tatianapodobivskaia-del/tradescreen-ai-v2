@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, Shield, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -9,23 +9,22 @@ type DropdownKey = "products" | "solutions" | "resources" | "company";
 const MENU = {
   products: [
     { label: "Sanctions Screening", href: "/app/screening" },
-    { label: "Risk Assessment", href: "/app" },
-    { label: "Compliance Reports", href: "/app/reports" },
+    { label: "Document Scanner", href: "/app/scanner" },
+    { label: "Cyrillic Engine", href: "/app/cyrillic" },
   ],
   solutions: [
-    { label: "Financial Institutions", href: "/app/screening" },
-    { label: "Trade Finance", href: "/app/scanner" },
-    { label: "Corporate Compliance", href: "/app/watchlist" },
+    { label: "Financial Institutions", href: "#" },
+    { label: "Trade Finance", href: "#" },
+    { label: "Corporate Compliance", href: "#" },
   ],
   resources: [
     { label: "Documentation", href: "/app/architecture" },
-    { label: "API Reference", href: "#" },
-    { label: "Case Studies", href: "#" },
+    { label: "Case Studies", href: "/app/live-demo" },
+    { label: "Compliance Guide", href: "#" },
   ],
   company: [
     { label: "About", href: "/app/about" },
     { label: "Research", href: "/app/reports" },
-    { label: "Contact", href: "#" },
   ],
 } as const;
 
@@ -58,6 +57,13 @@ export default function TopNavbar({ className }: { className?: string }) {
     setMobileNavOpen(false);
   };
 
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    if (window.scrollY > 8) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <>
       <AnimatePresence>
@@ -70,9 +76,11 @@ export default function TopNavbar({ className }: { className?: string }) {
             className="fixed inset-0 z-[70] bg-[#0B0F1A]/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex h-20 items-center justify-between border-b border-cyan-500/20 px-6">
-              <span className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/20">
-                  <Shield className="h-4 w-4 text-cyan-400" />
+              <span className="inline-flex items-center gap-2.5 text-2xl font-extrabold tracking-tight">
+                <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/15">
+                  <span className="absolute h-4 w-[1px] bg-cyan-300/80" />
+                  <span className="absolute w-4 h-[1px] bg-cyan-300/70" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
                 </span>
                 <span className="text-white">TradeScreen</span>
                 <span className="text-cyan-400">AI</span>
@@ -106,11 +114,11 @@ export default function TopNavbar({ className }: { className?: string }) {
 
               <div className="pt-4">
                 <Link
-                  href="/app/screening"
+                  href="/app/architecture"
                   onClick={closeMenus}
                   className="inline-flex w-full items-center justify-center rounded-full bg-[#06b6d4] px-4 py-3 text-sm font-bold text-[#0B0F1A] transition-colors hover:bg-[#22d3ee]"
                 >
-                  Start Screening
+                  Explore Demo
                 </Link>
               </div>
             </div>
@@ -136,9 +144,15 @@ export default function TopNavbar({ className }: { className?: string }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link href="/" className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/20">
-                <Shield className="h-4 w-4 text-cyan-400" />
+            <Link
+              href="/"
+              onClick={handleLogoClick}
+              className="inline-flex items-center gap-3 text-[1.7rem] font-extrabold tracking-tight leading-none"
+            >
+              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/15">
+                <span className="absolute h-5 w-[1px] bg-cyan-300/80" />
+                <span className="absolute w-5 h-[1px] bg-cyan-300/70" />
+                <span className="h-3 w-3 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
               </span>
               <span className="text-white">TradeScreen</span>
               <span className="text-cyan-400">AI</span>
@@ -189,11 +203,11 @@ export default function TopNavbar({ className }: { className?: string }) {
 
           <div className="hidden lg:flex">
             <Link
-              href="/app/screening"
+              href="/app/architecture"
               onClick={closeMenus}
               className="inline-flex items-center rounded-full bg-[#06b6d4] px-5 py-2.5 text-sm font-bold text-[#0B0F1A] transition-colors hover:bg-[#22d3ee]"
             >
-              Start Screening
+              Explore Demo
             </Link>
           </div>
         </div>

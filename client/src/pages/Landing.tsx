@@ -12,11 +12,11 @@ import TopNavbar from "@/components/TopNavbar";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
 import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
-  comparisonData, dataSources
+  dataSources
 } from "@/lib/mockData";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
-  Shield, Languages, ScanLine, Brain, BarChart3, Database, Check, X,
+  Shield, Languages, ScanLine, Brain, BarChart3, Database,
   ArrowRight, ChevronDown, ChevronUp, Github, Linkedin, Lock, ExternalLink, GraduationCap, Play, Twitter,
 } from "lucide-react";
 
@@ -41,8 +41,20 @@ const coreCapabilityDescriptions: Record<string, string> = {
     "Download a professional compliance report ready to share with your team or bank",
 };
 
-const howItWorksScreenDescription =
-  "Checks all name variations across 4 sanctions lists and 45,296 entities";
+const howItWorksStepDescriptions = [
+  "Drop your vendor list, CSV, or trade document",
+  "AI checks all name variations across 4 sanctions lists",
+  "Get risk score, confidence level, and action",
+] as const;
+
+const comparisonRows = [
+  { feature: "Speed", manual: "2-4 hours", tradescreen: "<2 min" },
+  { feature: "Accuracy", manual: "Variable", tradescreen: "97%" },
+  { feature: "Multi-language", manual: "Limited", tradescreen: "Native support" },
+  { feature: "AI Analysis", manual: "No", tradescreen: "Yes" },
+  { feature: "Document Scanning", manual: "Manual review", tradescreen: "Automated AI OCR" },
+  { feature: "Audit Trail", manual: "Spreadsheet-based", tradescreen: "Structured logs" },
+] as const;
 
 const fadeUpOnLoad = {
   hidden: { opacity: 0, y: 30 },
@@ -312,13 +324,12 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 1.0, ease: "easeOut" }}
             className="mb-10 flex flex-col items-center gap-2"
           >
-            <div className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-full border border-cyan-400/25 bg-[#0B162A]/85 px-6 py-3.5 shadow-[0_0_34px_rgba(56,189,248,0.16)] backdrop-blur-sm sm:px-8 sm:py-4.5">
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-full border border-cyan-400/25 bg-[#0B162A]/85 px-6 py-3.5 shadow-[0_0_34px_rgba(56,189,248,0.16)] backdrop-blur-sm sm:px-8 sm:py-4.5">
               <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-cyan-300" />
-              <span className="text-sm text-slate-400 font-body">Monitoring</span>
-              <CountUpNumber value={heroStats.totalEntities} className="text-3xl font-bold text-cyan-300" />
-              <span className="text-sm text-slate-400 font-body">sanctioned entities</span>
-              <span className="w-full shrink-0 text-center font-body text-[11px] leading-tight text-slate-500 sm:ml-1 sm:w-auto sm:text-left">
-                Auto-updated every 6 hours
+              <span className="text-center font-body text-sm font-semibold text-cyan-100 sm:text-left">
+                Screening <span className="font-data text-cyan-300">{heroStats.totalEntities.toLocaleString()}</span> entities across OFAC, EU, UN & UK OFSI
+                <span className="mx-2 text-slate-500">•</span>
+                Synchronized every 6 hours
               </span>
             </div>
           </motion.div>
@@ -408,8 +419,8 @@ function WhyItMatters() {
                   <Icon className="w-7 h-7 text-cyan-300" />
                 </div>
                 <WhyItMattersStatCount value={stat.value} />
-                <div className="text-sm font-bold text-slate-200 mb-1.5 tracking-wide uppercase">{stat.label}</div>
-                <div className="text-xs text-slate-500 font-body">{stat.sublabel}</div>
+                <div className="mb-2 text-base font-extrabold tracking-wide text-slate-100 uppercase">{stat.label}</div>
+                <div className="text-sm font-medium text-slate-300 font-body">{stat.sublabel}</div>
               </motion.div>
             );
           })}
@@ -456,8 +467,8 @@ function HowItWorks() {
                     <Icon className="h-9 w-9 text-cyan-300" />
                   </div>
                   <h3 className="mb-3 font-display text-2xl font-extrabold text-white">{step.title}</h3>
-                  <p className="text-sm text-slate-400 font-body leading-relaxed">
-                    {step.title === "Screen" ? howItWorksScreenDescription : step.description}
+                  <p className="text-base font-medium text-slate-200 font-body leading-relaxed">
+                    {howItWorksStepDescriptions[i] ?? step.description}
                   </p>
                 </div>
                 {i < 2 && (
@@ -485,7 +496,8 @@ function CoreCapabilities() {
           label="CORE CAPABILITIES"
           subtitle="Purpose-built for sanctions compliance intelligence"
         >
-          Enterprise-Grade Features, <span className="text-cyan-300">Research Innovation</span>
+          <span>Enterprise-Grade Features,</span>
+          <span className="block text-cyan-300">Research Innovation</span>
         </PremiumHeading>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {coreCapabilities.map((cap, i) => {
@@ -553,6 +565,15 @@ function SeeItInAction() {
             <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">Demo Video Coming Soon</p>
           </div>
         </motion.div>
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/app/live-demo"
+            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-[#0B162A]/72 px-6 py-3 text-sm font-bold text-cyan-200 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/60 hover:bg-[#0E1B31]"
+          >
+            <Play className="h-4 w-4 fill-current" />
+            Watch Full Demo
+          </Link>
+        </div>
         <SectionScrollArrow sectionId="landing-see-it-in-action" />
       </div>
     </section>
@@ -582,28 +603,16 @@ function ComparisonSection() {
               <thead>
                 <tr className="border-b border-slate-700/50">
                   <th className="text-left py-5 px-8 text-slate-400 font-bold font-display text-base">Feature</th>
-                  <th className="text-center py-5 px-8 text-slate-400 font-bold font-display text-base">Traditional</th>
-                  <th className="text-center py-5 px-8 text-cyan-300 font-bold font-display text-base">TradeScreenAI</th>
+                  <th className="text-center py-5 px-8 text-slate-400 font-bold font-display text-base">Manual Review</th>
+                  <th className="text-center py-5 px-8 text-cyan-300 font-bold font-display text-base">TradeScreen AI</th>
                 </tr>
               </thead>
               <tbody>
-                {comparisonData.map((row, i) => (
-                  <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                    <td className="py-4.5 px-8 text-slate-300 font-body text-[0.9375rem]">{row.feature}</td>
-                    <td className="py-4.5 px-8 text-center">
-                      {typeof row.traditional === "boolean" ? (
-                        row.traditional ? <Check className="w-5 h-5 text-emerald-400 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />
-                      ) : (
-                        <span className="text-slate-500 font-body">{row.traditional}</span>
-                      )}
-                    </td>
-                    <td className="py-4.5 px-8 text-center">
-                      {typeof row.tradescreen === "boolean" ? (
-                        row.tradescreen ? <Check className="w-5 h-5 text-cyan-300 mx-auto" /> : <X className="w-5 h-5 text-red-400 mx-auto" />
-                      ) : (
-                        <span className="text-cyan-300 font-bold font-body">{row.tradescreen}</span>
-                      )}
-                    </td>
+                {comparisonRows.map((row) => (
+                  <tr key={row.feature} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
+                    <td className="py-4.5 px-8 text-slate-200 font-semibold font-body text-[0.9375rem]">{row.feature}</td>
+                    <td className="py-4.5 px-8 text-center text-slate-400 font-body">{row.manual}</td>
+                    <td className="py-4.5 px-8 text-center text-cyan-300 font-semibold font-body">{row.tradescreen}</td>
                   </tr>
                 ))}
               </tbody>
@@ -651,7 +660,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-300 md:text-6xl">97%</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[97%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -665,7 +674,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-emerald-500/20 p-7 text-center shadow-lg shadow-emerald-500/5 transition-colors hover:border-emerald-500/35"
           >
-            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-emerald-400 md:text-6xl">~8%</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-emerald-300 md:text-7xl">8%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[8%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -679,7 +688,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-5xl font-extrabold tabular-nums text-cyan-300 md:text-6xl">&lt;2 min</div>
+            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">2min</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
@@ -733,6 +742,7 @@ function PerformanceBenchmarksSection() {
 
 function DataSourcesSection() {
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
+  const [nextCheckLabel, setNextCheckLabel] = useState("checking...");
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
@@ -761,9 +771,16 @@ function DataSourcesSection() {
             ? new Date(ts > 1e12 ? ts : ts * 1000)
             : new Date(String(ts));
         if (Number.isNaN(parsed.getTime())) throw new Error("invalid timestamp");
-        if (!cancelled) setLastUpdatedLabel(formatTimeAgo(parsed));
+        if (!cancelled) {
+          setLastUpdatedLabel(formatTimeAgo(parsed));
+          const next = new Date(parsed.getTime() + 6 * 60 * 60 * 1000);
+          setNextCheckLabel(next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+        }
       } catch {
-        if (!cancelled) setLastUpdatedLabel("checking...");
+        if (!cancelled) {
+          setLastUpdatedLabel("checking...");
+          setNextCheckLabel("checking...");
+        }
       }
     };
 
@@ -776,18 +793,18 @@ function DataSourcesSection() {
   }, []);
 
   const sourceHighlight = (name: string, idx: number) => {
-    const base = "transition-all duration-300";
+    const base = "transition-all duration-300 hover:scale-[1.02]";
     if (/OFAC|US/i.test(name) || idx === 0) {
-      return `${base} border-blue-400/20 bg-red-400/[0.02] hover:border-red-300/35 hover:shadow-[0_0_36px_rgba(239,68,68,0.18),0_0_26px_rgba(59,130,246,0.14)]`;
+      return `${base} border-blue-400/20 bg-red-400/[0.02] hover:border-red-300/45 hover:bg-gradient-to-br hover:from-red-500/18 hover:to-blue-500/20 hover:shadow-[0_0_40px_rgba(239,68,68,0.24),0_0_30px_rgba(59,130,246,0.18)]`;
     }
     if (/EU/i.test(name) || idx === 1) {
-      return `${base} border-blue-400/25 bg-blue-400/[0.04] hover:border-blue-300/45 hover:shadow-[0_0_32px_rgba(59,130,246,0.22)]`;
+      return `${base} border-blue-400/25 bg-blue-400/[0.04] hover:border-blue-300/55 hover:bg-blue-500/18 hover:shadow-[0_0_36px_rgba(59,130,246,0.28)]`;
     }
     if (/UN/i.test(name) || idx === 2) {
-      return `${base} border-cyan-300/25 bg-cyan-300/[0.04] hover:border-cyan-200/45 hover:shadow-[0_0_32px_rgba(34,211,238,0.22)]`;
+      return `${base} border-cyan-300/25 bg-cyan-300/[0.04] hover:border-cyan-200/55 hover:bg-cyan-400/20 hover:shadow-[0_0_36px_rgba(34,211,238,0.28)]`;
     }
     if (/UK|OFSI/i.test(name) || idx === 3) {
-      return `${base} border-indigo-300/20 bg-indigo-300/[0.03] hover:border-indigo-200/40 hover:shadow-[0_0_30px_rgba(99,102,241,0.18),0_0_24px_rgba(239,68,68,0.12)]`;
+      return `${base} border-indigo-300/20 bg-indigo-300/[0.03] hover:border-indigo-200/45 hover:bg-gradient-to-br hover:from-red-500/14 hover:to-indigo-500/20 hover:shadow-[0_0_34px_rgba(99,102,241,0.24),0_0_24px_rgba(239,68,68,0.14)]`;
     }
     return `${base} border-cyan-400/15 bg-cyan-400/[0.02]`;
   };
@@ -832,7 +849,7 @@ function DataSourcesSection() {
         </div>
         <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
           <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
-          <span>All sources synchronized • Last update: {lastUpdatedLabel}</span>
+          <span>All sources synchronized • Last synchronized: {lastUpdatedLabel} • Next check: {nextCheckLabel}</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>
@@ -885,28 +902,24 @@ function LandingFooter() {
     {
       title: "Product",
       links: [
-        { label: "Features", href: "/app/screening" },
-        { label: "Pricing", href: "#" },
-        { label: "API Documentation", href: "/app/architecture" },
-        { label: "Integrations", href: "#" },
+        { label: "Screening", href: "/app/screening" },
+        { label: "Document Scanner", href: "/app/scanner" },
+        { label: "Cyrillic Engine", href: "/app/cyrillic" },
+        { label: "Risk Scoring", href: "/app/screening" },
+      ],
+    },
+    {
+      title: "Research",
+      links: [
+        { label: "Reports", href: "/app/reports" },
+        { label: "Analytics", href: "/app/reports" },
+        { label: "Architecture", href: "/app/architecture" },
       ],
     },
     {
       title: "Company",
       links: [
         { label: "About", href: "/app/about" },
-        { label: "Research", href: "/app/reports" },
-        { label: "Careers", href: "#" },
-        { label: "Contact", href: "#" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        { label: "Blog", href: "#" },
-        { label: "Case Studies", href: "#" },
-        { label: "Compliance Guide", href: "/app/reports" },
-        { label: "Help Center", href: "#" },
       ],
     },
     {
@@ -914,8 +927,7 @@ function LandingFooter() {
       links: [
         { label: "Privacy Policy", href: "/app/privacy" },
         { label: "Terms of Service", href: "/app/terms" },
-        { label: "Cookie Policy", href: "#" },
-        { label: "Security", href: "/app/disclaimer" },
+        { label: "Disclaimer", href: "/app/disclaimer" },
       ],
     },
   ] as const;
@@ -975,7 +987,13 @@ function LandingFooter() {
         </div>
 
         <div className="flex flex-col items-start justify-between gap-3 pt-6 text-xs text-slate-500 md:flex-row md:items-center">
-          <p>Academic Research Prototype — Atlantis University</p>
+          <p>
+            Academic Research Prototype
+            <span className="mx-2 text-slate-700">•</span>
+            <Link href="#" className="underline-offset-2 transition-colors hover:text-slate-300 hover:underline">
+              Contact
+            </Link>
+          </p>
           <p>© 2026 TradeScreen AI. All rights reserved.</p>
         </div>
       </div>
