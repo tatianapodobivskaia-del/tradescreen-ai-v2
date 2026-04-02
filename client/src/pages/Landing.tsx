@@ -42,18 +42,19 @@ const coreCapabilityDescriptions: Record<string, string> = {
 };
 
 const howItWorksStepDescriptions = [
-  "Drop your vendor list, CSV, or trade document",
+  "Drop a vendor list, CSV, or trade document",
   "AI checks all name variations across 4 sanctions lists",
-  "Get risk score, confidence level, and action",
+  "Get risk score, confidence level, and recommended action",
 ] as const;
 
 const comparisonRows = [
-  { feature: "Speed", manual: "2-4 hours", tradescreen: "<2 min" },
-  { feature: "Accuracy", manual: "Variable", tradescreen: "97%" },
-  { feature: "Multi-language", manual: "Limited", tradescreen: "Native support" },
-  { feature: "AI Analysis", manual: "No", tradescreen: "Yes" },
-  { feature: "Document Scanning", manual: "Manual review", tradescreen: "Automated AI OCR" },
-  { feature: "Audit Trail", manual: "Spreadsheet-based", tradescreen: "Structured logs" },
+  { feature: "Screening speed (40 vendors)", manual: "2–4 hours", rules: "~15 min", tradescreen: "<2 min" },
+  { feature: "Detection rate", manual: "~60%", rules: "~78%", tradescreen: "97%" },
+  { feature: "Cyrillic name variants", manual: "Limited", rules: "~20%", tradescreen: "95%+" },
+  { feature: "False positive rate", manual: "~25%", rules: "~34%", tradescreen: "~8%" },
+  { feature: "AI reasoning per decision", manual: "None", rules: "None", tradescreen: "Yes" },
+  { feature: "Document scanning", manual: "Manual review", rules: "Basic OCR", tradescreen: "4-agent AI pipeline" },
+  { feature: "Audit trail", manual: "Spreadsheets", rules: "Basic logs", tradescreen: "Structured reports" },
 ] as const;
 
 const fadeUpOnLoad = {
@@ -562,7 +563,7 @@ function SeeItInAction() {
             <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-cyan-400/35 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
               <Play className="h-14 w-14 translate-x-1 text-cyan-300" strokeWidth={1.25} fill="currentColor" aria-hidden />
             </div>
-            <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">Demo Video Coming Soon</p>
+            <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">See the full screening cycle — from upload to compliance report</p>
           </div>
         </motion.div>
         <div className="mt-8 flex justify-center">
@@ -604,6 +605,7 @@ function ComparisonSection() {
                 <tr className="border-b border-slate-700/50">
                   <th className="text-left py-5 px-8 text-slate-400 font-bold font-display text-base">Feature</th>
                   <th className="text-center py-5 px-8 text-slate-400 font-bold font-display text-base">Manual Review</th>
+                  <th className="text-center py-5 px-8 text-slate-400 font-bold font-display text-base">Rule-Based Tools</th>
                   <th className="text-center py-5 px-8 text-cyan-300 font-bold font-display text-base">TradeScreen AI</th>
                 </tr>
               </thead>
@@ -612,12 +614,14 @@ function ComparisonSection() {
                   <tr key={row.feature} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
                     <td className="py-4.5 px-8 text-slate-200 font-semibold font-body text-[0.9375rem]">{row.feature}</td>
                     <td className="py-4.5 px-8 text-center text-slate-400 font-body">{row.manual}</td>
+                    <td className="py-4.5 px-8 text-center text-slate-400 font-body">{row.rules}</td>
                     <td className="py-4.5 px-8 text-center text-cyan-300 font-semibold font-body">{row.tradescreen}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-slate-400 mt-3 text-center">* TradeScreen AI metrics based on controlled test dataset</p>
         </motion.div>
         <SectionScrollArrow sectionId="landing-comparison" />
       </div>

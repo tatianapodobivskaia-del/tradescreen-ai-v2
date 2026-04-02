@@ -12,24 +12,24 @@ export const heroStats = {
 
 export const whyItMattersStats = [
   { value: "4", label: "Sanctions Lists", sublabel: "OFAC, EU, UN & UK OFSI coverage", icon: "Shield" },
-  { value: "45,296", label: "Sanctioned Entities", sublabel: "Across OFAC, EU, UN & UK lists", icon: "Users" },
-  { value: "97%", label: "Detection Rate", sublabel: "Across controlled test dataset", icon: "AlertTriangle" },
+  { value: "45,296", label: "Sanctioned Entities", sublabel: "Across all four international lists", icon: "Users" },
+  { value: "97%", label: "Detection Rate", sublabel: "On controlled test dataset", icon: "AlertTriangle" },
   { value: "4", label: "Transliteration Systems", sublabel: "ISO 9, ICAO, BGN/PCGN, Informal", icon: "Languages" },
 ];
 
 export const howItWorksSteps = [
-  { step: 1, title: "Upload", description: "Submit vendor names, batch CSV files, or trade documents for screening", icon: "Upload" },
-  { step: 2, title: "Screen", description: "Multi-list fuzzy matching with Cyrillic transliteration across 45,296 entities", icon: "Search" },
-  { step: 3, title: "Report", description: "AI-generated risk analysis with confidence scores and recommended actions", icon: "FileText" },
+  { step: 1, title: "Upload", description: "Drop a vendor list, CSV, or trade document", icon: "Upload" },
+  { step: 2, title: "Screen", description: "AI checks all name variations across 4 sanctions lists", icon: "Search" },
+  { step: 3, title: "Report", description: "Get risk score, confidence level, and recommended action", icon: "FileText" },
 ];
 
 export const coreCapabilities = [
-  { title: "Multi-List Screening", description: "Simultaneous screening across OFAC SDN, EU Consolidated, UN Security Council, and UK OFSI sanctions lists", icon: "Shield" },
-  { title: "Cyrillic Transliteration Engine", description: "ISO 9, ICAO, BGN/PCGN, and informal transliteration variants for Russian-language entity matching", icon: "Languages" },
-  { title: "AI Document Scanner", description: "4-agent pipeline: Vision extraction, transliteration, risk scoring, and action recommendation", icon: "ScanLine" },
-  { title: "AI Deep Analysis", description: "Context-aware AI analysis of flagged entities with confidence scoring and compliance recommendations", icon: "Brain" },
-  { title: "Composite Risk Scoring", description: "Weighted scoring algorithm combining name similarity, list source, entity type, and geographic risk factors", icon: "BarChart3" },
-  { title: "PDF Report Generation", description: "Generate comprehensive PDF compliance reports with risk scores and recommended actions", icon: "Database" },
+  { title: "Multi-List Screening", description: "Screen against OFAC, EU, UN, and UK OFSI — all four lists in one pass", icon: "Shield" },
+  { title: "Cyrillic Transliteration Engine", description: "Generate all Latin ↔ Cyrillic name spellings to find hidden matches", icon: "Languages" },
+  { title: "AI Document Scanner", description: "Upload a trade document — AI extracts names and screens them automatically", icon: "ScanLine" },
+  { title: "AI Deep Analysis", description: "Detailed risk explanation with confidence scores and next steps", icon: "Brain" },
+  { title: "Composite Risk Scoring", description: "One clear score (0–100) combining name match, country risk, and list source", icon: "BarChart3" },
+  { title: "PDF Report Generation", description: "Professional compliance report ready to share with your team or bank", icon: "Database" },
 ];
 
 export const comparisonData = [
