@@ -837,7 +837,7 @@ function DataSourcesSection() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeUpInView}
-              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}${activeSource === i ? " border-2 shadow-[0_0_40px_rgba(34,211,238,0.35)]" : ""}`}
+              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}${activeSource === i ? '!border-2 !border-cyan-300 !shadow-[0_0_40px_rgba(34,211,238,0.35)]' : ''}`}
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-300 transition-colors">{source.name}</h3>
