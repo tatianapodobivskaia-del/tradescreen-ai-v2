@@ -436,7 +436,7 @@ function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative bg-[#060a16] py-16 md:py-24 bg-white/[0.03]"
+      className="relative bg-[#060a16] py-16 md:py-24 bg-white/[0.07]"
     >
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading
@@ -532,7 +532,7 @@ function CoreCapabilities() {
 
 function SeeItInAction() {
   return (
-    <section id="landing-see-it-in-action" className="relative bg-[#0a0e1a] py-16 md:py-24 bg-white/[0.03]">
+    <section id="landing-see-it-in-action" className="relative bg-[#0a0e1a] py-16 md:py-24 bg-white/[0.07]">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading
           dark
@@ -815,7 +815,7 @@ function DataSourcesSection() {
   };
 
   return (
-    <section id="landing-data-sources" className="py-16 md:py-24 bg-white/[0.03]">
+    <section id="landing-data-sources" className="py-16 md:py-24 bg-white/[0.07]">
       <div className="mx-auto max-w-6xl px-4">
         <PremiumHeading
           dark
