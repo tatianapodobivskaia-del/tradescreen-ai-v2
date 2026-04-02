@@ -17,7 +17,7 @@ import {
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
-  ArrowRight, ChevronDown, ChevronUp, Github, Linkedin, Lock, ExternalLink, GraduationCap, Play, Twitter,
+  ArrowRight, ChevronDown, ChevronUp, Github, Linkedin, Lock, ExternalLink, GraduationCap, Play,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -941,7 +941,6 @@ function LandingFooter() {
             </p>
             <div className="mt-5 flex items-center gap-3">
               {[
-                { Icon: Twitter, href: "#" },
                 { Icon: Linkedin, href: "#" },
                 { Icon: Github, href: "#" },
               ].map(({ Icon, href }) => (
