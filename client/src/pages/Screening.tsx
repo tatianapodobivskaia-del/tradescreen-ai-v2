@@ -423,11 +423,16 @@ export default function Screening() {
         {activeTab === "upload" ? (
           <div>
             <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40">
+              <input id="screening-upload-input" type="file" className="sr-only" accept=".csv,.pdf" />
               <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
-              <p className="text-sm font-semibold text-slate-600 font-body">Drop CSV file here or click to browse</p>
-              <p className="mt-2 text-xs text-slate-400 font-body">
-                Supports CSV and PDF. Excel coming soon.
-              </p>
+              <p className="text-sm font-semibold text-slate-600 font-body">Drop File Here</p>
+              <label
+                htmlFor="screening-upload-input"
+                className="mt-1 inline-block cursor-pointer text-sm font-semibold text-cyan-600 underline-offset-2 transition-colors hover:text-cyan-700 hover:underline font-body"
+              >
+                Click to Browse
+              </label>
+              <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
             </div>
             <p className="mt-4 text-sm text-slate-500 font-body">
               Use <strong className="font-semibold text-slate-700">Manual Entry</strong> to run a screening and Azure AI
