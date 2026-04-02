@@ -48,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}>
         {/* Logo / Branding — Clickable, returns to landing page */}
         <div className="flex items-center gap-2 px-4 py-4">
-          <img src="/logo-light.png" alt="TradeScreen AI" className="h-8 w-8 object-contain" />
+          <img src="/logo-dark.png" alt="TradeScreen AI" className="h-8 w-8 object-contain" />
           <span className="font-bold text-base text-slate-50 tracking-tight">TradeScreen <span className="text-cyan-400">AI</span></span>
         </div>
 
