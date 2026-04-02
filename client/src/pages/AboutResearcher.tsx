@@ -3,28 +3,22 @@
  * Design: Clean fintech profile with strong typography hierarchy
  * Includes: Profile, Education, Publications, Research Focus, Connect, Disclaimer
  */
-import { motion } from "framer-motion";
 import { researcherInfo } from "@/lib/mockData";
 import { User, GraduationCap, Linkedin, Github, BookOpen, MapPin, Shield, ExternalLink, FileText, Award } from "lucide-react";
-
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
-};
 
 export default function AboutResearcher() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Page Header */}
-      <motion.div custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <h1 className="text-3xl font-bold font-display text-slate-900 tracking-tight">About the Researcher</h1>
         <p className="text-base text-slate-500 font-body mt-2 leading-relaxed">
           Background, credentials, and research behind TradeScreenAI
         </p>
-      </motion.div>
+      </div>
 
       {/* Profile Card */}
-      <motion.div custom={1} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="h-2 bg-gradient-to-r from-[#06b6d4] via-[#22d3ee] to-[#22d3ee]" />
           <div className="p-8">
@@ -46,10 +40,10 @@ export default function AboutResearcher() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Education */}
-      <motion.div custom={2} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-6">
             <GraduationCap className="w-5 h-5 text-cyan-500" />
@@ -73,10 +67,10 @@ export default function AboutResearcher() {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Publications */}
-      <motion.div custom={3} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-6">
             <FileText className="w-5 h-5 text-cyan-500" />
@@ -125,10 +119,10 @@ export default function AboutResearcher() {
             </a>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Research Focus */}
-      <motion.div custom={4} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="flex items-center gap-2.5 mb-5">
             <BookOpen className="w-5 h-5 text-cyan-500" />
@@ -148,10 +142,10 @@ export default function AboutResearcher() {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Connect */}
-      <motion.div custom={5} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <h3 className="text-lg font-bold font-display text-slate-900 mb-5">Connect</h3>
           <div className="flex flex-wrap gap-3">
@@ -187,16 +181,16 @@ export default function AboutResearcher() {
             </a>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Disclaimer */}
-      <motion.div custom={6} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
+      <div>
         <div className="rounded-xl border border-cyan-200/60 bg-amber-50/50 p-6">
           <p className="text-sm text-amber-700 font-body leading-relaxed">
             <span className="font-semibold">Academic Disclaimer:</span> TradeScreen AI is an academic research prototype developed at Atlantis University. For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

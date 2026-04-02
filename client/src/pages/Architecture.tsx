@@ -1,7 +1,6 @@
 /*
  * ARCHITECTURE & METHODOLOGY — Pipeline, scoring, two-pass architecture, AI comparison
  */
-import { motion } from "framer-motion";
 import { pipelineStages, scoringFormula } from "@/lib/mockData";
 import { Download, Languages, Search, Calculator, Brain, ArrowRight, Cpu, Shield, Lock, AlertTriangle, Zap, Server, Eye } from "lucide-react";
 
@@ -33,20 +32,14 @@ export default function Architecture() {
               const Icon = stageIcons[stage.icon];
               return (
                 <div key={stage.id} className="relative">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.12 }}
-                    viewport={{ once: true }}
-                    className="p-4 rounded-xl border border-slate-200 text-center h-full hover:border-cyan-500/30 hover:shadow-md transition-all"
-                  >
+                  <div className="p-4 rounded-xl border border-slate-200 text-center h-full hover:border-cyan-500/30 hover:shadow-md transition-all">
                     <div className="text-3xl font-bold font-data text-cyan-500/20 mb-2">{stage.id}</div>
                     <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mx-auto mb-3">
                       <Icon className="w-5 h-5 text-amber-600" />
                     </div>
                     <h4 className="text-base font-bold font-display text-slate-800 mb-1">{stage.name}</h4>
                     <p className="text-[11px] text-slate-500 font-body leading-relaxed">{stage.description}</p>
-                  </motion.div>
+                  </div>
                   {i < 4 && (
                     <div className="hidden md:flex absolute top-1/2 -right-2 transform -translate-y-1/2 z-10">
                       <ArrowRight className="w-4 h-4 text-cyan-400" />
@@ -87,12 +80,8 @@ export default function Architecture() {
           ].map((agent, i) => {
             const Icon = agent.icon;
             return (
-              <motion.div
+              <div
                 key={agent.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                viewport={{ once: true }}
                 className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 hover:border-cyan-500/25 hover:shadow-sm transition-all"
               >
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
@@ -100,7 +89,7 @@ export default function Architecture() {
                 </div>
                 <h4 className="text-sm font-bold font-display text-slate-900 mb-1.5">{agent.title}</h4>
                 <p className="text-[12px] leading-relaxed text-slate-600 font-body">{agent.desc}</p>
-              </motion.div>
+              </div>
             );
           })}
         </div>
@@ -119,25 +108,15 @@ export default function Architecture() {
 
         <div className="space-y-4">
           {scoringFormula.weights.map((w, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              className="flex items-center gap-4"
-            >
+            <div key={i} className="flex items-center gap-4">
               <div className="w-20 text-right">
                 <span className="text-lg font-bold font-data text-amber-600">{(w.weight * 100).toFixed(0)}%</span>
               </div>
               <div className="flex-1">
                 <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-1">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${w.weight * 100}%` }}
-                    transition={{ duration: 0.8, delay: i * 0.15 }}
-                    viewport={{ once: true }}
+                  <div
                     className="h-full rounded-full bg-gradient-to-r from-[#06b6d4] to-[#22d3ee]"
+                    style={{ width: `${w.weight * 100}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -145,7 +124,7 @@ export default function Architecture() {
                   <span className="text-xs text-slate-500 font-body">{w.description}</span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

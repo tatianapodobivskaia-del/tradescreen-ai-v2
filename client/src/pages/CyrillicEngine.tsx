@@ -3,7 +3,6 @@
  * Two tabs, animated flow, matched entities, reference table
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { cyrillicTransliterations, cyrillicVariantsReference, tradeDocumentComparison } from "@/lib/mockData";
 import { Languages, ArrowRight, Search, BookOpen, FileText } from "lucide-react";
 
@@ -72,12 +71,8 @@ export default function CyrillicEngine() {
             </thead>
             <tbody>
               {cyrillicTransliterations.map((row, i) => (
-                <motion.tr
+                <tr
                   key={i}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  viewport={{ once: true }}
                   className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors"
                 >
                   <td className="py-3 px-4 font-semibold text-slate-900 font-body">{row.cyrillic}</td>
@@ -86,7 +81,7 @@ export default function CyrillicEngine() {
                   <td className="py-3 px-4 font-data text-slate-700">{row.icao}</td>
                   <td className="py-3 px-4 font-data text-slate-700">{row.bgn}</td>
                   <td className="py-3 px-4 font-data text-slate-700">{row.informal}</td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>

@@ -2,11 +2,8 @@
  * LEGAL — Academic research prototype: Disclaimer, Privacy Policy, Terms of Use (single tabbed page)
  */
 import type { ElementType } from "react";
-import { motion } from "framer-motion";
 import { Shield, Lock, FileText, ArrowLeft } from "lucide-react";
 import { Link, useLocation } from "wouter";
-
-const fadeIn = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } };
 
 type LegalTab = "disclaimer" | "privacy" | "terms";
 
@@ -28,7 +25,7 @@ export default function LegalPages() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <motion.div {...fadeIn}>
+      <div>
         <Link href="/app" className="mb-8 inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-amber-600">
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
@@ -78,7 +75,7 @@ export default function LegalPages() {
             &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; TradeScreen AI research prototype
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

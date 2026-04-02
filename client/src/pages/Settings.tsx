@@ -2,7 +2,6 @@
  * SETTINGS — Fuzzy matching threshold, notifications, version, data policy
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Settings, Sliders, Bell, Info, Shield, Database } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,7 +26,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Fuzzy Matching Threshold */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="premium-card rounded-xl p-8">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Sliders className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Fuzzy Matching Threshold</h3>
@@ -57,10 +56,10 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Notifications */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="premium-card rounded-xl p-8">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Bell className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Notifications</h3>
@@ -89,10 +88,10 @@ export default function SettingsPage() {
         <p className="mt-5 border-t border-slate-100 pt-4 text-xs text-slate-500 font-body leading-relaxed">
           Supported upload formats: CSV, PDF. Excel support coming soon.
         </p>
-      </motion.div>
+      </div>
 
       {/* About / Version */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-card rounded-xl p-8">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Info className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">About</h3>
@@ -115,10 +114,10 @@ export default function SettingsPage() {
             <div className="text-sm font-data text-slate-900">4 (OFAC, EU, UN, UK)</div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Data Handling Policy */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="premium-card rounded-xl p-8">
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Data Handling Policy</h3>
@@ -144,7 +143,7 @@ export default function SettingsPage() {
             </li>
           </ul>
         </div>
-      </motion.div>
+      </div>
 
       {/* Save Button */}
       <div className="flex justify-end">

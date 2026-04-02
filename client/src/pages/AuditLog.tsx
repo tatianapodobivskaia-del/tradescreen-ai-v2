@@ -2,7 +2,6 @@
  * AUDIT LOG — Timestamped log with search, filters, export
  */
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { auditLogEntries } from "@/lib/mockData";
 import { ScrollText, Search, Download, Filter, Clock, AlertTriangle, Info, ShieldAlert, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,12 +78,8 @@ export default function AuditLog() {
             const SevIcon = config.icon;
             const date = new Date(entry.timestamp);
             return (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ delay: i * 0.03 }}
-                viewport={{ once: true }}
                 className="flex items-start gap-4 p-4 hover:bg-slate-50/50 transition-colors"
               >
                 <div className={`w-8 h-8 rounded-lg ${config.bg} flex items-center justify-center shrink-0 mt-0.5`}>
@@ -108,7 +103,7 @@ export default function AuditLog() {
                     {date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })} UTC
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

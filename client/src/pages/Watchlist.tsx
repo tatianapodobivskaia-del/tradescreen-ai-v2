@@ -3,7 +3,6 @@
  * Filters by list, entity type, country. Entity detail cards on click.
  */
 import { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { RiskBadge } from "@/components/shared";
 import { watchlistEntities, dataSources } from "@/lib/mockData";
 import { Search, Globe, User, Building2, Ship, X } from "lucide-react";
@@ -64,13 +63,9 @@ export default function Watchlist() {
                 <span className="text-lg">{source.flag}</span>
                 <span className="w-24 text-xs font-medium text-slate-600 font-body">{source.name}</span>
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${pct}%` }}
-                    transition={{ duration: 1, delay: i * 0.15 }}
-                    viewport={{ once: true }}
+                  <div
                     className="h-full rounded-full bg-[#06b6d4]"
-                    style={{ opacity: 1 - i * 0.15 }}
+                    style={{ width: `${pct}%`, opacity: 1 - i * 0.15 }}
                   />
                 </div>
                 <span className="text-xs font-data text-slate-500 w-20 text-right">{source.count.toLocaleString()}</span>
@@ -193,9 +188,8 @@ export default function Watchlist() {
 
         {/* Entity Detail */}
         <div className="premium-card rounded-xl p-8">
-          <AnimatePresence mode="wait">
             {selected ? (
-              <motion.div key={selected.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div key={selected.id}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold font-display text-slate-900">Entity Detail</h3>
                   <button onClick={() => setSelectedEntity(null)} className="text-slate-400 hover:text-slate-600">
@@ -240,14 +234,13 @@ export default function Watchlist() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ) : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
+              <div className="text-center py-10">
                 <Globe className="w-10 h-10 text-slate-200 mx-auto mb-3" />
                 <p className="text-sm text-slate-400 font-body">Select an entity to view details</p>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
       </div>
     </div>

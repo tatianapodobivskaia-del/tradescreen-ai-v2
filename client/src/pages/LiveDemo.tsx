@@ -2,7 +2,6 @@
  * LIVE DEMO — Pre-configured scenarios, professional compliance-style results (light panels on dark shell)
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Eye,
@@ -214,7 +213,6 @@ const VARIANT_TO_TABLE_MS = 350;
 
 const AGENT_STEP_MS = 900;
 const PIPELINE_TOTAL_MS = AGENT_STEP_MS * 4;
-const FADE_DURATION = 0.3;
 const ROW_STAGGER_MS = 420;
 const PHASE2_PROCESS_MS = 1600;
 
@@ -454,15 +452,10 @@ function TypingText({ text, active }: { text: string; active: boolean }) {
   if (!active) return null;
 
   return (
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.25 }}
-      className="mt-2 min-h-[2.75rem] break-words text-left text-[11px] leading-relaxed text-slate-700 font-body"
-    >
+    <p className="mt-2 min-h-[2.75rem] break-words text-left text-[11px] leading-relaxed text-slate-700 font-body">
       {text.slice(0, n)}
       {n < text.length ? <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-[#0ea5e9]" /> : null}
-    </motion.p>
+    </p>
   );
 }
 
@@ -488,18 +481,13 @@ function ResultDetailText({ text, show }: { text: string; show: boolean }) {
   if (!show) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: FADE_DURATION, ease: "easeOut" }}
-      className="mt-2 flex items-start gap-2 text-left"
-    >
+    <div className="mt-2 flex items-start gap-2 text-left">
       <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" strokeWidth={2} />
       <p className="break-words text-[11px] leading-relaxed text-slate-800 font-body">
         {text.slice(0, n)}
         {n < text.length ? <span className="text-emerald-600/80">|</span> : null}
       </p>
-    </motion.div>
+    </div>
   );
 }
 
@@ -565,18 +553,15 @@ function NameVariantGenerationBlock({
       {!genLoading && revealed > 0 && (
         <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4">
           {meta.rows.slice(0, revealed).map((row, i) => (
-            <motion.li
+            <li
               key={`${scenarioId}-${row.text}-${row.label}-${i}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.12, ease: "easeOut" }}
               className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2"
             >
               <span className="min-w-0 flex-1 break-words font-data text-[13px] font-semibold text-slate-900">{row.text}</span>
               <span className="shrink-0 rounded-md border border-slate-200/90 bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
                 {row.label}
               </span>
-            </motion.li>
+            </li>
           ))}
         </ul>
       )}
@@ -773,10 +758,7 @@ function PdfReportModal({
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: FADE_DURATION }}
+      <div
         className="relative z-10 max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-white p-8 text-slate-900 shadow-2xl"
         role="dialog"
         aria-modal="true"
@@ -969,7 +951,7 @@ function PdfReportModal({
             Close
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -1053,10 +1035,7 @@ TradeScreen AI — Demo Export`;
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: FADE_DURATION }}
+      <div
         className="relative z-10 flex h-[min(92vh,720px)] min-h-[500px] w-full min-w-0 max-w-[min(100vw-2rem,880px)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl sm:min-w-[600px]"
         role="dialog"
         aria-modal="true"
@@ -1108,7 +1087,7 @@ TradeScreen AI — Demo Export`;
             Close
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -1183,7 +1162,7 @@ function ScenarioCard({
       setAgentProgress(100);
       setPhase3("complete");
       const vCue: DemoSoundCue = scenario.result.risk === "HIGH" ? "verdictHigh" : "verdictOk";
-      const idVerdict = window.setTimeout(() => playCue?.(vCue), 140);
+      const idVerdict = setTimeout(() => playCue?.(vCue), 140);
       timeoutIdsRef.current.push(idVerdict);
     }, AGENT_STEP_MS * 4);
 
@@ -1351,10 +1330,7 @@ function ScenarioCard({
   const lightPanel = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
 
   return (
-    <motion.article
-      layout
-      className="flex w-full min-w-0 max-w-full flex-col rounded-xl border border-slate-700/80 bg-slate-900/95 p-6 text-left shadow-lg shadow-black/30"
-    >
+    <article className="flex w-full min-w-0 max-w-full flex-col rounded-xl border border-slate-700/80 bg-slate-900/95 p-6 text-left shadow-lg shadow-black/30">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-base font-extrabold font-display leading-snug text-white">{scenario.title}</h3>
@@ -1450,16 +1426,8 @@ function ScenarioCard({
         </div>
       )}
 
-      <AnimatePresence mode="wait">
-        {showDemoPanel && (
-          <motion.div
-            key="panel"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: FADE_DURATION }}
-            className={cn("mt-5 w-full min-w-0 max-w-full min-h-[600px]", lightPanel)}
-          >
+      {showDemoPanel && (
+          <div className={cn("mt-5 w-full min-w-0 max-w-full min-h-[600px]", lightPanel)}>
             <p className="mb-1 text-center text-[10px] font-bold font-display uppercase tracking-[0.2em] text-slate-500">
               {activeStep === 1 && "Sanctions list screening"}
               {activeStep === 2 && "AI deep analysis"}
@@ -1467,21 +1435,13 @@ function ScenarioCard({
             </p>
             <StepIndicator activeStep={activeStep} />
 
-            <AnimatePresence mode="wait">
               {phase1 !== "idle" && (
-                <motion.div
-                  key="p1"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: FADE_DURATION }}
-                  className="space-y-4"
-                >
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: phase1 === "running" || phase1 === "complete" ? 1 : 0 }}
-                    transition={{ duration: FADE_DURATION }}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                <div className="space-y-4">
+                  <div
+                    className={cn(
+                      "rounded-xl border border-slate-200 bg-slate-50 p-4 transition-opacity duration-300",
+                      phase1 === "running" || phase1 === "complete" ? "opacity-100" : "opacity-0"
+                    )}
                   >
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Vendor input</p>
                     <p className="mt-1 text-sm font-semibold text-slate-900">{scenario.entity}</p>
@@ -1502,7 +1462,7 @@ function ScenarioCard({
                         <p className="font-medium">{scenario.docType}</p>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
 
                   <NameVariantGenerationBlock
                     scenarioId={scenario.id}
@@ -1520,21 +1480,12 @@ function ScenarioCard({
                     </div>
                   )}
 
-                  <AnimatePresence>
                     {showScreeningComplete && (
-                      <motion.p
-                        key="done"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: FADE_DURATION }}
-                        className="flex items-center gap-2 text-sm font-semibold text-emerald-700"
-                      >
+                      <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
                         <CheckCircle className="h-4 w-4 shrink-0" strokeWidth={2} />
                         Screening Complete ✓
-                      </motion.p>
+                      </p>
                     )}
-                  </AnimatePresence>
 
                   {showPhase1Table && (
                     <div className="w-full min-w-0 overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -1555,11 +1506,8 @@ function ScenarioCard({
                         </thead>
                         <tbody className="text-slate-900">
                           {listRows.slice(0, visibleRows).map((row, i) => (
-                            <motion.tr
+                            <tr
                               key={i}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: FADE_DURATION }}
                               className="border-b border-slate-200 odd:bg-white even:bg-slate-50"
                             >
                               <td className="px-3 py-2.5 align-top font-medium text-slate-800">{row.list}</td>
@@ -1572,7 +1520,7 @@ function ScenarioCard({
                               <td className={cn("px-3 py-2.5 align-top", tierCellClass(row.tier))}>
                                 {row.statusLabel}
                               </td>
-                            </motion.tr>
+                            </tr>
                           ))}
                         </tbody>
                       </table>
@@ -1580,12 +1528,7 @@ function ScenarioCard({
                   )}
 
                   {phase1 === "complete" && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: FADE_DURATION }}
-                      className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
-                    >
+                    <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                         Screening summary
                       </p>
@@ -1628,20 +1571,13 @@ function ScenarioCard({
                           </span>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
             {(phase2 === "running" || phase2 === "complete" || phase3 !== "locked") && phase1 === "complete" && (
-              <motion.div
-                key="p2block"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: FADE_DURATION }}
-                className={cn("space-y-3", phase1 === "complete" && "mt-6 border-t border-slate-200 pt-6")}
-              >
+              <div className={cn("space-y-3", phase1 === "complete" && "mt-6 border-t border-slate-200 pt-6")}>
                 {phase2 === "running" && (
                   <div className="flex items-center gap-2 text-sm text-slate-800">
                     <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber-700" strokeWidth={2} />
@@ -1692,12 +1628,7 @@ function ScenarioCard({
                       containerRef={agentsWrapRef}
                     />
                     {phase3 === "complete" && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: FADE_DURATION }}
-                        className="mt-6 space-y-4 border-t border-slate-200 pt-6"
-                      >
+                      <div className="mt-6 space-y-4 border-t border-slate-200 pt-6">
                         <div
                           className={cn(
                             "rounded-xl border-2 px-4 py-4",
@@ -1736,15 +1667,14 @@ function ScenarioCard({
                             Generate Email to Bank
                           </button>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       <PdfReportModal
         open={pdfOpen}
@@ -1764,7 +1694,7 @@ function ScenarioCard({
         auditId={auditId}
         generatedAt={reportStamp}
       />
-    </motion.article>
+    </article>
   );
 }
 

@@ -2,7 +2,6 @@
  * REPORTS & ANALYTICS — Charts, heatmap, reports archive, performance metrics
  */
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import { screeningTrends, geographicDistribution, performanceMetrics, reportsArchive } from "@/lib/mockData";
 import { BarChart3, Download, Globe, TrendingUp, FileText, Award, Printer, X, ShieldAlert } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
@@ -201,12 +200,7 @@ export default function Reports() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Screening Trends */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="premium-card rounded-xl p-8"
-        >
+        <div className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Screening Trends</h3>
@@ -226,16 +220,10 @@ export default function Reports() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
         {/* Geographic Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          viewport={{ once: true }}
-          className="premium-card rounded-xl p-8"
-        >
+        <div className="premium-card rounded-xl p-8">
           <div className="flex items-center gap-2 mb-1">
             <Globe className="w-4 h-4 text-cyan-500" />
             <h3 className="text-base font-bold font-display text-slate-900">Geographic Distribution</h3>
@@ -246,13 +234,10 @@ export default function Reports() {
               <div key={i} className="flex items-center gap-3">
                 <span className="w-20 text-xs font-medium text-slate-600 font-body truncate">{item.country}</span>
                 <div className="flex-1 h-6 bg-slate-100 rounded-md overflow-hidden relative">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${item.percentage}%` }}
-                    transition={{ duration: 0.8, delay: i * 0.08 }}
-                    viewport={{ once: true }}
+                  <div
                     className="h-full rounded-md"
                     style={{
+                      width: `${item.percentage}%`,
                       background: `linear-gradient(90deg, #22d3ee ${Math.min(item.percentage * 2, 100)}%, #0ea5e9)`,
                       opacity: 1 - i * 0.08,
                     }}
@@ -265,17 +250,11 @@ export default function Reports() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Reports Archive */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        viewport={{ once: true }}
-        className="premium-card rounded-xl overflow-hidden"
-      >
+      <div className="premium-card rounded-xl overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-cyan-500" />
@@ -323,16 +302,10 @@ export default function Reports() {
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
 
       {/* Performance Metrics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        viewport={{ once: true }}
-        className="premium-card rounded-xl p-8"
-      >
+      <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-1">
           <Award className="w-4 h-4 text-cyan-500" />
           <h3 className="text-base font-bold font-display text-slate-900">Performance Metrics</h3>
@@ -360,7 +333,7 @@ export default function Reports() {
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

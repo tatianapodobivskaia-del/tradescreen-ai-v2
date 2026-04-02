@@ -2,16 +2,10 @@
  * DASHBOARD — Intelligence Overview
  * Premium: enlarged spacing, premium cards, stronger headings, AI glow on key metrics
  */
-import { motion } from "framer-motion";
 import { CountUpNumber, RiskBadge, StatusDot, ScanningLine } from "@/components/shared";
 import { dashboardStats, screeningActivityData, listDistribution, recentScreenings, systemStatus } from "@/lib/mockData";
 import { TrendingUp, TrendingDown, Clock, Shield, AlertTriangle, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-const fadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5 } }),
-};
 
 const statIcons = [Activity, Shield, AlertTriangle, Clock];
 
@@ -47,13 +41,8 @@ export default function Dashboard() {
           const Icon = statIcons[i];
           const isHighlight = i === 0;
           return (
-            <motion.div
+            <div
               key={i}
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeIn}
               className={`${isHighlight ? "ai-glow" : "premium-card"} rounded-xl p-6 relative overflow-hidden group`}
             >
               <ScanningLine className="opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -91,7 +80,7 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </div>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -99,13 +88,7 @@ export default function Dashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Screening Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          viewport={{ once: true }}
-          className="lg:col-span-2 premium-card rounded-xl p-8"
-        >
+        <div className="lg:col-span-2 premium-card rounded-xl p-8">
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-1">Screening Activity</h3>
           <p className="text-xs text-slate-500 font-body mb-6">Monthly screening volume and flagged entities</p>
           <div className="h-72">
@@ -130,16 +113,10 @@ export default function Dashboard() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </motion.div>
+        </div>
 
         {/* List Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          viewport={{ once: true }}
-          className="premium-card rounded-xl p-8"
-        >
+        <div className="premium-card rounded-xl p-8">
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-1">List Distribution</h3>
           <p className="text-xs text-slate-500 font-body mb-6">Entities by sanctions list</p>
           <div className="h-56">
@@ -165,19 +142,13 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Recent Screenings + System Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Screenings Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          viewport={{ once: true }}
-          className="lg:col-span-2 premium-card rounded-xl overflow-hidden"
-        >
+        <div className="lg:col-span-2 premium-card rounded-xl overflow-hidden">
           <div className="p-6 border-b border-slate-100">
             <h3 className="text-lg font-extrabold font-display text-slate-900">Recent Screenings</h3>
           </div>
@@ -212,16 +183,10 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </div>
 
         {/* System Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          viewport={{ once: true }}
-          className="premium-card rounded-xl p-6"
-        >
+        <div className="premium-card rounded-xl p-6">
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-6">System Status</h3>
           <div className="space-y-5">
             {systemStatus.map((service, i) => (
@@ -242,7 +207,7 @@ export default function Dashboard() {
               <span className="font-bold text-slate-600">Database:</span> Updated 2h ago
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
