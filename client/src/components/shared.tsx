@@ -87,7 +87,7 @@ export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
       <div className="max-w-6xl mx-auto px-4 space-y-4">
         {/* Main line */}
         <p className={cn("text-sm font-medium", isDark ? "text-slate-400" : "text-slate-600")}>
-          TradeScreen AI — Academic Research Prototype — Atlantis University
+          TradeScreen AI — Academic Research Prototype
         </p>
 
         {/* Legal links */}
@@ -113,7 +113,7 @@ export function Footer({ variant = "light" }: { variant?: "light" | "dark" }) {
 
         {/* Copyright */}
         <p className={cn("text-xs pt-2", isDark ? "text-slate-600" : "text-slate-400")}>
-          &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL
+          © 2026 Tatiana Podobivskaia. All rights reserved.
         </p>
       </div>
     </footer>

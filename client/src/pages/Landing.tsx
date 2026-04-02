@@ -905,37 +905,23 @@ function PrivacySection() {
 
 function LandingFooter() {
   const footerColumns = [
-    {
-      title: "Product",
-      links: [
-        { label: "Screening", href: "/app/screening" },
-        { label: "Document Scanner", href: "/app/scanner" },
-        { label: "Cyrillic Engine", href: "/app/cyrillic" },
-        { label: "Risk Scoring", href: "/app/screening" },
-      ],
-    },
-    {
-      title: "Research",
-      links: [
-        { label: "Reports", href: "/app/reports" },
-        { label: "Analytics", href: "/app/reports" },
-        { label: "Architecture", href: "/app/architecture" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { label: "About", href: "/app/about" },
-      ],
-    },
-    {
-      title: "Legal",
-      links: [
-        { label: "Privacy Policy", href: "/app/privacy" },
-        { label: "Terms of Service", href: "/app/terms" },
-        { label: "Disclaimer", href: "/app/disclaimer" },
-      ],
-    },
+    { title: "Prototype", links: [
+      { label: "Screening", href: "/app/screening" },
+      { label: "Document Scanner", href: "/app/scanner" },
+      { label: "Cyrillic Engine", href: "/app/cyrillic" },
+    ]},
+    { title: "Research", links: [
+      { label: "Reports", href: "/app/reports" },
+      { label: "Architecture", href: "/app/architecture" },
+    ]},
+    { title: "About", links: [
+      { label: "About", href: "/app/about" },
+    ]},
+    { title: "Legal", links: [
+      { label: "Privacy Policy", href: "/app/privacy" },
+      { label: "Terms of Service", href: "/app/terms" },
+      { label: "Disclaimer", href: "/app/disclaimer" },
+    ]},
   ] as const;
 
   return (
@@ -1000,7 +986,7 @@ function LandingFooter() {
               Contact
             </Link>
           </p>
-          <p>© 2026 TradeScreen AI. All rights reserved.</p>
+          <p>© 2026 Tatiana Podobivskaia. All rights reserved.</p>
         </div>
       </div>
     </footer>
