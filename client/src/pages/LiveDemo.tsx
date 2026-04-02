@@ -567,8 +567,8 @@ function NameVariantGenerationBlock({
           {meta.rows.slice(0, revealed).map((row, i) => (
             <motion.li
               key={`${scenarioId}-${row.text}-${row.label}-${i}`}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.12, ease: "easeOut" }}
               className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2"
             >
@@ -1458,7 +1458,7 @@ function ScenarioCard({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: FADE_DURATION }}
-            className={cn("mt-5 w-full min-w-0 max-w-full", lightPanel)}
+            className={cn("mt-5 w-full min-w-0 max-w-full min-h-[600px]", lightPanel)}
           >
             <p className="mb-1 text-center text-[10px] font-bold font-display uppercase tracking-[0.2em] text-slate-500">
               {activeStep === 1 && "Sanctions list screening"}
