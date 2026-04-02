@@ -18,7 +18,16 @@ import AboutResearcher from "./pages/AboutResearcher";
 import SettingsPage from "./pages/Settings";
 import LegalPages from "./pages/LegalPages";
 import AppLayout from "./components/AppLayout";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
+
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  return null;
+}
 
 function AppPages() {
   return (
@@ -67,6 +76,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <ScrollToTop />
           <Router />
         </TooltipProvider>
       </ThemeProvider>
