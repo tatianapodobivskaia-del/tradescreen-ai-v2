@@ -21,7 +21,6 @@ const MENU = {
   research: [
     { label: "Live Demo", href: "/app/live-demo" },
     { label: "System Architecture", href: "/app/architecture" },
-    { label: "Reports & Analytics", href: "/app/reports" },
   ],
 } as const;
 
