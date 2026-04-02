@@ -82,8 +82,9 @@ export default function AuditLog() {
               <motion.div
                 key={i}
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                whileInView={{ opacity: 1 }}
                 transition={{ delay: i * 0.03 }}
+                viewport={{ once: true }}
                 className="flex items-start gap-4 p-4 hover:bg-slate-50/50 transition-colors"
               >
                 <div className={`w-8 h-8 rounded-lg ${config.bg} flex items-center justify-center shrink-0 mt-0.5`}>

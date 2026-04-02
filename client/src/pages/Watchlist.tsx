@@ -66,8 +66,9 @@ export default function Watchlist() {
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
+                    whileInView={{ width: `${pct}%` }}
                     transition={{ duration: 1, delay: i * 0.15 }}
+                    viewport={{ once: true }}
                     className="h-full rounded-full bg-[#06b6d4]"
                     style={{ opacity: 1 - i * 0.15 }}
                   />

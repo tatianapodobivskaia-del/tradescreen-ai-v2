@@ -75,8 +75,9 @@ export default function CyrillicEngine() {
                 <motion.tr
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.08 }}
+                  viewport={{ once: true }}
                   className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors"
                 >
                   <td className="py-3 px-4 font-semibold text-slate-900 font-body">{row.cyrillic}</td>

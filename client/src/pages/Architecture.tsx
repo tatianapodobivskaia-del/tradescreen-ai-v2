@@ -35,8 +35,9 @@ export default function Architecture() {
                 <div key={stage.id} className="relative">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.12 }}
+                    viewport={{ once: true }}
                     className="p-4 rounded-xl border border-slate-200 text-center h-full hover:border-cyan-500/30 hover:shadow-md transition-all"
                   >
                     <div className="text-3xl font-bold font-data text-cyan-500/20 mb-2">{stage.id}</div>
@@ -89,8 +90,9 @@ export default function Architecture() {
               <motion.div
                 key={agent.title}
                 initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
+                viewport={{ once: true }}
                 className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 hover:border-cyan-500/25 hover:shadow-sm transition-all"
               >
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50">
@@ -120,8 +122,9 @@ export default function Architecture() {
             <motion.div
               key={i}
               initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
+              viewport={{ once: true }}
               className="flex items-center gap-4"
             >
               <div className="w-20 text-right">
@@ -131,8 +134,9 @@ export default function Architecture() {
                 <div className="h-3 bg-slate-100 rounded-full overflow-hidden mb-1">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${w.weight * 100}%` }}
+                    whileInView={{ width: `${w.weight * 100}%` }}
                     transition={{ duration: 0.8, delay: i * 0.15 }}
+                    viewport={{ once: true }}
                     className="h-full rounded-full bg-gradient-to-r from-[#06b6d4] to-[#22d3ee]"
                   />
                 </div>

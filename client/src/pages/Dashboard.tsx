@@ -51,7 +51,8 @@ export default function Dashboard() {
               key={i}
               custom={i}
               initial="hidden"
-              animate="visible"
+              whileInView="visible"
+              viewport={{ once: true }}
               variants={fadeIn}
               className={`${isHighlight ? "ai-glow" : "premium-card"} rounded-xl p-6 relative overflow-hidden group`}
             >
@@ -99,7 +100,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Screening Activity */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          viewport={{ once: true }}
           className="lg:col-span-2 premium-card rounded-xl p-8"
         >
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-1">Screening Activity</h3>
@@ -130,7 +134,10 @@ export default function Dashboard() {
 
         {/* List Distribution */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          viewport={{ once: true }}
           className="premium-card rounded-xl p-8"
         >
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-1">List Distribution</h3>
@@ -165,7 +172,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Screenings Table */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          viewport={{ once: true }}
           className="lg:col-span-2 premium-card rounded-xl overflow-hidden"
         >
           <div className="p-6 border-b border-slate-100">
@@ -206,7 +216,10 @@ export default function Dashboard() {
 
         {/* System Status */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          viewport={{ once: true }}
           className="premium-card rounded-xl p-6"
         >
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-6">System Status</h3>
