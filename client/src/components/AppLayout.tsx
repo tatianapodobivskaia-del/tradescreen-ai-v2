@@ -47,10 +47,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Logo / Branding — Clickable, returns to landing page */}
-        <div className="flex items-center gap-2 px-4 py-4">
+        <Link
+          href="/"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-2 px-4 py-4 text-inherit no-underline"
+        >
           <img src="/logo-dark.png" alt="TradeScreen AI" className="h-8 w-8 object-contain" />
           <span className="font-bold text-base text-slate-50 tracking-tight">TradeScreen <span className="text-cyan-400">AI</span></span>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-3 overflow-y-auto">

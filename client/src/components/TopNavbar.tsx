@@ -1,7 +1,7 @@
 // IA/UX Reconstruction Phase 1 — approved by Tatiana 2026-04-01
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -81,13 +81,6 @@ export default function TopNavbar({
     setMobileNavOpen(false);
   };
 
-  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    if (window.scrollY > 8) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
   return (
     <>
       <AnimatePresence>
@@ -100,12 +93,21 @@ export default function TopNavbar({
             className={cn("fixed inset-0 z-[70] backdrop-blur-xl lg:hidden", overlayBgClass)}
           >
             <div className={cn("flex h-20 items-center justify-between border-b px-6", isLight ? "border-slate-200" : "border-cyan-500/20")}>
-              <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer flex items-center gap-2">
-                <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
-                <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
-                  TradeScreen <span className={aiTextClass}>AI</span>
-                </span>
-              </div>
+              {isLight ? (
+                <Link href="/" onClick={closeMenus} className="flex items-center gap-2">
+                  <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+                  <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
+                    TradeScreen <span className={aiTextClass}>AI</span>
+                  </span>
+                </Link>
+              ) : (
+                <div onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex cursor-pointer items-center gap-2">
+                  <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+                  <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
+                    TradeScreen <span className={aiTextClass}>AI</span>
+                  </span>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(false)}
@@ -182,12 +184,21 @@ export default function TopNavbar({
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer flex items-center gap-2">
-              <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
-              <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
-                TradeScreen <span className={aiTextClass}>AI</span>
-              </span>
-            </div>
+            {isLight ? (
+              <Link href="/" onClick={closeMenus} className="flex items-center gap-2">
+                <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+                <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
+                  TradeScreen <span className={aiTextClass}>AI</span>
+                </span>
+              </Link>
+            ) : (
+              <div onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex cursor-pointer items-center gap-2">
+                <img src={logoSrc} alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+                <span className={cn("font-bold text-lg tracking-tight", brandTextClass)}>
+                  TradeScreen <span className={aiTextClass}>AI</span>
+                </span>
+              </div>
+            )}
           </div>
 
           <div ref={dropdownWrapRef} className="hidden items-center gap-7 lg:flex">
