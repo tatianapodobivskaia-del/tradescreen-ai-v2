@@ -5,29 +5,31 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
-type DropdownKey = "products" | "solutions" | "resources" | "company";
+type DropdownKey = "prototype" | "useCases" | "research";
 
 const MENU = {
-  products: [
+  prototype: [
     { label: "Sanctions Screening", href: "/app/screening" },
     { label: "Document Scanner", href: "/app/scanner" },
     { label: "Cyrillic Engine", href: "/app/cyrillic" },
   ],
-  solutions: [
-    { label: "Financial Institutions", href: "#" },
-    { label: "Trade Finance", href: "#" },
-    { label: "Corporate Compliance", href: "#" },
+  useCases: [
+    { label: "Financial Institutions", href: "/app/live-demo" },
+    { label: "Trade Finance", href: "/app/live-demo" },
+    { label: "Corporate Compliance", href: "/app/live-demo" },
   ],
-  resources: [
-    { label: "Documentation", href: "/app/architecture" },
-    { label: "Case Studies", href: "/app/live-demo" },
-    { label: "Compliance Guide", href: "#" },
-  ],
-  company: [
-    { label: "About", href: "/app/about" },
-    { label: "Research", href: "/app/reports" },
+  research: [
+    { label: "Live Demo", href: "/app/live-demo" },
+    { label: "System Architecture", href: "/app/architecture" },
+    { label: "Reports & Analytics", href: "/app/reports" },
   ],
 } as const;
+
+const MENU_LABELS: Record<DropdownKey, string> = {
+  prototype: "Prototype",
+  useCases: "Use Cases",
+  research: "Research",
+};
 
 export default function TopNavbar({
   className,
@@ -123,7 +125,7 @@ export default function TopNavbar({
             <div className="space-y-6 overflow-y-auto px-6 py-6">
               {Object.entries(MENU).map(([group, items]) => (
                 <div key={group} className="space-y-2">
-                  <p className={cn("text-[11px] font-semibold uppercase tracking-[0.15em]", isLight ? "text-slate-500" : "text-slate-400")}>{group}</p>
+                  <p className={cn("text-[11px] font-semibold uppercase tracking-[0.15em]", isLight ? "text-slate-500" : "text-slate-400")}>{MENU_LABELS[group as DropdownKey]}</p>
                   {items.map((item) => (
                     <Link
                       key={item.label}
@@ -137,6 +139,12 @@ export default function TopNavbar({
                 </div>
               ))}
 
+              <div className="pt-2">
+                <Link href="/app/about" onClick={closeMenus} className="block text-lg font-semibold text-white transition-colors hover:text-cyan-400">
+                  About
+                </Link>
+              </div>
+
               <div className="pt-4">
                 <Link
                   href="/app/architecture"
@@ -146,7 +154,7 @@ export default function TopNavbar({
                     isLight ? "text-slate-900" : "text-[#0B0F1A]",
                   )}
                 >
-                  Explore Demo
+                  Explore Prototype
                 </Link>
               </div>
             </div>
@@ -194,9 +202,9 @@ export default function TopNavbar({
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(openDropdown === group ? null : group)}
-                  className={cn("inline-flex items-center gap-1 text-sm font-semibold capitalize transition-colors", navTextClass)}
+                  className={cn("inline-flex items-center gap-1 text-sm font-semibold transition-colors", navTextClass)}
                 >
-                  {group}
+                  {MENU_LABELS[group]}
                   <ChevronDown className="h-4 w-4" />
                 </button>
                 <AnimatePresence>
@@ -226,6 +234,15 @@ export default function TopNavbar({
                 </AnimatePresence>
               </div>
             ))}
+            <Link
+              href="/app/about"
+              className={cn(
+                "text-sm font-semibold transition-colors",
+                isLight ? "text-slate-600 hover:text-cyan-600" : "text-slate-200 hover:text-cyan-400",
+              )}
+            >
+              About
+            </Link>
           </div>
 
           <div className="hidden lg:flex">
@@ -237,7 +254,7 @@ export default function TopNavbar({
                 isLight ? "text-slate-900" : "text-[#0B0F1A]",
               )}
             >
-              Explore Demo
+              Explore Prototype
             </Link>
           </div>
         </div>
