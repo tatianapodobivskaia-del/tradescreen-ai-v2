@@ -223,7 +223,7 @@ function PremiumHeading({
           viewport={{ once: true, amount: 0.2 }}
           variants={fadeUpInView}
           custom={0}
-          className="mb-3 text-center font-data text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400/80"
+          className="mb-3 text-center font-data text-sm font-bold uppercase tracking-[0.2em] text-cyan-400/80"
         >
           {label}
         </motion.p>
