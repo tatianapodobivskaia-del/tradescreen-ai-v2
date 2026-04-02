@@ -1,3 +1,4 @@
+// IA/UX Reconstruction Phase 1 — approved by Tatiana 2026-04-01
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
@@ -27,6 +28,24 @@ const MENU = {
     { label: "Research", href: "/app/reports" },
   ],
 } as const;
+
+const LogoSVG = () => (
+  <svg width="240" height="64" viewBox="0 0 240 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Globe */}
+    <circle cx="32" cy="32" r="29" stroke="currentColor" strokeWidth="5"/>
+    <path d="M12 32 Q32 12 52 32 Q32 52 12 32" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M8 22 Q32 22 56 22" stroke="currentColor" strokeWidth="3"/>
+    <path d="M8 42 Q32 42 56 42" stroke="currentColor" strokeWidth="3"/>
+    {/* Magnifier handle */}
+    <circle cx="52" cy="42" r="13" stroke="currentColor" strokeWidth="5"/>
+    <line x1="62" y1="52" x2="72" y2="62" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/>
+    {/* Text TradeScreen */}
+    <text x="82" y="41" fontFamily="system-ui" fontSize="28" fontWeight="700" fill="currentColor">TradeScreen</text>
+    {/* AI badge */}
+    <rect x="195" y="20" width="42" height="42" rx="9" fill="#00D4FF"/>
+    <text x="205" y="46" fontFamily="system-ui" fontSize="24" fontWeight="800" fill="#0A2540">AI</text>
+  </svg>
+);
 
 export default function TopNavbar({ className }: { className?: string }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -76,15 +95,9 @@ export default function TopNavbar({ className }: { className?: string }) {
             className="fixed inset-0 z-[70] bg-[#0B0F1A]/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex h-20 items-center justify-between border-b border-cyan-500/20 px-6">
-              <span className="inline-flex items-center gap-2.5 text-2xl font-extrabold tracking-tight">
-                <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/15">
-                  <span className="absolute h-4 w-[1px] bg-cyan-300/80" />
-                  <span className="absolute w-4 h-[1px] bg-cyan-300/70" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
-                </span>
-                <span className="text-white">TradeScreen</span>
-                <span className="text-cyan-400">AI</span>
-              </span>
+              <div className="text-white">
+                <LogoSVG />
+              </div>
               <button
                 type="button"
                 onClick={() => setMobileNavOpen(false)}
@@ -144,19 +157,23 @@ export default function TopNavbar({ className }: { className?: string }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link
-              href="/"
-              onClick={handleLogoClick}
-              className="inline-flex items-center gap-3 text-[1.7rem] font-extrabold tracking-tight leading-none"
+            <div
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="cursor-pointer flex items-center gap-2 select-none"
             >
-              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-cyan-400/40 bg-cyan-500/15">
-                <span className="absolute h-5 w-[1px] bg-cyan-300/80" />
-                <span className="absolute w-5 h-[1px] bg-cyan-300/70" />
-                <span className="h-3 w-3 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="13" stroke="#22d3ee" strokeWidth="1.5" fill="none"/>
+                <ellipse cx="16" cy="16" rx="5" ry="13" stroke="#22d3ee" strokeWidth="1.2" fill="none"/>
+                <line x1="3" y1="16" x2="29" y2="16" stroke="#22d3ee" strokeWidth="1.2"/>
+                <line x1="5" y1="10" x2="27" y2="10" stroke="#22d3ee" strokeWidth="1"/>
+                <line x1="5" y1="22" x2="27" y2="22" stroke="#22d3ee" strokeWidth="1"/>
+                <circle cx="26" cy="26" r="6" stroke="#22d3ee" strokeWidth="1.8" fill="rgba(34,211,238,0.1)"/>
+                <line x1="30" y1="30" x2="34" y2="34" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
+              <span style={{fontFamily: 'Inter, sans-serif', fontWeight: 700, fontSize: '18px', color: '#f0f9ff', letterSpacing: '-0.3px'}}>
+                TradeScreen <span style={{color: '#22d3ee'}}>AI</span>
               </span>
-              <span className="text-white">TradeScreen</span>
-              <span className="text-cyan-400">AI</span>
-            </Link>
+            </div>
           </div>
 
           <div ref={dropdownWrapRef} className="hidden items-center gap-7 lg:flex">
