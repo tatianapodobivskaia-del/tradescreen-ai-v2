@@ -234,7 +234,7 @@ function PremiumHeading({
         viewport={{ once: true, amount: 0.2 }}
         variants={fadeUpInView}
         custom={label ? 1 : 0}
-        className={`section-heading ${dark ? "text-white" : "text-slate-900"}`}
+        className={`section-heading text-4xl md:text-5xl font-bold ${dark ? "text-white" : "text-slate-900"}`}
       >
         {children}
       </motion.h2>
@@ -245,7 +245,7 @@ function PremiumHeading({
           viewport={{ once: true, amount: 0.2 }}
           variants={fadeUpInView}
           custom={label ? 3 : 2}
-          className={`mt-3 section-subtitle ${dark ? "section-subtitle-dark" : ""}`}
+          className={`mt-3 text-lg md:text-xl section-subtitle ${dark ? "section-subtitle-dark" : ""}`}
         >
           {subtitle}
         </motion.p>
