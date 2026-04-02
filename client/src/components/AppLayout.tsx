@@ -123,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content — premium spacing */}
       <div className={cn("flex-1 flex flex-col transition-all duration-300", collapsed ? "lg:ml-[76px]" : "lg:ml-[288px]")}>
-        <TopNavbar className={collapsed ? "lg:left-[76px]" : "lg:left-[288px]"} />
+        <TopNavbar variant="light" className={collapsed ? "lg:left-[76px]" : "lg:left-[288px]"} />
 
         {/* Page content — premium padding */}
         <main className="flex-1 p-6 pt-24 lg:p-8 lg:pt-28">

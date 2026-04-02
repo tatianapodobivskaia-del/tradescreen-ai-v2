@@ -267,7 +267,7 @@ export default function Landing() {
 
   return (
     <div className="overflow-hidden bg-[#0a0e1a] text-white">
-      <TopNavbar />
+      <TopNavbar variant="dark" />
       {/* ===== HERO ===== */}
       <section id="landing-hero" className="relative flex min-h-screen items-center justify-center pt-20">
         <HeroNetworkAnimation />
