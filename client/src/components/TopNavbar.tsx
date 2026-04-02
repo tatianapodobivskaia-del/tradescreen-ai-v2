@@ -78,7 +78,7 @@ export default function TopNavbar({ className }: { className?: string }) {
           >
             <div className="flex h-20 items-center justify-between border-b border-cyan-500/20 px-6">
               <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer flex items-center gap-2">
-                <img src="/logo-dark.png" alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+                <img src="/logo-light.png" alt="TradeScreen AI" className="h-9 w-9 object-contain" />
                 <span className="font-bold text-lg text-slate-50 tracking-tight">TradeScreen <span className="text-cyan-400">AI</span></span>
               </div>
               <button
@@ -141,7 +141,7 @@ export default function TopNavbar({ className }: { className?: string }) {
               <Menu className="h-5 w-5" />
             </button>
             <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer flex items-center gap-2">
-              <img src="/logo-dark.png" alt="TradeScreen AI" className="h-9 w-9 object-contain" />
+              <img src="/logo-light.png" alt="TradeScreen AI" className="h-9 w-9 object-contain" />
               <span className="font-bold text-lg text-slate-50 tracking-tight">TradeScreen <span className="text-cyan-400">AI</span></span>
             </div>
           </div>
