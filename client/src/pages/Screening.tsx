@@ -659,7 +659,7 @@ export default function Screening() {
               "btn-premium mt-4 text-sm",
               !screeningResults || activeTab !== "manual"
                 ? "btn-premium-outline cursor-not-allowed opacity-50"
-                : "btn-premium-primary"
+                : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400 disabled:opacity-100"
             )}
           >
             Run AI Deep Analysis
