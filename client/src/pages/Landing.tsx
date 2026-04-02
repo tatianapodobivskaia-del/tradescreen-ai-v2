@@ -664,7 +664,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">97%</div>
+            <div className="mb-2 font-data text-7xl font-black tabular-nums text-cyan-200 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>97%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">Detection Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[97%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -678,7 +678,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-emerald-500/20 p-7 text-center shadow-lg shadow-emerald-500/5 transition-colors hover:border-emerald-500/35"
           >
-            <div className="mb-2 font-data text-6xl font-black tabular-nums text-emerald-300 md:text-7xl">8%</div>
+            <div className="mb-2 font-data text-7xl font-black tabular-nums text-emerald-300 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>8%</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide">False Positive Rate</div>
             <div className="mt-4 h-2 w-full rounded-full bg-slate-800">
               <div className="h-full w-[8%] rounded-full bg-gradient-to-r from-cyan-500 to-cyan-300" />
@@ -692,7 +692,7 @@ function PerformanceBenchmarksSection() {
             variants={fadeUpInView}
             className="premium-card-dark rounded-xl border border-cyan-400/20 p-7 text-center shadow-lg shadow-cyan-500/15 transition-colors hover:border-cyan-400/35"
           >
-            <div className="mb-2 font-data text-6xl font-black tabular-nums text-cyan-200 md:text-7xl">2min</div>
+            <div className="mb-2 font-data text-7xl font-black tabular-nums text-cyan-200 md:text-8xl" style={{ textShadow: '0 0 30px rgba(34,211,238,0.3)' }}>2min</div>
             <div className="text-sm font-bold text-slate-200 font-display tracking-wide leading-snug">
               Processing Time
               <span className="block text-xs font-normal text-slate-500 font-body mt-1.5 tracking-normal">40 vendors</span>
@@ -723,11 +723,11 @@ function PerformanceBenchmarksSection() {
               </thead>
               <tbody>
                 {performanceBenchmarkRows.map((row) => (
-                  <tr key={row.metric} className="border-b border-slate-800/60 hover:bg-slate-800/25 transition-colors">
-                    <td className="py-4 px-6 text-slate-300 font-body font-medium">{row.metric}</td>
-                    <td className="py-4 px-4 text-center text-cyan-300 font-bold font-data">{row.tradescreen}</td>
-                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.manual}</td>
-                    <td className="py-4 px-4 text-center text-slate-500 font-body">{row.rules}</td>
+                  <tr key={row.metric} className="border-b border-slate-800/60 py-5 hover:bg-slate-800/25 transition-colors">
+                    <td className="px-6 text-slate-300 font-body font-medium">{row.metric}</td>
+                    <td className="px-4 text-center text-base text-cyan-300 font-bold font-data">{row.tradescreen}</td>
+                    <td className="px-4 text-center text-slate-500 font-body">{row.manual}</td>
+                    <td className="px-4 text-center text-slate-500 font-body">{row.rules}</td>
                   </tr>
                 ))}
               </tbody>
