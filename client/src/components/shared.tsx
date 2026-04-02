@@ -1,6 +1,32 @@
+// IA/UX Reconstruction Phase 1 — approved by Tatiana 2026-04-01
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/utils";
+import { createContext, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { Link } from "wouter";
+
+export type ThemeName = "default" | "ofac" | "eu" | "un";
+
+type ThemeContextValue = {
+  currentTheme: ThemeName;
+  setTheme: Dispatch<SetStateAction<ThemeName>>;
+};
+
+export const ThemeContext = createContext<ThemeContextValue>({
+  currentTheme: "default",
+  setTheme: () => undefined,
+});
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [currentTheme, setTheme] = useState<ThemeName>("default");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", currentTheme);
+  }, [currentTheme]);
+
+  const value = useMemo(() => ({ currentTheme, setTheme }), [currentTheme]);
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
 
 // ---- Risk Badge ----
 export function RiskBadge({ risk, className }: { risk: "High" | "Medium" | "Low"; className?: string }) {
