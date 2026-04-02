@@ -747,6 +747,7 @@ function PerformanceBenchmarksSection() {
 function DataSourcesSection() {
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
   const [nextCheckLabel, setNextCheckLabel] = useState("checking...");
+  const [activeSource, setActiveSource] = useState<number | null>(null);
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
@@ -830,12 +831,13 @@ function DataSourcesSection() {
               href={source.url}
               target="_blank"
               rel="noopener noreferrer"
+              onMouseDown={() => setActiveSource((prev) => (prev === i ? null : i))}
               custom={i}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeUpInView}
-              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}`}
+              className={`premium-card-dark group block cursor-pointer rounded-xl p-6 text-center ${sourceHighlight(source.name, i)}${activeSource === i ? " border-2 shadow-[0_0_40px_rgba(34,211,238,0.35)]" : ""}`}
             >
               <div className="mb-3 text-5xl">{source.flag}</div>
               <h3 className="text-xl font-extrabold font-display text-white mb-2 group-hover:text-cyan-300 transition-colors">{source.name}</h3>
