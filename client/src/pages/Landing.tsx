@@ -330,7 +330,7 @@ export default function Landing() {
               <span className="text-center font-body text-sm font-semibold text-cyan-100 sm:text-left">
                 Screening <span className="font-data text-cyan-300">{heroStats.totalEntities.toLocaleString()}</span> entities across OFAC, EU, UN & UK OFSI
                 <span className="mx-2 text-slate-500">•</span>
-                Synchronized every 6 hours
+                Updated every 6 hours
               </span>
             </div>
           </motion.div>
@@ -855,7 +855,7 @@ function DataSourcesSection() {
         </div>
         <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
           <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
-          <span>All sources synchronized • Last synchronized: {lastUpdatedLabel} • Next check: {nextCheckLabel}</span>
+          <span>All sources updated • Last updated: {lastUpdatedLabel} • Next check: {nextCheckLabel}</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>
