@@ -51,11 +51,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           href="/"
           onClick={() => setMobileOpen(false)}
           className={cn(
-            "flex items-center gap-2 py-4 text-inherit no-underline",
-            collapsed ? "justify-center px-2" : "px-4"
+            "flex items-center py-4 text-inherit no-underline",
+            collapsed ? "w-full min-w-0 justify-center px-1" : "gap-2 px-4"
           )}
         >
-          <img src="/logo-dark.png" alt="TradeScreen AI" className="h-8 w-8 shrink-0 object-contain" />
+          <img
+            src="/logo-dark.png"
+            alt="TradeScreen AI"
+            className={cn(
+              "shrink-0 object-contain",
+              collapsed ? "h-8 max-h-8 w-auto max-w-full" : "h-8 w-8"
+            )}
+          />
           {!collapsed && (
             <span className="font-bold text-base text-slate-50 tracking-tight">
               TradeScreen <span className="text-cyan-400">AI</span>
