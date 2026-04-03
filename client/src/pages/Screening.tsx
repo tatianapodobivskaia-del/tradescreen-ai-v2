@@ -3,9 +3,14 @@
  */
 import { useState, useCallback } from "react";
 import { Search, Upload, Loader2 } from "lucide-react";
+import * as pdfjsLib from "pdfjs-dist";
+import * as XLSX from "xlsx";
+import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
-import { runAIDeepAnalysis } from "@/lib/api";
+import { runAIDeepAnalysis, runVisionScan } from "../lib/api";
 import { watchlistEntities } from "@/lib/mockData";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 /** Full alphabetical country list (50+) */
 const COUNTRY_OPTIONS = [
@@ -341,6 +346,7 @@ export default function Screening() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string) => {
@@ -364,25 +370,78 @@ export default function Screening() {
   const handleFileUpload = useCallback(
     async (file: File) => {
       setUploadedFile(file.name);
+      setAiError(null);
+      setIsLoading(true);
       const ext = file.name.split(".").pop()?.toLowerCase();
+      let vendorNames: string[] = [];
 
-      if (ext === "csv") {
-        const text = await file.text();
-        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-        const startIdx =
-          lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("vendor") ? 1 : 0;
-        const names = lines.slice(startIdx).map((line) => line.split(",")[0].trim()).filter(Boolean);
-        if (names.length > 0) {
-          setVendorName(names[0]);
-          handleScreen(names[0]);
+      try {
+        if (ext === "csv" || ext === "txt") {
+          const text = await file.text();
+          const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+          const startIdx =
+            lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("vendor") ? 1 : 0;
+          vendorNames = lines.slice(startIdx).map((line) => line.split(",")[0].trim()).filter(Boolean);
+        } else if (ext === "xlsx" || ext === "xls") {
+          const buf = await file.arrayBuffer();
+          const wb = XLSX.read(buf, { type: "array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as string[][];
+          const startIdx =
+            rows[0]?.[0]?.toString().toLowerCase().includes("name") ||
+            rows[0]?.[0]?.toString().toLowerCase().includes("vendor")
+              ? 1
+              : 0;
+          vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
+        } else if (ext === "pdf") {
+          const buf = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+          const page = await pdf.getPage(1);
+          const scale = 2;
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            setAiError("Could not render PDF page. Try a different format or use Manual Entry.");
+            setIsLoading(false);
+            return;
+          }
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+          const base64 = canvas.toDataURL("image/png").split(",")[1];
+          try {
+            const result = await runVisionScan(base64);
+            if (result.risk_results?.length) {
+              vendorNames = result.risk_results.map((r) => r.entity);
+            }
+          } catch {
+            setAiError("PDF vision analysis unavailable. Try uploading as CSV or use Manual Entry.");
+            setIsLoading(false);
+            return;
+          }
+        } else if (ext === "docx" || ext === "doc") {
+          const buf = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer: buf });
+          const lines = result.value.split("\n").map((l) => l.trim()).filter(Boolean);
+          vendorNames = lines.filter((l) => l.length > 2 && l.length < 100);
+        } else {
+          setAiError("Unsupported file format. Please upload CSV, Excel, PDF, Word, or TXT.");
+          setIsLoading(false);
+          return;
         }
-      } else if (ext === "pdf") {
-        setAiError(
-          "PDF documents are best analyzed on the AI Document Scanner page. Go to AI Document Scanner for full 4-agent analysis, or enter vendor names manually."
-        );
-        setActiveTab("manual");
-      } else {
-        alert("Unsupported file type. Please upload CSV or PDF.");
+
+        if (vendorNames.length > 0) {
+          setVendorName(vendorNames[0]);
+          setIsLoading(false);
+          setTimeout(() => handleScreen(), 100);
+        } else {
+          setAiError("No vendor names found in file. Try Manual Entry.");
+          setIsLoading(false);
+        }
+      } catch {
+        setAiError("Error reading file. Try a different format or use Manual Entry.");
+        setIsLoading(false);
       }
     },
     [handleScreen]
@@ -470,7 +529,7 @@ export default function Screening() {
                 id="screening-upload-input"
                 type="file"
                 className="sr-only"
-                accept=".csv,.pdf"
+                accept=".csv,.txt,.xlsx,.xls,.pdf,.docx,.doc"
                 onChange={(e) => {
                   if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
                 }}
@@ -484,12 +543,15 @@ export default function Screening() {
                 Click to Browse
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">
-                Supports CSV files and PDF uploads (PDFs: use Document Scanner or manual entry).
+                Supports CSV, Excel, PDF, Word, TXT
               </p>
               {uploadedFile && (
                 <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
               )}
             </div>
+            {isLoading && (
+              <p className="mt-4 text-center text-sm font-medium text-amber-800 font-body">Processing file…</p>
+            )}
           </div>
         ) : (
           <form
