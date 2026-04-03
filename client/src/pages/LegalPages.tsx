@@ -19,6 +19,11 @@ const tabs: { id: LegalTab; label: string; href: string; icon: ElementType }[] =
   { id: "terms", label: "Terms of Use", href: "/app/terms", icon: FileText },
 ];
 
+const legalH2 = "text-lg font-bold text-slate-800 mt-8 mb-3 first:mt-0";
+const legalP = "text-sm text-slate-600 leading-relaxed mb-4";
+const legalUl = "list-disc pl-6 space-y-2 mb-4";
+const legalLi = "text-sm text-slate-600";
+
 export default function LegalPages() {
   const [location, setLocation] = useLocation();
   const activeTab = tabFromPath(location);
@@ -62,12 +67,10 @@ export default function LegalPages() {
           })}
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm md:p-10">
-          <div className="prose prose-slate max-w-none prose-headings:font-display prose-headings:tracking-tight prose-p:font-body prose-p:text-[15px] prose-p:leading-relaxed prose-li:font-body prose-li:text-[15px]">
-            {activeTab === "disclaimer" && <DisclaimerContent />}
-            {activeTab === "privacy" && <PrivacyContent />}
-            {activeTab === "terms" && <TermsContent />}
-          </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          {activeTab === "disclaimer" && <DisclaimerContent />}
+          {activeTab === "privacy" && <PrivacyContent />}
+          {activeTab === "terms" && <TermsContent />}
         </div>
 
         <div className="mt-8 text-center text-xs text-slate-400 font-body">
@@ -82,139 +85,147 @@ export default function LegalPages() {
 
 function DisclaimerContent() {
   return (
-    <>
-      <h2>Academic Research Prototype</h2>
-      <p>
+    <div className="font-body">
+      <h2 className={legalH2}>Academic Research Prototype</h2>
+      <p className={legalP}>
         TradeScreen AI is an <strong>academic research prototype</strong> developed as academic research. This system
         is intended for educational and research purposes only and is <strong>not a commercial compliance tool</strong>.
       </p>
 
-      <h2>No Legal or Compliance Advice</h2>
-      <p>
+      <h2 className={legalH2}>No Legal or Compliance Advice</h2>
+      <p className={legalP}>
         Information and screening results produced by this prototype do not constitute legal, financial, or compliance
         advice. This system is not a substitute for professional legal or compliance counsel. All outputs should be
         verified by qualified compliance professionals before any business decisions are made.
       </p>
 
-      <h2>Accuracy and Completeness</h2>
-      <p>
+      <h2 className={legalH2}>Accuracy and Completeness</h2>
+      <p className={legalP}>
         This prototype draws on publicly available government sanctions databases (OFAC SDN, EU Consolidated, UN
         Security Council, UK OFSI). The researcher makes no warranties as to the accuracy, completeness, or timeliness
         of screening results shown here. Official lists change frequently; there may be delays between updates on source
         sites and what appears in this prototype.
       </p>
 
-      <h2>AI-Generated Analysis</h2>
-      <p>
+      <h2 className={legalH2}>AI-Generated Analysis</h2>
+      <p className={legalP}>
         Where AI-assisted analysis is shown, it is for demonstration only and may contain errors, omissions, or
         unsupported assertions. A qualified human analyst must review any material before it is relied upon.
       </p>
 
-      <h2>Limitation of Liability</h2>
-      <p>
+      <h2 className={legalH2}>Limitation of Liability</h2>
+      <p className={legalP}>
         To the fullest extent permitted by law, the researcher disclaims liability for any
         damages or losses arising from use of this prototype, including reliance on screening outputs or AI-generated
         text.
       </p>
-    </>
+    </div>
   );
 }
 
 function PrivacyContent() {
   return (
-    <>
-      <h2>Data Processing</h2>
-      <p>
+    <div className="font-body">
+      <h2 className={legalH2}>Data Processing</h2>
+      <p className={legalP}>
         Privacy is a core design goal for this prototype. Where possible, screening-related data is processed locally in
         the browser.
       </p>
 
-      <h2>No Enduring Collection by This Prototype</h2>
-      <p>
+      <h2 className={legalH2}>No Enduring Collection by This Prototype</h2>
+      <p className={legalP}>
         This prototype is not intended to store vendor names, screening results, or uploaded documents on external
         servers or to retain them after the session ends. The researcher does not operate this demo as a data
         broker—personal or commercial screening queries should not be treated as confidential submissions to a
         product.
       </p>
 
-      <h2>Sanctions Data Sources</h2>
-      <p>Indexed sanctions data in the prototype reflects publicly available government sources, including:</p>
-      <ul>
-        <li>
+      <h2 className={legalH2}>Sanctions Data Sources</h2>
+      <p className={legalP}>
+        Indexed sanctions data in the prototype reflects publicly available government sources, including:
+      </p>
+      <ul className={legalUl}>
+        <li className={legalLi}>
           <strong>OFAC SDN</strong> — U.S. Department of the Treasury, Office of Foreign Assets Control
         </li>
-        <li>
+        <li className={legalLi}>
           <strong>EU Consolidated</strong> — European Union Consolidated Financial Sanctions List
         </li>
-        <li>
+        <li className={legalLi}>
           <strong>UN Security Council</strong> — United Nations Security Council Consolidated List
         </li>
-        <li>
+        <li className={legalLi}>
           <strong>UK OFSI</strong> — UK Office of Financial Sanctions Implementation
         </li>
       </ul>
 
-      <h2>Optional Cloud AI Processing</h2>
-      <p>
+      <h2 className={legalH2}>Optional Cloud AI Processing</h2>
+      <p className={legalP}>
         If a deployment connects AI analysis to a cloud provider (e.g. Azure OpenAI), query payload and policies would be
         governed by that provider’s terms—not by this overview. This academic build emphasizes local and demo-safe paths.
       </p>
 
-      <h2>Browser Storage</h2>
-      <p>
+      <h2 className={legalH2}>Browser Storage</h2>
+      <p className={legalP}>
         The prototype may use browser storage for preferences (e.g. theme). That data stays on the device unless
         otherwise documented for a specific deployment.
       </p>
 
-      <h2>Contact</h2>
-      <p>For questions about how this research prototype handles information, use the About the Researcher page.</p>
-    </>
+      <h2 className={legalH2}>Contact</h2>
+      <p className={legalP}>
+        For questions about how this research prototype handles information, use the About the Researcher page.
+      </p>
+    </div>
   );
 }
 
 function TermsContent() {
   return (
-    <>
-      <h2>Acceptance</h2>
-      <p>
+    <div className="font-body">
+      <h2 className={legalH2}>Acceptance</h2>
+      <p className={legalP}>
         By using TradeScreen AI, you acknowledge that this is an <strong>academic research prototype</strong> and agree
         to these <strong>Terms of Use</strong> (not a commercial Terms of Service).
       </p>
 
-      <h2>Educational Use</h2>
-      <p>
+      <h2 className={legalH2}>Educational Use</h2>
+      <p className={legalP}>
         This system is offered for education and research. It is <strong>not</strong> a
         substitute for licensed compliance software. Users must not rely on this prototype alone for real-world
         sanctions determinations.
       </p>
 
-      <h2>Permitted Use</h2>
-      <p>Appropriate uses of this prototype include:</p>
-      <ul>
-        <li>Academic research and classroom discussion</li>
-        <li>Understanding how screening and transliteration concepts apply in trade finance</li>
-        <li>Evaluating AI-assisted compliance <em>methodologies</em> in a non-production setting</li>
+      <h2 className={legalH2}>Permitted Use</h2>
+      <p className={legalP}>Appropriate uses of this prototype include:</p>
+      <ul className={legalUl}>
+        <li className={legalLi}>Academic research and classroom discussion</li>
+        <li className={legalLi}>Understanding how screening and transliteration concepts apply in trade finance</li>
+        <li className={legalLi}>
+          Evaluating AI-assisted compliance <em>methodologies</em> in a non-production setting
+        </li>
       </ul>
 
-      <h2>Prohibited Use</h2>
-      <p>Users agree <strong>not</strong> to:</p>
-      <ul>
-        <li>Represent this prototype as production-ready commercial screening</li>
-        <li>Base sole business, banking, or legal decisions on outputs from this demo</li>
-        <li>Use this system for any unlawful purpose, including evasion of sanctions</li>
+      <h2 className={legalH2}>Prohibited Use</h2>
+      <p className={legalP}>
+        Users agree <strong>not</strong> to:
+      </p>
+      <ul className={legalUl}>
+        <li className={legalLi}>Represent this prototype as production-ready commercial screening</li>
+        <li className={legalLi}>Base sole business, banking, or legal decisions on outputs from this demo</li>
+        <li className={legalLi}>Use this system for any unlawful purpose, including evasion of sanctions</li>
       </ul>
 
-      <h2>Intellectual Property</h2>
-      <p>
+      <h2 className={legalH2}>Intellectual Property</h2>
+      <p className={legalP}>
         The TradeScreen AI prototype (design, code, narrative) reflects the researcher&apos;s work. Underlying
         sanctions listings remain the property of their issuing authorities.
       </p>
 
-      <h2>Changes</h2>
-      <p>
+      <h2 className={legalH2}>Changes</h2>
+      <p className={legalP}>
         These Terms of Use may be revised as the research evolves. Continued use after updates constitutes acceptance of
         the revised terms for this prototype context.
       </p>
-    </>
+    </div>
   );
 }
