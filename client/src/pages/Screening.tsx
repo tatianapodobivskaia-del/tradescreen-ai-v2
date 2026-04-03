@@ -375,8 +375,7 @@ export default function Screening() {
         const names = lines.slice(startIdx).map((line) => line.split(",")[0].trim()).filter(Boolean);
         if (names.length > 0) {
           setVendorName(names[0]);
-          setActiveTab("manual");
-          setTimeout(() => handleScreen(names[0]), 100);
+          handleScreen(names[0]);
         }
       } else if (ext === "pdf") {
         const reader = new FileReader();
@@ -388,18 +387,16 @@ export default function Screening() {
           setIsLoading(true);
           try {
             const result = await runVisionScan(base64);
-            setActiveTab("manual");
-            setVendorName(file.name);
             setIsLoading(false);
             if (result.risk_results && result.risk_results.length > 0) {
-              setVendorName(result.risk_results[0].entity);
-              setTimeout(() => handleScreen(result.risk_results[0].entity), 100);
+              const entity = result.risk_results[0].entity;
+              setVendorName(entity);
+              handleScreen(entity);
             }
           } catch {
             setAiError(
               "PDF scanning temporarily unavailable. Please use Manual Entry — type the vendor name from your document."
             );
-            setActiveTab("manual");
             setIsLoading(false);
           }
         };
