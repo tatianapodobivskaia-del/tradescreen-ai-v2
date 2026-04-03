@@ -43,22 +43,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar — premium fintech */}
       <aside className={cn(
         "fixed top-0 left-0 h-full z-50 bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300",
-        collapsed ? "w-[76px]" : "w-[288px]",
+        collapsed ? "w-16" : "w-64",
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Logo / Branding — Clickable, returns to landing page */}
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2 px-4 py-4 text-inherit no-underline"
+          className={cn(
+            "flex items-center gap-2 py-4 text-inherit no-underline",
+            collapsed ? "justify-center px-2" : "px-4"
+          )}
         >
-          <img src="/logo-dark.png" alt="TradeScreen AI" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-base text-slate-50 tracking-tight">TradeScreen <span className="text-cyan-400">AI</span></span>
+          <img src="/logo-dark.png" alt="TradeScreen AI" className="h-8 w-8 shrink-0 object-contain" />
+          {!collapsed && (
+            <span className="font-bold text-base text-slate-50 tracking-tight">
+              TradeScreen <span className="text-cyan-400">AI</span>
+            </span>
+          )}
         </Link>
 
         {/* Navigation */}
         <nav className="flex-1 py-3 overflow-y-auto">
-          <ul className="space-y-1 px-3">
+          <ul className={cn("space-y-1", collapsed ? "px-1.5" : "px-3")}>
             {navItems.map((item) => {
               const isActive = location === item.path || (item.path !== "/app" && location.startsWith(item.path));
               const Icon = item.icon;
@@ -69,7 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     onClick={() => setMobileOpen(false)}
                     className={cn(
                       "flex items-center gap-3.5 rounded-xl transition-all duration-200 group relative",
-                      collapsed ? "justify-center px-3 py-3" : "px-5 py-3",
+                      collapsed ? "justify-center px-0 py-3" : "px-5 py-3",
                       isActive
                         ? "bg-cyan-500/12 text-cyan-400 font-bold"
                         : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200 font-medium"
@@ -95,22 +102,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Bottom section — always visible */}
         <div className="shrink-0 border-t border-sidebar-border">
           {/* Collapse toggle */}
-          <div className="px-3 py-2 hidden lg:flex justify-center">
+          <div className={cn("py-2 hidden lg:flex justify-center", collapsed ? "px-1.5" : "px-3")}>
             <button
+              type="button"
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               onClick={() => setCollapsed(!collapsed)}
               className="p-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
             >
-              {collapsed ? <ChevronRight className="w-4.5 h-4.5" /> : <ChevronLeft className="w-4.5 h-4.5" />}
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
           </div>
 
           {/* Back to landing */}
-          <div className="px-3 pb-5 pt-1">
+          <div className={cn("pb-5 pt-1", collapsed ? "px-1.5" : "px-3")}>
             <a
               href="/"
               className={cn(
                 "flex items-center gap-3 rounded-xl text-[13px] font-semibold text-slate-500 hover:text-cyan-400 hover:bg-white/[0.06] transition-all duration-200",
-                collapsed ? "justify-center px-3 py-2.5" : "px-5 py-2.5"
+                collapsed ? "justify-center px-0 py-2.5" : "px-5 py-2.5"
               )}
             >
               <Home className="w-5 h-5 shrink-0" />
@@ -126,8 +136,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content — premium spacing */}
-      <div className={cn("flex-1 flex flex-col transition-all duration-300", collapsed ? "lg:ml-[76px]" : "lg:ml-[288px]")}>
-        <TopNavbar variant="light" className={collapsed ? "lg:left-[76px]" : "lg:left-[288px]"} />
+      <div className={cn("flex-1 flex flex-col transition-all duration-300", collapsed ? "lg:ml-16" : "lg:ml-64")}>
+        <TopNavbar variant="light" className={collapsed ? "lg:left-16" : "lg:left-64"} />
 
         {/* Page content — premium padding */}
         <main className="flex-1 p-6 pt-24 lg:p-8 lg:pt-28">
