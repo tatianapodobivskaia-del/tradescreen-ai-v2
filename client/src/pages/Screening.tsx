@@ -394,29 +394,41 @@ export default function Screening() {
               : 0;
           vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
         } else if (ext === "pdf") {
-          const buf = await file.arrayBuffer();
-          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-          const page = await pdf.getPage(1);
-          const scale = 2;
-          const viewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            setAiError("Could not render PDF page. Try a different format or use Manual Entry.");
-            setIsLoading(false);
-            return;
-          }
-          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
-          const base64 = canvas.toDataURL("image/png").split(",")[1];
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), 30000)
+          );
           try {
-            const result = await runVisionScan(base64);
-            if (result.risk_results?.length) {
-              vendorNames = result.risk_results.map((r) => r.entity);
-            }
-          } catch {
-            setAiError("PDF vision analysis unavailable. Try uploading as CSV or use Manual Entry.");
+            await Promise.race([
+              (async () => {
+                const buf = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+                const page = await pdf.getPage(1);
+                const scale = 2;
+                const viewport = page.getViewport({ scale });
+                const canvas = document.createElement("canvas");
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                  throw new Error("no-canvas");
+                }
+                await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+                const base64 = canvas.toDataURL("image/png").split(",")[1];
+                const result = await runVisionScan(base64);
+                if (result.risk_results?.length) {
+                  vendorNames = result.risk_results.map((r) => r.entity);
+                }
+              })(),
+              timeoutPromise,
+            ]);
+          } catch (err) {
+            const msg =
+              err instanceof Error && err.message === "timeout"
+                ? "PDF processing timed out. Try a smaller file or use Manual Entry."
+                : err instanceof Error && err.message === "no-canvas"
+                  ? "Could not render PDF page. Try a different format or use Manual Entry."
+                  : "PDF analysis unavailable. Try uploading as CSV or use Manual Entry.";
+            setAiError(msg);
             setIsLoading(false);
             return;
           }
