@@ -7,7 +7,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
-import { runAIDeepAnalysis, runVisionScan } from "../lib/api";
+import { runAIDeepAnalysis } from "../lib/api";
 import { watchlistEntities } from "@/lib/mockData";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -394,44 +394,25 @@ export default function Screening() {
               : 0;
           vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
         } else if (ext === "pdf") {
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("timeout")), 30000)
-          );
-          try {
-            await Promise.race([
-              (async () => {
-                const buf = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
-                const page = await pdf.getPage(1);
-                const scale = 2;
-                const viewport = page.getViewport({ scale });
-                const canvas = document.createElement("canvas");
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) {
-                  throw new Error("no-canvas");
-                }
-                await page.render({ canvas, canvasContext: ctx, viewport }).promise;
-                const base64 = canvas.toDataURL("image/png").split(",")[1];
-                const result = await runVisionScan(base64);
-                if (result.risk_results?.length) {
-                  vendorNames = result.risk_results.map((r) => r.entity);
-                }
-              })(),
-              timeoutPromise,
-            ]);
-          } catch (err) {
-            const msg =
-              err instanceof Error && err.message === "timeout"
-                ? "PDF processing timed out. Try a smaller file or use Manual Entry."
-                : err instanceof Error && err.message === "no-canvas"
-                  ? "Could not render PDF page. Try a different format or use Manual Entry."
-                  : "PDF analysis unavailable. Try uploading as CSV or use Manual Entry.";
-            setAiError(msg);
-            setIsLoading(false);
-            return;
+          const buf = await file.arrayBuffer();
+          if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
           }
+          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+          let allText = "";
+          for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items
+              .map((item) => ("str" in item ? item.str : ""))
+              .join(" ");
+            allText += pageText + "\n";
+          }
+          const lines = allText
+            .split(/[\n,;]+/)
+            .map((l) => l.trim())
+            .filter((l) => l.length > 2 && l.length < 100);
+          vendorNames = lines.filter((l) => /^[A-Za-z\u0400-\u04FF]/.test(l));
         } else if (ext === "docx" || ext === "doc") {
           const buf = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: buf });
