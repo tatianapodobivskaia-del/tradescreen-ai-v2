@@ -3,14 +3,11 @@
  */
 import { useState, useCallback } from "react";
 import { Search, Upload, Loader2 } from "lucide-react";
-import * as pdfjsLib from "pdfjs-dist";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
 import { runAIDeepAnalysis } from "../lib/api";
 import { watchlistEntities } from "@/lib/mockData";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 /** Full alphabetical country list (50+) */
 const COUNTRY_OPTIONS = [
@@ -394,25 +391,15 @@ export default function Screening() {
               : 0;
           vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
         } else if (ext === "pdf") {
-          const buf = await file.arrayBuffer();
-          if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-          }
-          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-          let allText = "";
-          for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
-            const page = await pdf.getPage(i);
-            const content = await page.getTextContent();
-            const pageText = content.items
-              .map((item) => ("str" in item ? item.str : ""))
-              .join(" ");
-            allText += pageText + "\n";
-          }
-          const lines = allText
-            .split(/[\n,;]+/)
-            .map((l) => l.trim())
-            .filter((l) => l.length > 2 && l.length < 100);
-          vendorNames = lines.filter((l) => /^[A-Za-z\u0400-\u04FF]/.test(l));
+          setUploadedFile(file.name);
+          setIsLoading(false);
+          setAiError(
+            "PDF documents are analyzed on the AI Document Scanner page with our 4-agent pipeline. Redirecting..."
+          );
+          setTimeout(() => {
+            window.location.href = "/app/scanner";
+          }, 2000);
+          return;
         } else if (ext === "docx" || ext === "doc") {
           const buf = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -536,7 +523,7 @@ export default function Screening() {
                 Click to Browse
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">
-                Supports CSV, Excel, PDF, Word, TXT
+                Supports CSV, Excel, Word, TXT · PDF → Document Scanner
               </p>
               {uploadedFile && (
                 <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
