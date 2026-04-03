@@ -390,16 +390,6 @@ export default function Screening() {
               ? 1
               : 0;
           vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
-        } else if (ext === "pdf") {
-          setUploadedFile(file.name);
-          setIsLoading(false);
-          setAiError(
-            "PDF documents are analyzed on the AI Document Scanner page with our 4-agent pipeline. Redirecting..."
-          );
-          setTimeout(() => {
-            window.location.href = "/app/scanner";
-          }, 2000);
-          return;
         } else if (ext === "docx" || ext === "doc") {
           const buf = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: buf });
@@ -509,7 +499,7 @@ export default function Screening() {
                 id="screening-upload-input"
                 type="file"
                 className="sr-only"
-                accept=".csv,.txt,.xlsx,.xls,.pdf,.docx,.doc"
+                accept=".csv,.txt,.xlsx,.xls,.docx,.doc"
                 onChange={(e) => {
                   if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
                 }}
@@ -523,7 +513,7 @@ export default function Screening() {
                 Click to Browse
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">
-                Supports CSV, Excel, Word, TXT · PDF → Document Scanner
+                Supports CSV, Excel, Word, TXT
               </p>
               {uploadedFile && (
                 <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
