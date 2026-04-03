@@ -434,9 +434,6 @@ export default function Screening() {
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
             </div>
-            <p className="mt-4 text-sm text-slate-500 font-body">
-              Enter a name manually to screen against all sanctions lists
-            </p>
           </div>
         ) : (
           <form

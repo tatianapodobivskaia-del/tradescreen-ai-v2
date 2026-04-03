@@ -982,13 +982,7 @@ function LandingFooter() {
         </div>
 
         <div className="flex flex-col items-start justify-between gap-3 pt-6 text-xs text-slate-500 md:flex-row md:items-center">
-          <p>
-            Academic Research Prototype
-            <span className="mx-2 text-slate-700">•</span>
-            <Link href="#" className="underline-offset-2 transition-colors hover:text-slate-300 hover:underline">
-              Contact
-            </Link>
-          </p>
+          <p>Academic Research Prototype</p>
           <p>© 2026 Tatiana Podobivskaia. All rights reserved.</p>
         </div>
       </div>
