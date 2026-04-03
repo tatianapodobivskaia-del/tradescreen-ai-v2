@@ -435,8 +435,7 @@ export default function Screening() {
               <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
             </div>
             <p className="mt-4 text-sm text-slate-500 font-body">
-              Use <strong className="font-semibold text-slate-700">Manual Entry</strong> to run a screening and Azure AI
-              Deep Analysis from this page.
+              Enter a name manually to screen against all sanctions lists
             </p>
           </div>
         ) : (
