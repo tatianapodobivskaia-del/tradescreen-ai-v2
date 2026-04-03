@@ -892,7 +892,7 @@ function PrivacySection() {
               <h3 className="text-lg font-extrabold font-display text-white">Terms of Use</h3>
             </div>
             <div className="space-y-4 text-sm text-slate-400 font-body leading-relaxed">
-              <p>TradeScreen AI is an academic research prototype developed at Atlantis University.</p>
+              <p>TradeScreen AI is an academic research prototype developed as academic research.</p>
               <p>For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.</p>
               <p>Results should be verified by qualified compliance professionals before any business decisions are made.</p>
             </div>

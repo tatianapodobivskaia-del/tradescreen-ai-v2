@@ -72,7 +72,7 @@ export default function LegalPages() {
 
         <div className="mt-8 text-center text-xs text-slate-400 font-body">
           <p>
-            &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Atlantis University, Miami FL &middot; TradeScreen AI research prototype
+            &copy; {new Date().getFullYear()} Tatiana Podobivskaia &middot; Miami FL &middot; TradeScreen AI research prototype
           </p>
         </div>
       </div>
@@ -85,7 +85,7 @@ function DisclaimerContent() {
     <>
       <h2>Academic Research Prototype</h2>
       <p>
-        TradeScreen AI is an <strong>academic research prototype</strong> developed at Atlantis University. This system
+        TradeScreen AI is an <strong>academic research prototype</strong> developed as academic research. This system
         is intended for educational and research purposes only and is <strong>not a commercial compliance tool</strong>.
       </p>
 
@@ -112,7 +112,7 @@ function DisclaimerContent() {
 
       <h2>Limitation of Liability</h2>
       <p>
-        To the fullest extent permitted by law, the researcher and Atlantis University disclaim liability for any
+        To the fullest extent permitted by law, the researcher disclaims liability for any
         damages or losses arising from use of this prototype, including reliance on screening outputs or AI-generated
         text.
       </p>
@@ -183,7 +183,7 @@ function TermsContent() {
 
       <h2>Educational Use</h2>
       <p>
-        This system is offered for education and research at Atlantis University. It is <strong>not</strong> a
+        This system is offered for education and research. It is <strong>not</strong> a
         substitute for licensed compliance software. Users must not rely on this prototype alone for real-world
         sanctions determinations.
       </p>

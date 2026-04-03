@@ -929,7 +929,7 @@ function PdfReportModal({
           </p>
 
           <div className="footer">
-            TradeScreen AI — MBA Information &amp; Technology Management Systems — Atlantis University, Miami FL.
+            TradeScreen AI — MBA Information &amp; Technology Management Systems — Miami FL.
             Research prototype.
           </div>
         </div>
