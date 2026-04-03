@@ -187,7 +187,7 @@ export default function AboutResearcher() {
       <div>
         <div className="rounded-xl border border-cyan-200/60 bg-amber-50/50 p-6">
           <p className="text-sm text-amber-700 font-body leading-relaxed">
-            <span className="font-semibold">Academic Disclaimer:</span> TradeScreen AI is an academic research prototype developed at Atlantis University. For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.
+            <span className="font-semibold">Academic Disclaimer:</span> TradeScreen AI is an academic research prototype. For educational use only — not a commercial compliance tool. This system is not a substitute for professional legal or compliance advice.
           </p>
         </div>
       </div>
