@@ -657,7 +657,7 @@ export default function Screening() {
 
         {!screeningResults ? (
           <p className="mt-2 text-sm text-slate-500 font-body">
-            Match scores, list hits, and recommended actions will appear here after you screen a vendor (Manual Entry).
+            Match scores, list hits, and recommended actions will appear here after you screen a vendor.
           </p>
         ) : (
           <div className="mt-4 space-y-4">
