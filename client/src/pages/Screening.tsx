@@ -341,6 +341,7 @@ export default function Screening() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string) => {
@@ -363,6 +364,7 @@ export default function Screening() {
 
   const handleFileUpload = useCallback(
     async (file: File) => {
+      setUploadedFile(file.name);
       const ext = file.name.split(".").pop()?.toLowerCase();
 
       if (ext === "csv") {
@@ -394,8 +396,11 @@ export default function Screening() {
               setTimeout(() => handleScreen(result.risk_results[0].entity), 100);
             }
           } catch {
+            setAiError(
+              "PDF scanning temporarily unavailable. Please use Manual Entry — type the vendor name from your document."
+            );
+            setActiveTab("manual");
             setIsLoading(false);
-            setAiError("Document scanning unavailable — try Manual Entry instead.");
           }
         };
         reader.readAsDataURL(file);
@@ -502,6 +507,9 @@ export default function Screening() {
                 Click to Browse
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
+              {uploadedFile && (
+                <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
+              )}
             </div>
             {isLoading && (
               <p className="mt-4 text-center text-sm font-medium text-amber-800 font-body">Processing PDF…</p>
@@ -724,10 +732,10 @@ export default function Screening() {
             disabled={!screeningResults || aiLoading || activeTab !== "manual"}
             onClick={() => void handleRunAI()}
             className={cn(
-              "btn-premium mt-4 text-sm",
-              !screeningResults || activeTab !== "manual"
-                ? "btn-premium-outline cursor-not-allowed opacity-50"
-                : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400 disabled:opacity-100"
+              "mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm transition-colors",
+              !screeningResults || aiLoading || activeTab !== "manual"
+                ? "cursor-not-allowed border border-slate-200 bg-slate-50 font-semibold text-slate-400"
+                : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400"
             )}
           >
             Run AI Deep Analysis
