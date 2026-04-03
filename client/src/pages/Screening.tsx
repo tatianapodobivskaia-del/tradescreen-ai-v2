@@ -4,7 +4,7 @@
 import { useState, useCallback } from "react";
 import { Search, Upload, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { runAIDeepAnalysis, runVisionScan } from "@/lib/api";
+import { runAIDeepAnalysis } from "@/lib/api";
 import { watchlistEntities } from "@/lib/mockData";
 
 /** Full alphabetical country list (50+) */
@@ -340,7 +340,6 @@ export default function Screening() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 
   const handleScreen = useCallback(
@@ -378,29 +377,10 @@ export default function Screening() {
           handleScreen(names[0]);
         }
       } else if (ext === "pdf") {
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          setScreeningResults(null);
-          setAiResults(null);
-          setAiError(null);
-          setIsLoading(true);
-          try {
-            const result = await runVisionScan(base64);
-            setIsLoading(false);
-            if (result.risk_results && result.risk_results.length > 0) {
-              const entity = result.risk_results[0].entity;
-              setVendorName(entity);
-              handleScreen(entity);
-            }
-          } catch {
-            setAiError(
-              "PDF scanning temporarily unavailable. Please use Manual Entry — type the vendor name from your document."
-            );
-            setIsLoading(false);
-          }
-        };
-        reader.readAsDataURL(file);
+        setAiError(
+          "PDF documents are best analyzed on the AI Document Scanner page. Go to AI Document Scanner for full 4-agent analysis, or enter vendor names manually."
+        );
+        setActiveTab("manual");
       } else {
         alert("Unsupported file type. Please upload CSV or PDF.");
       }
@@ -503,14 +483,13 @@ export default function Screening() {
               >
                 Click to Browse
               </label>
-              <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
+              <p className="mt-2 text-xs text-slate-400 font-body">
+                Supports CSV files and PDF uploads (PDFs: use Document Scanner or manual entry).
+              </p>
               {uploadedFile && (
                 <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
               )}
             </div>
-            {isLoading && (
-              <p className="mt-4 text-center text-sm font-medium text-amber-800 font-body">Processing PDF…</p>
-            )}
           </div>
         ) : (
           <form
@@ -726,11 +705,11 @@ export default function Screening() {
 
           <button
             type="button"
-            disabled={!screeningResults || aiLoading || activeTab !== "manual"}
+            disabled={!screeningResults || aiLoading}
             onClick={() => void handleRunAI()}
             className={cn(
               "mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm transition-colors",
-              !screeningResults || aiLoading || activeTab !== "manual"
+              !screeningResults || aiLoading
                 ? "cursor-not-allowed border border-slate-200 bg-slate-50 font-semibold text-slate-400"
                 : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400"
             )}
