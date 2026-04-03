@@ -4,7 +4,7 @@
 import { useState, useCallback } from "react";
 import { Search, Upload, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { runAIDeepAnalysis } from "@/lib/api";
+import { runAIDeepAnalysis, runVisionScan } from "@/lib/api";
 import { watchlistEntities } from "@/lib/mockData";
 
 /** Full alphabetical country list (50+) */
@@ -340,21 +340,71 @@ export default function Screening() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleScreen = () => {
-    if (!vendorName.trim()) return;
-    const input = {
-      vendorName: vendorName.trim(),
-      country: country.trim(),
-      amount: amount.trim(),
-      docType: docType.trim(),
-      cyrillicName: cyrillicName.trim(),
-    };
-    setLastScreenInput(input);
-    setScreeningResults(runClientScreening(input));
-    setAiResults(null);
-    setAiError(null);
-  };
+  const handleScreen = useCallback(
+    (vendorNameOverride?: string) => {
+      const vn = (vendorNameOverride !== undefined ? vendorNameOverride : vendorName).trim();
+      if (!vn) return;
+      const input = {
+        vendorName: vn,
+        country: country.trim(),
+        amount: amount.trim(),
+        docType: docType.trim(),
+        cyrillicName: cyrillicName.trim(),
+      };
+      setLastScreenInput(input);
+      setScreeningResults(runClientScreening(input));
+      setAiResults(null);
+      setAiError(null);
+    },
+    [vendorName, country, amount, docType, cyrillicName]
+  );
+
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+
+      if (ext === "csv") {
+        const text = await file.text();
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        const startIdx =
+          lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("vendor") ? 1 : 0;
+        const names = lines.slice(startIdx).map((line) => line.split(",")[0].trim()).filter(Boolean);
+        if (names.length > 0) {
+          setVendorName(names[0]);
+          setActiveTab("manual");
+          setTimeout(() => handleScreen(names[0]), 100);
+        }
+      } else if (ext === "pdf") {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64 = (reader.result as string).split(",")[1];
+          setScreeningResults(null);
+          setAiResults(null);
+          setAiError(null);
+          setIsLoading(true);
+          try {
+            const result = await runVisionScan(base64);
+            setActiveTab("manual");
+            setVendorName(file.name);
+            setIsLoading(false);
+            if (result.risk_results && result.risk_results.length > 0) {
+              setVendorName(result.risk_results[0].entity);
+              setTimeout(() => handleScreen(result.risk_results[0].entity), 100);
+            }
+          } catch {
+            setIsLoading(false);
+            setAiError("Document scanning unavailable — try Manual Entry instead.");
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert("Unsupported file type. Please upload CSV or PDF.");
+      }
+    },
+    [handleScreen]
+  );
 
   const handleRunAI = useCallback(async () => {
     if (!screeningResults || !lastScreenInput) return;
@@ -422,8 +472,27 @@ export default function Screening() {
 
         {activeTab === "upload" ? (
           <div>
-            <div className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40">
-              <input id="screening-upload-input" type="file" className="sr-only" accept=".csv,.pdf" />
+            <div
+              className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+              }}
+            >
+              <input
+                id="screening-upload-input"
+                type="file"
+                className="sr-only"
+                accept=".csv,.pdf"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
+                }}
+              />
               <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
               <p className="text-sm font-semibold text-slate-600 font-body">Drop File Here</p>
               <label
@@ -434,6 +503,9 @@ export default function Screening() {
               </label>
               <p className="mt-2 text-xs text-slate-400 font-body">Supports CSV and PDF</p>
             </div>
+            {isLoading && (
+              <p className="mt-4 text-center text-sm font-medium text-amber-800 font-body">Processing PDF…</p>
+            )}
           </div>
         ) : (
           <form
