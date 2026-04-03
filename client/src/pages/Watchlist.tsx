@@ -47,8 +47,7 @@ export default function Watchlist() {
           Search and explore 45,296 sanctioned entities across all monitored lists
         </p>
         <p className="mt-3 text-xs leading-relaxed text-slate-600 font-body">
-          <span className="font-semibold text-slate-700">Last Updated:</span> Sanctions data last refreshed: March 29,
-          2026 — Auto-updates every 6 hours from OFAC, EU, UN, UK OFSI
+          Last updated: March 29, 2026 · Auto-updates every 6 hours
         </p>
       </div>
 
