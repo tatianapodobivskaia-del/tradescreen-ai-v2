@@ -731,6 +731,15 @@ function normalizeActionDisplay(action: string, risk: string): { label: string; 
   return complianceActionFromRisk(r === "HIGH" || r === "MEDIUM" || r === "LOW" ? r : "LOW");
 }
 
+/** Display label for AI Deep Analysis cards: BLOCK / FLAG / APPROVE */
+function aiDeepAnalysisActionDisplay(action: string): string {
+  const a = action.toUpperCase();
+  if (a === "REVIEW" || a === "FLAG") return "FLAG";
+  if (a === "BLOCK") return "BLOCK";
+  if (a === "APPROVE") return "APPROVE";
+  return a || "—";
+}
+
 function auditBulletsFromAI(r: NormalizedAIResult): string[] {
   const chunks: string[] = [];
   if (r.reasoning && r.reasoning !== "—") {
@@ -763,18 +772,6 @@ function aiForBatchRow(
   );
   if (byName) return byName;
   return aiList[index];
-}
-
-function effectiveBatchRiskTier(
-  batchRow: BatchScreenRow,
-  index: number,
-  aiResults: NormalizedAIResult[] | null
-): "HIGH" | "MEDIUM" | "LOW" {
-  const aiRow = aiForBatchRow(batchRow, index, aiResults);
-  if (aiRow) {
-    return normalizeActionDisplay(aiRow.action, aiRow.risk_level).badge;
-  }
-  return batchRow.screeningResults.risk;
 }
 
 function displayDocumentType(docType: string): string {
@@ -1224,31 +1221,29 @@ export default function Screening() {
     let high = 0;
     let medium = 0;
     let low = 0;
-    for (let i = 0; i < batchScreeningRows.length; i++) {
-      const r = batchScreeningRows[i];
-      const risk = effectiveBatchRiskTier(r, i, aiResults);
+    for (const r of batchScreeningRows) {
+      const risk = r.screeningResults.risk;
       if (risk === "HIGH") high++;
       else if (risk === "MEDIUM") medium++;
       else low++;
     }
     return { all: batchScreeningRows.length, high, medium, low };
-  }, [batchScreeningRows, aiResults]);
+  }, [batchScreeningRows]);
 
   const batchNamesByRisk = useMemo(() => {
     const high: string[] = [];
     const medium: string[] = [];
     const low: string[] = [];
     if (!batchScreeningRows?.length) return { high, medium, low };
-    for (let i = 0; i < batchScreeningRows.length; i++) {
-      const r = batchScreeningRows[i];
+    for (const r of batchScreeningRows) {
       const name = r.screenInput.vendorName;
-      const risk = effectiveBatchRiskTier(r, i, aiResults);
+      const risk = r.screeningResults.risk;
       if (risk === "HIGH") high.push(name);
       else if (risk === "MEDIUM") medium.push(name);
       else low.push(name);
     }
     return { high, medium, low };
-  }, [batchScreeningRows, aiResults]);
+  }, [batchScreeningRows]);
 
   const filteredBatchRows = useMemo(() => {
     if (!batchScreeningRows?.length) return [];
@@ -1289,12 +1284,9 @@ export default function Screening() {
       "SCR ID",
       "Audited At",
     ];
-    const lines = batchScreeningRows.map((row, i) => {
+    const lines = batchScreeningRows.map((row) => {
       const sr = row.screeningResults;
-      const ai = aiForBatchRow(row, i, aiResults);
-      const action = ai
-        ? normalizeActionDisplay(ai.action, ai.risk_level).label
-        : complianceActionFromRisk(sr.risk).label;
+      const action = complianceActionFromRisk(sr.risk).label;
       return [
         escapeCsvCell(row.screenInput.vendorName),
         escapeCsvCell(row.screenInput.country),
@@ -1316,7 +1308,7 @@ export default function Screening() {
     a.download = `batch-screening-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [batchScreeningRows, aiResults]);
+  }, [batchScreeningRows]);
 
   const handleBatchPdfReport = useCallback(() => {
     if (!batchScreeningRows?.length) return;
@@ -1535,7 +1527,6 @@ export default function Screening() {
         const data = await runAIDeepAnalysis(vendors);
         const rows = data.results ?? [];
         setAiResults(rows.map((row) => normalizeAIResult(row as unknown as RawAIResult)));
-        setBatchDetailsExpanded(true);
       } catch {
         setAiError(
           "AI analysis unavailable — check your internet connection. Screening results above are still valid."
@@ -1988,14 +1979,9 @@ export default function Screening() {
                         </tr>
                       ) : (
                         batchTableRows.map((batchRow) => {
-                      const idx = batchScreeningRows!.indexOf(batchRow);
-                      const aiRow = aiForBatchRow(batchRow, idx, aiResults);
                       const sr = batchRow.screeningResults;
-                      const breakdown =
-                        aiRow?.score_breakdown ?? sr.scoreBreakdown;
-                      const { label: actionLabel, badge: actionBadge } = aiRow
-                        ? normalizeActionDisplay(aiRow.action, aiRow.risk_level)
-                        : complianceActionFromRisk(sr.risk);
+                      const breakdown = sr.scoreBreakdown;
+                      const { label: actionLabel, badge: actionBadge } = complianceActionFromRisk(sr.risk);
                       const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
                       const auditLines = buildComplianceAuditLines(
                         sr,
@@ -2061,6 +2047,87 @@ export default function Screening() {
             </div>
               </>
             ) : null}
+
+            {batchScreeningRows &&
+              aiResults &&
+              aiResults.length > 0 &&
+              !aiLoading && (
+                <div className="mt-8 space-y-4 border-t border-slate-200 pt-8">
+                  <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 font-body">
+                    AI Analysis complete — {aiResults.length} vendors analyzed via Azure OpenAI GPT-4o
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-lg font-bold font-display text-slate-900">AI Deep Analysis Results</h3>
+                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] text-white">Azure OpenAI</span>
+                  </div>
+                  <div className="space-y-4">
+                    {batchScreeningRows.map((batchRow, idx) => {
+                      const aiRow = aiForBatchRow(batchRow, idx, aiResults);
+                      if (!aiRow) return null;
+                      const riskU = (aiRow.risk_level || "LOW").toUpperCase();
+                      const riskTier =
+                        riskU === "HIGH" || riskU === "MEDIUM" || riskU === "LOW" ? riskU : "LOW";
+                      const actionDisplay = aiDeepAnalysisActionDisplay(aiRow.action);
+                      return (
+                        <div
+                          key={`${batchRow.auditId}-ai-deep-${idx}`}
+                          className={cn(
+                            "rounded-lg border border-slate-200 border-l-4 bg-white p-5 shadow-sm",
+                            riskTier === "HIGH" && "border-l-red-500",
+                            riskTier === "MEDIUM" && "border-l-amber-500",
+                            riskTier === "LOW" && "border-l-emerald-500"
+                          )}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <p className="min-w-0 text-lg font-bold text-slate-900 font-display">{aiRow.vendor_name}</p>
+                            <span
+                              className={cn(
+                                "shrink-0 rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
+                                riskBadgeClasses(riskTier)
+                              )}
+                            >
+                              {riskTier}
+                            </span>
+                          </div>
+                          <div className="mt-3 flex flex-wrap items-baseline gap-1 text-sm">
+                            <span
+                              className={cn(
+                                "font-semibold tracking-tight",
+                                aiRow.true_positive ? "text-red-700" : "text-emerald-700"
+                              )}
+                            >
+                              {aiRow.true_positive ? "TRUE_POSITIVE" : "FALSE_POSITIVE"}
+                            </span>
+                            <span className="text-slate-500 font-body">— Confidence:</span>
+                            <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">
+                              {aiRow.confidence}%
+                            </span>
+                          </div>
+                          <div className="mt-3">
+                            <span
+                              className={cn(
+                                "inline-flex rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
+                                actionBadgeClasses(aiRow.action)
+                              )}
+                            >
+                              {actionDisplay}
+                            </span>
+                          </div>
+                          <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            AI REASONING:
+                          </p>
+                          <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-800 font-body">
+                            {aiRow.reasoning}
+                          </div>
+                          <p className="mt-3 text-xs text-slate-400 font-body">
+                            Lists checked: OFAC+EU+UN+UK
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
             <Dialog
               open={emailDraftOpen}
@@ -2238,16 +2305,6 @@ export default function Screening() {
               "Run AI Deep Analysis"
             )}
           </button>
-
-          {batchScreeningRows &&
-            batchScreeningRows.length > 0 &&
-            aiResults &&
-            aiResults.length > 0 &&
-            !aiLoading && (
-              <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 font-body">
-                AI Analysis complete — {batchScreeningRows.length} vendors analyzed. Results updated in screening table.
-              </p>
-            )}
 
           {aiError && (
             <p className="mt-4 rounded-lg border border-cyan-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 font-body">
