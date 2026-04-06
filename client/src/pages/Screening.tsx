@@ -1,13 +1,33 @@
 /*
  * SCREENING PAGE — Upload document + manual entry
  */
-import { useState, useCallback, useRef, useMemo, Fragment } from "react";
+import { useState, useCallback, useRef, useMemo, Fragment, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Search, Upload, Loader2, CheckCircle, AlertTriangle, ShieldAlert, Info } from "lucide-react";
+import {
+  Search,
+  Upload,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
+  ShieldAlert,
+  Info,
+  Mail,
+  Copy,
+  Check,
+  ExternalLink,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { runAIDeepAnalysis } from "../lib/api";
 import { watchlistEntities } from "@/lib/mockData";
 
@@ -823,6 +843,75 @@ function buildComplianceAuditLines(
   return lines;
 }
 
+function buildComplianceEmailDraftContent(rows: BatchScreenRow[]): {
+  subject: string;
+  body: string;
+  fullText: string;
+} {
+  const dateYmd = new Date().toISOString().slice(0, 10);
+  const firstScr = rows[0]?.auditId ?? "SCR-N/A";
+  const subject = `Sanctions Screening Alert - ${dateYmd} - Batch ${firstScr}`;
+
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+  for (const r of rows) {
+    if (r.screeningResults.risk === "HIGH") high++;
+    else if (r.screeningResults.risk === "MEDIUM") medium++;
+    else low++;
+  }
+
+  const screeningDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const highEntityLines: string[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const batchRow = rows[i];
+    if (batchRow.screeningResults.risk !== "HIGH") continue;
+    const sr = batchRow.screeningResults;
+    const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
+    const auditLines = buildComplianceAuditLines(
+      sr,
+      { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
+      sr.bestMatch,
+      nameScore
+    );
+    const firstBullet = auditLines[0]?.text ?? "—";
+    highEntityLines.push(
+      `- ${batchRow.screenInput.vendorName} (Score: ${sr.compositeScore}%) — ${firstBullet}`
+    );
+  }
+
+  const entitiesSection = highEntityLines.length > 0 ? highEntityLines.join("\n") : "- None";
+
+  const body = `Dear Compliance Team,
+
+Please find the summary of the automated sanctions screening performed on ${screeningDate} via TradeScreen AI.
+
+Screening Summary:
+- Total Vendors Screened: ${rows.length}
+- High Risk (BLOCK): ${high}
+- Medium Risk (REVIEW): ${medium}
+- Low Risk (APPROVE): ${low}
+
+Entities Requiring Immediate Action:
+${entitiesSection}
+
+Detailed evidence is available in the attached PDF screening report.
+
+Please review and confirm the recommended actions.
+
+Regards,
+Compliance Officer`;
+
+  const fullText = `Subject: ${subject}\n\n${body}`;
+  return { subject, body, fullText };
+}
+
 function generateSanctionsScreeningPdfBlob(
   rows: BatchScreenRow[],
   aiResults: NormalizedAIResult[] | null
@@ -1114,6 +1203,9 @@ export default function Screening() {
   const [batchRiskFilter, setBatchRiskFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
   const [batchDetailsExpanded, setBatchDetailsExpanded] = useState(false);
   const [batchTableSearch, setBatchTableSearch] = useState("");
+  const [emailDraftOpen, setEmailDraftOpen] = useState(false);
+  const [emailDraftCopied, setEmailDraftCopied] = useState(false);
+  const emailCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const batchRiskCounts = useMemo(() => {
     if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };
@@ -1155,6 +1247,17 @@ export default function Screening() {
     if (!q) return filteredBatchRows;
     return filteredBatchRows.filter((r) => r.screenInput.vendorName.toLowerCase().includes(q));
   }, [filteredBatchRows, batchTableSearch]);
+
+  const complianceEmailDraft = useMemo(
+    () => (batchScreeningRows?.length ? buildComplianceEmailDraftContent(batchScreeningRows) : null),
+    [batchScreeningRows]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (emailCopyResetRef.current) clearTimeout(emailCopyResetRef.current);
+    };
+  }, []);
 
   const escapeCsvCell = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
 
@@ -1246,6 +1349,27 @@ export default function Screening() {
       URL.revokeObjectURL(pdfBlobUrl);
     }, 120_000);
   }, [batchScreeningRows, aiResults]);
+
+  const handleCopyEmailDraft = useCallback(async () => {
+    if (!complianceEmailDraft) return;
+    try {
+      await navigator.clipboard.writeText(complianceEmailDraft.fullText);
+      setEmailDraftCopied(true);
+      if (emailCopyResetRef.current) clearTimeout(emailCopyResetRef.current);
+      emailCopyResetRef.current = setTimeout(() => {
+        setEmailDraftCopied(false);
+        emailCopyResetRef.current = null;
+      }, 2000);
+    } catch {
+      /* ignore clipboard errors */
+    }
+  }, [complianceEmailDraft]);
+
+  const handleOpenEmailDraftMailto = useCallback(() => {
+    if (!complianceEmailDraft) return;
+    const href = `mailto:?subject=${encodeURIComponent(complianceEmailDraft.subject)}&body=${encodeURIComponent(complianceEmailDraft.body)}`;
+    window.location.href = href;
+  }, [complianceEmailDraft]);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
@@ -1753,6 +1877,14 @@ export default function Screening() {
               >
                 Export CSV
               </button>
+              <button
+                type="button"
+                onClick={() => setEmailDraftOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              >
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                Email Draft
+              </button>
             </div>
             <button
               type="button"
@@ -1914,6 +2046,73 @@ export default function Screening() {
             </div>
               </>
             ) : null}
+
+            <Dialog
+              open={emailDraftOpen}
+              onOpenChange={(open) => {
+                setEmailDraftOpen(open);
+                if (!open) setEmailDraftCopied(false);
+              }}
+            >
+              <DialogContent
+                showCloseButton={false}
+                className="max-h-[90vh] max-w-2xl gap-0 overflow-y-auto p-0 sm:max-w-2xl"
+              >
+                {complianceEmailDraft ? (
+                  <>
+                    <div className="border-b border-slate-200 px-6 py-4">
+                      <DialogHeader className="gap-1 text-left">
+                        <DialogTitle className="font-display text-lg text-slate-900">Email draft</DialogTitle>
+                        <DialogDescription className="text-sm text-slate-600">
+                          Pre-formatted compliance email from the current batch screening results.
+                        </DialogDescription>
+                      </DialogHeader>
+                    </div>
+                    <div className="space-y-4 px-6 py-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Subject</p>
+                        <p className="mt-2 font-mono text-sm leading-snug text-slate-900">{complianceEmailDraft.subject}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Body</p>
+                        <pre className="mt-2 max-h-[min(42vh,360px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 font-body text-sm leading-relaxed text-slate-800">
+                          {complianceEmailDraft.body}
+                        </pre>
+                      </div>
+                    </div>
+                    <DialogFooter className="flex-col gap-2 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end sm:gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyEmailDraft}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        {emailDraftCopied ? (
+                          <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                        ) : (
+                          <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                        )}
+                        {emailDraftCopied ? "Copied!" : "Copy to Clipboard"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenEmailDraftMailto}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+                        Open in Mail
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEmailDraftOpen(false)}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        Close
+                      </button>
+                    </DialogFooter>
+                  </>
+                ) : null}
+              </DialogContent>
+            </Dialog>
           </div>
         ) : screeningResults ? (
           <div className="mt-4 space-y-4">
