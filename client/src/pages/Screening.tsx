@@ -2,7 +2,7 @@
  * SCREENING PAGE — Upload document + manual entry
  */
 import { useState, useCallback, useRef, useMemo, Fragment } from "react";
-import { Search, Upload, Loader2, CheckCircle } from "lucide-react";
+import { Search, Upload, Loader2, CheckCircle, AlertTriangle, ShieldAlert } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
@@ -147,6 +147,32 @@ function fuzzyPercent(a: string, b: string): number {
   return Math.round((1 - dist / maxLen) * 100);
 }
 
+/** Best match score vs entity name/aliases — token + substring aware so short names (e.g. Sberbank) score ~100 vs full SDN strings */
+function maximumFuzzyScore(needle: string, candidate: string): number {
+  const n = needle.trim().toLowerCase();
+  const c = candidate.trim().toLowerCase();
+  if (!n || !c) return 0;
+  let best = fuzzyPercent(n, c);
+  if (c.includes(n) || n.includes(c)) {
+    best = Math.max(best, 98);
+  }
+  const compactN = n.replace(/\s+/g, "");
+  const compactC = c.replace(/\s+/g, "");
+  if (compactN.length >= 4 && (compactC.includes(compactN) || compactN.includes(compactC))) {
+    best = Math.max(best, 99);
+  }
+  const tokens = c.split(/[\s\-/,.]+/).filter((w) => w.length >= 2);
+  for (const tok of tokens) {
+    if (tok.length >= 3) {
+      best = Math.max(best, fuzzyPercent(n, tok));
+    }
+    if (tok.length >= 4 && (tok.startsWith(n) || n.startsWith(tok))) {
+      best = Math.max(best, 98);
+    }
+  }
+  return Math.min(100, best);
+}
+
 function bestScoreAgainstEntity(
   needles: string[],
   entityName: string,
@@ -158,7 +184,7 @@ function bestScoreAgainstEntity(
   for (const needle of needles) {
     if (!needle.trim()) continue;
     for (const c of candidates) {
-      const sc = fuzzyPercent(needle, c);
+      const sc = maximumFuzzyScore(needle, c);
       if (sc > best) {
         best = sc;
         matchedAs = c;
@@ -361,6 +387,27 @@ function rowsFromDelimitedText(text: string): string[][] {
   return lines.map(parseCsvLine);
 }
 
+/** Prefer explicit document headers over generic "doc" to avoid wrong column mapping */
+function findDocColumnIndex(norm: string[]): number {
+  const priority = [
+    "document_type",
+    "type_of_document",
+    "doc_type",
+    "document",
+    "doc",
+  ];
+  for (const p of priority) {
+    const i = norm.indexOf(p);
+    if (i >= 0) return i;
+  }
+  for (let i = 0; i < norm.length; i++) {
+    const h = norm[i];
+    if (h.includes("document_type") || (h.includes("document") && !h.includes("vendor"))) return i;
+    if (h.endsWith("_doc") && !h.includes("vendor")) return i;
+  }
+  return -1;
+}
+
 function mapHeaderToIndices(headers: string[]): {
   vendor: number;
   country: number;
@@ -371,7 +418,6 @@ function mapHeaderToIndices(headers: string[]): {
   let vendor = -1;
   let country = -1;
   let amount = -1;
-  let doc = -1;
   for (let i = 0; i < norm.length; i++) {
     const h = norm[i];
     if (
@@ -400,31 +446,8 @@ function mapHeaderToIndices(headers: string[]): {
     ) {
       amount = i;
     }
-    if (
-      doc < 0 &&
-      (h === "document_type" ||
-        h === "document" ||
-        h === "doc_type" ||
-        h === "doc" ||
-        h === "type_of_document")
-    ) {
-      doc = i;
-    }
   }
-  if (doc < 0) {
-    for (let i = 0; i < norm.length; i++) {
-      const h = norm[i];
-      if (
-        h.includes("document_type") ||
-        (h.includes("document") && !h.includes("vendor")) ||
-        h.endsWith("_doc") ||
-        h === "doc_type"
-      ) {
-        doc = i;
-        break;
-      }
-    }
-  }
+  const doc = findDocColumnIndex(norm);
   if (vendor < 0) return null;
   return { vendor, country, amount, doc };
 }
@@ -686,6 +709,124 @@ function aiForBatchRow(
   return aiList[index];
 }
 
+function displayDocumentType(docType: string): string {
+  const t = docType.trim();
+  return t.length > 0 ? t : "Document";
+}
+
+function formatScrFooterCell(auditId: string, iso: string): string {
+  const d = new Date(iso);
+  const utc = d.toISOString().slice(0, 19).replace("T", " ");
+  return `${auditId} | ${utc} UTC`;
+}
+
+type ComplianceAuditLineKind = "alert" | "shield" | "arrow";
+
+function buildComplianceAuditLines(
+  sr: ScreeningResultsState,
+  input: { country: string; amount: string },
+  bestMatchEntity: string,
+  nameScore: number
+): { kind: ComplianceAuditLineKind; text: string }[] {
+  const lines: { kind: ComplianceAuditLineKind; text: string }[] = [];
+  const matchLabel =
+    bestMatchEntity && bestMatchEntity !== "No strong list match" ? bestMatchEntity : "listed entity";
+
+  if (nameScore >= 90) {
+    lines.push({
+      kind: "alert",
+      text: `Direct SDN match (${Math.round(nameScore)}% similarity) with "${matchLabel}" — immediate escalation required`,
+    });
+  } else if (nameScore >= 75) {
+    lines.push({
+      kind: "alert",
+      text: `Strong list match (${Math.round(nameScore)}% similarity) with "${matchLabel}" — manual review required`,
+    });
+  }
+
+  if (nameScore >= 85) {
+    lines.push({
+      kind: "arrow",
+      text: "Match confidence: HIGH — strong entity correlation detected",
+    });
+  } else if (nameScore >= 50) {
+    lines.push({
+      kind: "arrow",
+      text: "Match confidence: MODERATE — corroborate screening factors before proceeding",
+    });
+  }
+
+  if (nameScore >= 90) {
+    lines.push({
+      kind: "shield",
+      text: "Name directly matches known SDN entity — AUTO BLOCK — potential sanctions violation if transaction proceeds",
+    });
+  }
+
+  if (highRiskJurisdiction(input.country)) {
+    lines.push({
+      kind: "arrow",
+      text: `Country of origin (${input.country.trim()}) is on OFAC high-risk jurisdiction list`,
+    });
+  }
+
+  if (parseAmountUsd(input.amount) > 50_000) {
+    lines.push({
+      kind: "arrow",
+      text: "Transaction amount exceeds elevated monitoring threshold",
+    });
+  }
+
+  if (lines.length === 0) {
+    lines.push({
+      kind: "arrow",
+      text: "No material sanctions exposure detected at current screening thresholds",
+    });
+  }
+
+  return lines;
+}
+
+function ComplianceAuditTrail({
+  lines,
+  scrFooter,
+}: {
+  lines: { kind: ComplianceAuditLineKind; text: string }[];
+  scrFooter: string;
+}) {
+  return (
+    <div>
+      <div className="space-y-2">
+        {lines.map((line, i) => {
+          if (line.kind === "alert") {
+            return (
+              <div key={i} className="flex gap-2">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" strokeWidth={2} aria-hidden />
+                <span className="text-[11px] leading-snug text-slate-800 font-body">{line.text}</span>
+              </div>
+            );
+          }
+          if (line.kind === "shield") {
+            return (
+              <div key={i} className="flex gap-2">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-500" strokeWidth={2} aria-hidden />
+                <span className="text-[11px] leading-snug text-slate-800 font-body">{line.text}</span>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className="flex gap-2">
+              <span className="shrink-0 font-mono text-teal-600">→</span>
+              <span className="text-[11px] leading-snug text-slate-700 font-body">{line.text}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-3 border-t border-slate-100 pt-2 font-mono text-[10px] text-slate-500">{scrFooter}</p>
+    </div>
+  );
+}
+
 function ScoreBreakdownBlock({ breakdown }: { breakdown: ScoreBreakdown }) {
   return (
     <div className="min-w-[7.5rem] text-[10px] leading-snug text-slate-700">
@@ -738,6 +879,7 @@ export default function Screening() {
   const [batchScreeningRows, setBatchScreeningRows] = useState<BatchScreenRow[] | null>(null);
   const [batchRiskFilter, setBatchRiskFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
   const [batchDetailsExpanded, setBatchDetailsExpanded] = useState(false);
+  const [batchTableSearch, setBatchTableSearch] = useState("");
 
   const batchRiskCounts = useMemo(() => {
     if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };
@@ -773,6 +915,12 @@ export default function Screening() {
     if (batchRiskFilter === "ALL") return batchScreeningRows;
     return batchScreeningRows.filter((r) => r.screeningResults.risk === batchRiskFilter);
   }, [batchScreeningRows, batchRiskFilter]);
+
+  const batchTableRows = useMemo(() => {
+    const q = batchTableSearch.trim().toLowerCase();
+    if (!q) return filteredBatchRows;
+    return filteredBatchRows.filter((r) => r.screenInput.vendorName.toLowerCase().includes(q));
+  }, [filteredBatchRows, batchTableSearch]);
 
   const escapeCsvCell = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
 
@@ -1288,41 +1436,56 @@ export default function Screening() {
             {batchDetailsExpanded ? (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex flex-wrap gap-2">
-                    {(
-                      [
-                        { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
-                        { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
-                        { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
-                        { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
-                      ] as const
-                    ).map((tab) => {
-                      const count =
-                        tab.key === "ALL"
-                          ? batchRiskCounts.all
-                          : tab.key === "HIGH"
-                            ? batchRiskCounts.high
-                            : tab.key === "MEDIUM"
-                              ? batchRiskCounts.medium
-                              : batchRiskCounts.low;
-                      const active = batchRiskFilter === tab.key;
-                      return (
-                        <button
-                          key={tab.key}
-                          type="button"
-                          onClick={() => setBatchRiskFilter(tab.key)}
-                          className={cn(
-                            "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
-                            active
-                              ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
-                              : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                          )}
-                        >
-                          <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
-                          {tab.label} ({count})
-                        </button>
-                      );
-                    })}
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      {(
+                        [
+                          { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
+                          { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
+                          { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
+                          { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
+                        ] as const
+                      ).map((tab) => {
+                        const count =
+                          tab.key === "ALL"
+                            ? batchRiskCounts.all
+                            : tab.key === "HIGH"
+                              ? batchRiskCounts.high
+                              : tab.key === "MEDIUM"
+                                ? batchRiskCounts.medium
+                                : batchRiskCounts.low;
+                        const active = batchRiskFilter === tab.key;
+                        return (
+                          <button
+                            key={tab.key}
+                            type="button"
+                            onClick={() => setBatchRiskFilter(tab.key)}
+                            className={cn(
+                              "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
+                              active
+                                ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
+                                : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                            )}
+                          >
+                            <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
+                            {tab.label} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="relative min-w-[200px] max-w-xs flex-1">
+                      <Search
+                        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        aria-hidden
+                      />
+                      <input
+                        type="search"
+                        value={batchTableSearch}
+                        onChange={(e) => setBatchTableSearch(e.target.value)}
+                        placeholder="Search vendors..."
+                        className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                      />
+                    </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <button
@@ -1343,7 +1506,7 @@ export default function Screening() {
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-                  <table className="w-full min-w-[1020px] text-left text-xs">
+                  <table className="w-full min-w-[920px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
                         <th className="px-3 py-2 font-display">Vendor</th>
@@ -1353,19 +1516,18 @@ export default function Screening() {
                         <th className="px-3 py-2 font-display">SDN match</th>
                         <th className="px-3 py-2 font-display">Score breakdown</th>
                         <th className="px-3 py-2 font-display">Risk</th>
-                        <th className="min-w-[200px] px-3 py-2 font-display">Action & audit</th>
-                        <th className="whitespace-nowrap px-3 py-2 font-display">SCR ID</th>
+                        <th className="min-w-[280px] px-3 py-2 font-display">Action & audit</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredBatchRows.length === 0 ? (
+                      {batchTableRows.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="px-3 py-8 text-center text-sm text-slate-500 font-body">
+                          <td colSpan={8} className="px-3 py-8 text-center text-sm text-slate-500 font-body">
                             No vendors match this filter.
                           </td>
                         </tr>
                       ) : (
-                        filteredBatchRows.map((batchRow) => {
+                        batchTableRows.map((batchRow) => {
                       const idx = batchScreeningRows!.indexOf(batchRow);
                       const aiRow = aiForBatchRow(batchRow, idx, aiResults);
                       const sr = batchRow.screeningResults;
@@ -1374,7 +1536,13 @@ export default function Screening() {
                       const { label: actionLabel, badge: actionBadge } = aiRow
                         ? normalizeActionDisplay(aiRow.action, aiRow.risk_level)
                         : complianceActionFromRisk(sr.risk);
-                      const bullets = aiRow ? auditBulletsFromAI(aiRow) : fallbackAuditBullets(sr);
+                      const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
+                      const auditLines = buildComplianceAuditLines(
+                        sr,
+                        { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
+                        sr.bestMatch,
+                        nameScore
+                      );
                       return (
                         <Fragment key={batchRow.auditId}>
                           <tr className="border-b border-slate-100 align-top odd:bg-white even:bg-slate-50/80">
@@ -1383,7 +1551,7 @@ export default function Screening() {
                             <td className="px-3 py-3 font-mono tabular-nums text-slate-800">
                               {formatUsdDisplay(batchRow.screenInput.amount)}
                             </td>
-                            <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.docType || "—"}</td>
+                            <td className="px-3 py-3 text-slate-700">{displayDocumentType(batchRow.screenInput.docType)}</td>
                             <td className="max-w-[180px] px-3 py-3 font-data text-[11px] text-slate-900">
                               {sr.bestMatch}
                             </td>
@@ -1402,7 +1570,7 @@ export default function Screening() {
                                 {sr.risk}
                               </span>
                             </td>
-                            <td className="px-3 py-3">
+                            <td className="min-w-[280px] px-3 py-3">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-[11px] font-bold text-slate-900">{actionLabel}</span>
                                 <span
@@ -1416,14 +1584,12 @@ export default function Screening() {
                                   {actionBadge}
                                 </span>
                               </div>
-                              <ul className="mt-2 list-inside list-disc space-y-1 text-[11px] leading-snug text-slate-700 font-body">
-                                {bullets.map((b, bi) => (
-                                  <li key={`${batchRow.auditId}-b-${bi}`}>{b}</li>
-                                ))}
-                              </ul>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 font-mono text-[10px] text-slate-700">
-                              {batchRow.auditId}
+                              <div className="mt-3">
+                                <ComplianceAuditTrail
+                                  lines={auditLines}
+                                  scrFooter={formatScrFooterCell(batchRow.auditId, batchRow.auditedAt)}
+                                />
+                              </div>
                             </td>
                           </tr>
                         </Fragment>
