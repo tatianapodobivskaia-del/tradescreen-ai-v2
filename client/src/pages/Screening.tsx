@@ -274,6 +274,174 @@ function parseAmountUsd(raw: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** One row from an uploaded file (vendor + optional metadata columns) */
+type ParsedUploadRow = {
+  vendorName: string;
+  country: string;
+  amount: string;
+  docType: string;
+};
+
+function normalizeHeaderKey(s: string): string {
+  return s
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if (c === "," && !inQuotes) {
+      out.push(cur.trim());
+      cur = "";
+    } else {
+      cur += c;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+function rowsFromDelimitedText(text: string): string[][] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  return lines.map(parseCsvLine);
+}
+
+function mapHeaderToIndices(headers: string[]): {
+  vendor: number;
+  country: number;
+  amount: number;
+  doc: number;
+} | null {
+  const norm = headers.map((h) => normalizeHeaderKey(String(h ?? "")));
+  let vendor = -1;
+  let country = -1;
+  let amount = -1;
+  let doc = -1;
+  for (let i = 0; i < norm.length; i++) {
+    const h = norm[i];
+    if (
+      vendor < 0 &&
+      (h === "vendor_name" ||
+        h === "vendor" ||
+        h === "name" ||
+        h === "company" ||
+        h === "entity" ||
+        h === "entity_name" ||
+        h === "legal_name" ||
+        h === "beneficiary" ||
+        h === "counterparty")
+    ) {
+      vendor = i;
+    }
+    if (country < 0 && (h === "country" || h === "nation" || h === "country_code")) country = i;
+    if (
+      amount < 0 &&
+      (h === "amount" ||
+        h === "transaction_amount" ||
+        h === "usd" ||
+        h === "value" ||
+        h === "transaction" ||
+        h === "transaction_value")
+    ) {
+      amount = i;
+    }
+    if (
+      doc < 0 &&
+      (h === "document_type" ||
+        h === "document" ||
+        h === "doc_type" ||
+        h === "doc" ||
+        h === "type_of_document")
+    ) {
+      doc = i;
+    }
+  }
+  if (vendor < 0) return null;
+  return { vendor, country, amount, doc };
+}
+
+function buildParsedRowsFromHeaderTable(rows: string[][]): ParsedUploadRow[] | null {
+  if (rows.length < 2) return null;
+  const headers = rows[0].map((c) => String(c ?? ""));
+  const idx = mapHeaderToIndices(headers);
+  if (!idx) return null;
+  const out: ParsedUploadRow[] = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    const vn = String(row[idx.vendor] ?? "").trim();
+    if (!vn) continue;
+    out.push({
+      vendorName: vn,
+      country: idx.country >= 0 ? String(row[idx.country] ?? "").trim() : "",
+      amount: idx.amount >= 0 ? String(row[idx.amount] ?? "").trim() : "",
+      docType: idx.doc >= 0 ? String(row[idx.doc] ?? "").trim() : "",
+    });
+  }
+  return out.length > 0 ? out : null;
+}
+
+/** Fallback: column 0 = vendor; optional cols 1–3 = country, amount, document */
+function buildParsedRowsWithoutNamedHeader(rows: string[][]): ParsedUploadRow[] {
+  if (rows.length === 0) return [];
+  const r0 = String(rows[0]?.[0] ?? "").toLowerCase();
+  const skipFirst =
+    r0.includes("name") ||
+    r0.includes("vendor") ||
+    r0.includes("country") ||
+    r0.includes("amount") ||
+    r0.includes("document");
+  const data = skipFirst ? rows.slice(1) : rows;
+  return data
+    .map((row) => ({
+      vendorName: String(row[0] ?? "").trim(),
+      country: String(row[1] ?? "").trim(),
+      amount: String(row[2] ?? "").trim(),
+      docType: String(row[3] ?? "").trim(),
+    }))
+    .filter((r) => r.vendorName.length > 0);
+}
+
+function parseSpreadsheetRows(rows: string[][]): ParsedUploadRow[] {
+  if (rows.length === 0) return [];
+  const fromHeaders = buildParsedRowsFromHeaderTable(rows);
+  if (fromHeaders && fromHeaders.length > 0) return fromHeaders;
+  return buildParsedRowsWithoutNamedHeader(rows);
+}
+
+function parseWordLinesToRows(lines: string[]): string[][] {
+  if (lines.length === 0) return [];
+  const first = lines[0];
+  if (first.includes("\t")) {
+    return lines.map((l) => l.split("\t").map((c) => c.trim()));
+  }
+  if (first.includes(",")) {
+    return lines.map((l) => parseCsvLine(l));
+  }
+  return [];
+}
+
+function parseWordPlainText(text: string): ParsedUploadRow[] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return [];
+  const matrix = parseWordLinesToRows(lines);
+  if (matrix.length > 0) {
+    const parsed = parseSpreadsheetRows(matrix);
+    if (parsed.length > 0) return parsed;
+  }
+  return lines
+    .filter((l) => l.length > 2 && l.length < 100)
+    .map((l) => ({ vendorName: l, country: "", amount: "", docType: "" }));
+}
+
 function tierStyle(tier: string): string {
   const u = tier.toUpperCase();
   if (u === "HIGH") return "text-red-700 bg-red-50 border-red-200";
@@ -509,12 +677,13 @@ export default function Screening() {
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   /** Non-null after a successful parse with at least one vendor; cleared when choosing a new file */
-  const [parsedUploadVendors, setParsedUploadVendors] = useState<string[] | null>(null);
+  const [parsedUploadRows, setParsedUploadRows] = useState<ParsedUploadRow[] | null>(null);
   const [uploadScreeningDone, setUploadScreeningDone] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   /** Multi-vendor file upload screening (2+ vendors); null when using single-vendor flow */
   const [batchScreeningRows, setBatchScreeningRows] = useState<BatchScreenRow[] | null>(null);
   const [batchRiskFilter, setBatchRiskFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
+  const [batchDetailsExpanded, setBatchDetailsExpanded] = useState(false);
 
   const batchRiskCounts = useMemo(() => {
     if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };
@@ -530,6 +699,21 @@ export default function Screening() {
     return { all: batchScreeningRows.length, high, medium, low };
   }, [batchScreeningRows]);
 
+  const batchNamesByRisk = useMemo(() => {
+    const high: string[] = [];
+    const medium: string[] = [];
+    const low: string[] = [];
+    if (!batchScreeningRows?.length) return { high, medium, low };
+    for (const r of batchScreeningRows) {
+      const name = r.screenInput.vendorName;
+      const risk = r.screeningResults.risk;
+      if (risk === "HIGH") high.push(name);
+      else if (risk === "MEDIUM") medium.push(name);
+      else low.push(name);
+    }
+    return { high, medium, low };
+  }, [batchScreeningRows]);
+
   const filteredBatchRows = useMemo(() => {
     if (!batchScreeningRows?.length) return [];
     if (batchRiskFilter === "ALL") return batchScreeningRows;
@@ -537,15 +721,15 @@ export default function Screening() {
   }, [batchScreeningRows, batchRiskFilter]);
 
   const handleScreen = useCallback(
-    (vendorNameOverride?: string) => {
+    (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
       const vn = (vendorNameOverride !== undefined ? vendorNameOverride : vendorName).trim();
       if (!vn) return;
       setBatchScreeningRows(null);
       const input = {
         vendorName: vn,
-        country: country.trim(),
-        amount: amount.trim(),
-        docType: docType.trim(),
+        country: (fileRow?.country ?? country).trim(),
+        amount: (fileRow?.amount ?? amount).trim(),
+        docType: (fileRow?.docType ?? docType).trim(),
         cyrillicName: cyrillicName.trim(),
       };
       setLastScreenInput(input);
@@ -557,23 +741,23 @@ export default function Screening() {
   );
 
   const runUploadScreening = useCallback(() => {
-    if (!parsedUploadVendors?.length) return;
+    if (!parsedUploadRows?.length) return;
     setBatchRiskFilter("ALL");
-    if (parsedUploadVendors.length === 1) {
-      const first = parsedUploadVendors[0];
-      setVendorName(first);
+    if (parsedUploadRows.length === 1) {
+      const first = parsedUploadRows[0];
+      setVendorName(first.vendorName);
       setBatchScreeningRows(null);
-      handleScreen(first);
+      handleScreen(first.vendorName, first);
       setUploadScreeningDone(true);
       return;
     }
     const auditedAt = new Date().toISOString();
-    const rows: BatchScreenRow[] = parsedUploadVendors.map((vn) => {
+    const rows: BatchScreenRow[] = parsedUploadRows.map((row) => {
       const screenInput = {
-        vendorName: vn,
-        country: country.trim(),
-        amount: amount.trim(),
-        docType: docType.trim(),
+        vendorName: row.vendorName,
+        country: row.country,
+        amount: row.amount,
+        docType: row.docType,
         cyrillicName: cyrillicName.trim(),
       };
       return {
@@ -584,18 +768,20 @@ export default function Screening() {
       };
     });
     setBatchScreeningRows(rows);
+    setBatchDetailsExpanded(false);
     setScreeningResults(null);
     setLastScreenInput(null);
     setAiResults(null);
     setAiError(null);
     setUploadScreeningDone(true);
-  }, [parsedUploadVendors, handleScreen, country, amount, docType, cyrillicName]);
+  }, [parsedUploadRows, handleScreen, cyrillicName]);
 
   const resetUpload = useCallback(() => {
-    setParsedUploadVendors(null);
+    setParsedUploadRows(null);
     setUploadedFile(null);
     setUploadScreeningDone(false);
     setBatchScreeningRows(null);
+    setBatchDetailsExpanded(false);
     setAiError(null);
     if (uploadInputRef.current) uploadInputRef.current.value = "";
   }, []);
@@ -603,48 +789,42 @@ export default function Screening() {
   const handleFileUpload = useCallback(
     async (file: File) => {
       setBatchScreeningRows(null);
+      setBatchDetailsExpanded(false);
       setScreeningResults(null);
       setLastScreenInput(null);
       setAiResults(null);
-      setParsedUploadVendors(null);
+      setParsedUploadRows(null);
       setUploadScreeningDone(false);
       setUploadedFile(file.name);
       setAiError(null);
       setIsLoading(true);
       const ext = file.name.split(".").pop()?.toLowerCase();
-      let vendorNames: string[] = [];
+      let parsedRows: ParsedUploadRow[] = [];
 
       try {
         if (ext === "csv" || ext === "txt") {
           const text = await file.text();
-          const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-          const startIdx =
-            lines[0]?.toLowerCase().includes("name") || lines[0]?.toLowerCase().includes("vendor") ? 1 : 0;
-          vendorNames = lines.slice(startIdx).map((line) => line.split(",")[0].trim()).filter(Boolean);
+          const matrix = rowsFromDelimitedText(text);
+          parsedRows = parseSpreadsheetRows(matrix);
         } else if (ext === "xlsx" || ext === "xls") {
           const buf = await file.arrayBuffer();
           const wb = XLSX.read(buf, { type: "array" });
           const ws = wb.Sheets[wb.SheetNames[0]];
           const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as string[][];
-          const startIdx =
-            rows[0]?.[0]?.toString().toLowerCase().includes("name") ||
-            rows[0]?.[0]?.toString().toLowerCase().includes("vendor")
-              ? 1
-              : 0;
-          vendorNames = rows.slice(startIdx).map((row) => (row[0] || "").toString().trim()).filter(Boolean);
+          const matrix = rows.map((row) => row.map((c) => (c === undefined || c === null ? "" : String(c))));
+          parsedRows = parseSpreadsheetRows(matrix);
         } else if (ext === "docx" || ext === "doc") {
           const buf = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: buf });
-          const lines = result.value.split("\n").map((l) => l.trim()).filter(Boolean);
-          vendorNames = lines.filter((l) => l.length > 2 && l.length < 100);
+          parsedRows = parseWordPlainText(result.value);
         } else {
           setAiError("Unsupported file format. Please upload CSV, Excel, PDF, Word, or TXT.");
           setIsLoading(false);
           return;
         }
 
-        if (vendorNames.length > 0) {
-          setParsedUploadVendors(vendorNames);
+        if (parsedRows.length > 0) {
+          setParsedUploadRows(parsedRows);
           setIsLoading(false);
         } else {
           setAiError("No vendor names found in file. Try Manual Entry.");
@@ -762,7 +942,7 @@ export default function Screening() {
                 if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
               }}
             />
-            {parsedUploadVendors !== null && parsedUploadVendors.length > 0 ? (
+            {parsedUploadRows !== null && parsedUploadRows.length > 0 ? (
               <div
                 className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-10 text-center transition-colors"
                 onDragOver={(e) => {
@@ -778,7 +958,7 @@ export default function Screening() {
                 <CheckCircle className="mx-auto mb-4 h-12 w-12 text-emerald-600" aria-hidden />
                 <p className="text-sm font-semibold text-slate-800 font-body">{uploadedFile}</p>
                 <p className="mt-2 text-sm text-slate-600 font-body">
-                  {parsedUploadVendors.length} vendor{parsedUploadVendors.length === 1 ? "" : "s"} loaded
+                  {parsedUploadRows.length} vendor{parsedUploadRows.length === 1 ? "" : "s"} loaded
                   {!uploadScreeningDone ? " — ready to screen" : ""}
                 </p>
                 {!uploadScreeningDone && (
@@ -963,66 +1143,96 @@ export default function Screening() {
           </p>
         ) : batchScreeningRows && batchScreeningRows.length > 0 ? (
           <div className="mt-4 space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
-                  { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
-                  { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
-                  { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
-                ] as const
-              ).map((tab) => {
-                const count =
-                  tab.key === "ALL"
-                    ? batchRiskCounts.all
-                    : tab.key === "HIGH"
-                      ? batchRiskCounts.high
-                      : tab.key === "MEDIUM"
-                        ? batchRiskCounts.medium
-                        : batchRiskCounts.low;
-                const active = batchRiskFilter === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setBatchRiskFilter(tab.key)}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
-                      active
-                        ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
-                        : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                    )}
-                  >
-                    <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
-                    {tab.label} ({count})
-                  </button>
-                );
-              })}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-6">
+              <h3 className="text-lg font-bold font-display text-slate-900">
+                {batchScreeningRows.length} vendors screened
+              </h3>
+              <div className="mt-4 space-y-3 text-sm text-slate-800 font-body">
+                <p>
+                  <span className="font-bold font-display text-red-700">HIGH RISK ({batchRiskCounts.high}):</span>{" "}
+                  <span>{batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : "—"}</span>
+                </p>
+                <p>
+                  <span className="font-bold font-display text-amber-800">MEDIUM ({batchRiskCounts.medium}):</span>{" "}
+                  <span>{batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : "—"}</span>
+                </p>
+                <p>
+                  <span className="font-bold font-display text-emerald-800">LOW/CLEAR ({batchRiskCounts.low}):</span>{" "}
+                  <span>{batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : "—"}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBatchDetailsExpanded((e) => !e)}
+                className="btn-premium btn-premium-primary mt-6 text-sm"
+              >
+                {batchDetailsExpanded ? "Hide details" : "View Details"}
+              </button>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-              <table className="w-full min-w-[960px] text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
-                    <th className="px-3 py-2 font-display">Vendor</th>
-                    <th className="px-3 py-2 font-display">Country</th>
-                    <th className="px-3 py-2 font-display">Amount</th>
-                    <th className="px-3 py-2 font-display">Document</th>
-                    <th className="px-3 py-2 font-display">SDN match</th>
-                    <th className="px-3 py-2 font-display">Score breakdown</th>
-                    <th className="px-3 py-2 font-display">Risk</th>
-                    <th className="min-w-[200px] px-3 py-2 font-display">Action & audit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBatchRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-3 py-8 text-center text-sm text-slate-500 font-body">
-                        No vendors match this filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredBatchRows.map((batchRow) => {
+            {batchDetailsExpanded ? (
+              <>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
+                      { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
+                      { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
+                      { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
+                    ] as const
+                  ).map((tab) => {
+                    const count =
+                      tab.key === "ALL"
+                        ? batchRiskCounts.all
+                        : tab.key === "HIGH"
+                          ? batchRiskCounts.high
+                          : tab.key === "MEDIUM"
+                            ? batchRiskCounts.medium
+                            : batchRiskCounts.low;
+                    const active = batchRiskFilter === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setBatchRiskFilter(tab.key)}
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
+                          active
+                            ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
+                            : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        )}
+                      >
+                        <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
+                        {tab.label} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                  <table className="w-full min-w-[1020px] text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
+                        <th className="px-3 py-2 font-display">Vendor</th>
+                        <th className="px-3 py-2 font-display">Country</th>
+                        <th className="px-3 py-2 font-display">Amount</th>
+                        <th className="px-3 py-2 font-display">Document</th>
+                        <th className="px-3 py-2 font-display">SDN match</th>
+                        <th className="px-3 py-2 font-display">Score breakdown</th>
+                        <th className="px-3 py-2 font-display">Risk</th>
+                        <th className="min-w-[200px] px-3 py-2 font-display">Action & audit</th>
+                        <th className="whitespace-nowrap px-3 py-2 font-display">SCR ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBatchRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="px-3 py-8 text-center text-sm text-slate-500 font-body">
+                            No vendors match this filter.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredBatchRows.map((batchRow) => {
                       const idx = batchScreeningRows!.indexOf(batchRow);
                       const aiRow = aiForBatchRow(batchRow, idx, aiResults);
                       const sr = batchRow.screeningResults;
@@ -1079,9 +1289,12 @@ export default function Screening() {
                                 ))}
                               </ul>
                             </td>
+                            <td className="whitespace-nowrap px-3 py-3 font-mono text-[10px] text-slate-700">
+                              {batchRow.auditId}
+                            </td>
                           </tr>
                           <tr className="bg-slate-50/90">
-                            <td colSpan={8} className="border-b border-slate-200 px-3 py-2 font-mono text-[10px] text-slate-500">
+                            <td colSpan={9} className="border-b border-slate-200 px-3 py-2 font-mono text-[10px] text-slate-500">
                               {formatAuditFooter(batchRow.auditId, batchRow.auditedAt)}
                             </td>
                           </tr>
@@ -1092,6 +1305,8 @@ export default function Screening() {
                 </tbody>
               </table>
             </div>
+              </>
+            ) : null}
           </div>
         ) : screeningResults ? (
           <div className="mt-4 space-y-4">
