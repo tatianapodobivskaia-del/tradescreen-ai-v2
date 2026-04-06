@@ -1016,10 +1016,10 @@ Screening Summary:
 - Total Vendors Screened: ${rows.length}
 - High Risk (BLOCK): ${high}
 - Medium Risk (REVIEW): ${medium}
-- Low Risk (APPROVE): ${low}${aiSummarySection}
+- Low Risk (APPROVE): ${low}
 
 Entities Requiring Immediate Action:
-${entitiesSection}
+${entitiesSection}${aiSummarySection}
 
 Detailed evidence is available in the attached PDF screening report.
 
@@ -1158,55 +1158,6 @@ function generateSanctionsScreeningPdfBlob(
     }
   };
 
-  if (aiResults?.length) {
-    ensureSpace(32);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text("AI Deep Analysis", margin, y);
-    y += 16;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    for (let i = 0; i < rows.length; i++) {
-      const aiRow = aiForBatchRow(rows[i], i, aiResults);
-      if (!aiRow) continue;
-      const assess = aiAssessmentLabel(aiRow.true_positive);
-      ensureSpace(40);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(0, 0, 0);
-      doc.text(aiRow.vendor_name, margin, y);
-      y += 12;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(45, 45, 45);
-      for (const wline of doc.splitTextToSize(`Assessment: ${assess}`, maxW)) {
-        ensureSpace(10);
-        doc.text(wline, margin, y);
-        y += 10;
-      }
-      doc.setFont("courier", "normal");
-      doc.setFontSize(8);
-      for (const wline of doc.splitTextToSize(`Confidence: ${aiRow.confidence}%`, maxW)) {
-        ensureSpace(10);
-        doc.text(wline, margin, y);
-        y += 10;
-      }
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text("Reasoning:", margin, y);
-      y += 9;
-      doc.setFont("helvetica", "normal");
-      for (const wline of doc.splitTextToSize(aiRow.reasoning, maxW)) {
-        ensureSpace(10);
-        doc.text(wline, margin, y);
-        y += 10;
-      }
-      y += 8;
-    }
-    doc.setTextColor(0, 0, 0);
-  }
-
   ensureSpace(28);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
@@ -1256,6 +1207,55 @@ function generateSanctionsScreeningPdfBlob(
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 0, 0);
     y += 14;
+  }
+
+  if (aiResults?.length) {
+    ensureSpace(32);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text("AI Deep Analysis", margin, y);
+    y += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    for (let i = 0; i < rows.length; i++) {
+      const aiRow = aiForBatchRow(rows[i], i, aiResults);
+      if (!aiRow) continue;
+      const assess = aiAssessmentLabel(aiRow.true_positive);
+      ensureSpace(40);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(aiRow.vendor_name, margin, y);
+      y += 12;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(45, 45, 45);
+      for (const wline of doc.splitTextToSize(`Assessment: ${assess}`, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      doc.setFont("courier", "normal");
+      doc.setFontSize(8);
+      for (const wline of doc.splitTextToSize(`Confidence: ${aiRow.confidence}%`, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("Reasoning:", margin, y);
+      y += 9;
+      doc.setFont("helvetica", "normal");
+      for (const wline of doc.splitTextToSize(aiRow.reasoning, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      y += 8;
+    }
+    doc.setTextColor(0, 0, 0);
   }
 
   const totalPages = doc.getNumberOfPages();
@@ -2169,13 +2169,9 @@ export default function Screening() {
                               <div>{batchRow.screenInput.vendorName}</div>
                               {sr.transliterationInfo ? (
                                 <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
-                                  Cyrillic variants: {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9},{" "}
-                                  {sr.transliterationInfo.icao}, {sr.transliterationInfo.bgn}, {sr.transliterationInfo.informal}{" "}
-                                  — best match across 4 lists
-                                </p>
-                              ) : sr.latinOnlyLabel ? (
-                                <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
-                                  Latin input — direct screening
+                                  Cyrillic: {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9} (ISO 9),{" "}
+                                  {sr.transliterationInfo.icao} (ICAO), {sr.transliterationInfo.bgn} (BGN),{" "}
+                                  {sr.transliterationInfo.informal} (Informal)
                                 </p>
                               ) : null}
                             </td>
