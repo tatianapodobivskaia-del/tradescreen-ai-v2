@@ -1402,27 +1402,30 @@ function ScenarioCard({
         </div>
       )}
 
-      {phase2 === "complete" && phase3 === "idle" && (
-        <button
-          type="button"
-          onClick={runPhase3}
-          className={cn(
-            "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-            "transition-[opacity,box-shadow] duration-200 hover:opacity-90 hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.45)]"
+      {phase2 === "complete" && (phase3 === "idle" || phase3 === "running") && (
+        <div className="mt-4 flex min-h-[44px] w-full min-w-0 items-stretch justify-center sm:w-auto">
+          {phase3 === "idle" && (
+            <button
+              type="button"
+              onClick={runPhase3}
+              className={cn(
+                "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
+                "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+                "transition-[opacity,box-shadow] duration-200 hover:opacity-90 hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.45)]"
+              )}
+            >
+              Scan Document with AI
+            </button>
           )}
-        >
-          Scan Document with AI
-        </button>
-      )}
-
-      {phase3 === "running" && (
-        <div
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-400 sm:w-auto sm:px-8"
-          aria-disabled
-        >
-          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-          Scanning document…
+          {phase3 === "running" && (
+            <div
+              className="inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold font-display text-slate-400 sm:w-auto sm:px-8"
+              aria-disabled
+            >
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+              Scanning document…
+            </div>
+          )}
         </div>
       )}
 
