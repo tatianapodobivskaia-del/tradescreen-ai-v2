@@ -1,7 +1,15 @@
 /*
  * SCREENING PAGE — Upload document + manual entry
  */
-import { useState, useCallback, useRef, useMemo, Fragment, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  Fragment,
+  useEffect,
+  type FormEvent,
+} from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -1621,6 +1629,35 @@ export default function Screening() {
     [vendorName, country, amount, docType, cyrillicName]
   );
 
+  /** Manual entry: read live form values so country / amount / doc always feed the scoring pipeline */
+  const handleManualSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const vn = String(fd.get("vendorName") ?? "").trim();
+    if (!vn) return;
+
+    const input = {
+      vendorName: vn,
+      country: String(fd.get("country") ?? "").trim(),
+      amount: String(fd.get("amount") ?? "").trim(),
+      docType: String(fd.get("docType") ?? "").trim(),
+      cyrillicName: String(fd.get("cyrillicName") ?? "").trim(),
+    };
+
+    setVendorName(vn);
+    setCountry(input.country);
+    setAmount(input.amount);
+    setDocType(input.docType);
+    setCyrillicName(input.cyrillicName);
+
+    setBatchScreeningRows(null);
+    setLastScreenInput(input);
+    setScreeningResults(runClientScreening(input));
+    setAiResults(null);
+    setAiError(null);
+  }, []);
+
   const runUploadScreening = useCallback(() => {
     if (!parsedUploadRows?.length) return;
     setBatchRiskFilter("ALL");
@@ -1914,13 +1951,7 @@ export default function Screening() {
             )}
           </div>
         ) : (
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleScreen();
-            }}
-          >
+          <form className="space-y-6" onSubmit={handleManualSubmit}>
             <div className="space-y-2">
               <label
                 htmlFor="vendor-name"
@@ -1930,6 +1961,7 @@ export default function Screening() {
               </label>
               <input
                 id="vendor-name"
+                name="vendorName"
                 type="text"
                 required
                 value={vendorName}
@@ -1949,6 +1981,7 @@ export default function Screening() {
               </label>
               <select
                 id="country"
+                name="country"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
@@ -1971,6 +2004,7 @@ export default function Screening() {
               </label>
               <input
                 id="amount"
+                name="amount"
                 type="text"
                 inputMode="decimal"
                 value={amount}
@@ -1989,6 +2023,7 @@ export default function Screening() {
               </label>
               <select
                 id="doc-type"
+                name="docType"
                 value={docType}
                 onChange={(e) => setDocType(e.target.value)}
                 className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 font-body transition-all focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
@@ -2011,6 +2046,7 @@ export default function Screening() {
               </label>
               <input
                 id="cyrillic-name"
+                name="cyrillicName"
                 type="text"
                 value={cyrillicName}
                 onChange={(e) => setCyrillicName(e.target.value)}
