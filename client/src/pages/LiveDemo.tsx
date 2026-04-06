@@ -1409,7 +1409,7 @@ function ScenarioCard({
           className={cn(
             "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
             "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+            "transition-[opacity,box-shadow] duration-200 hover:opacity-90 hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.45)]"
           )}
         >
           Scan Document with AI
