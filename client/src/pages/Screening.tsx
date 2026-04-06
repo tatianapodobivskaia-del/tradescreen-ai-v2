@@ -16,6 +16,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Languages,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
@@ -740,6 +741,25 @@ function aiDeepAnalysisActionDisplay(action: string): string {
   return a || "—";
 }
 
+function aiAssessmentLabel(truePositive: boolean): string {
+  return truePositive ? "True Positive" : "False Positive";
+}
+
+/** Hardcoded transliteration hints for demo entities; Latin-only otherwise */
+function transliterationLineForVendor(vendorName: string): string {
+  const compact = vendorName.trim().toLowerCase().replace(/\s+/g, "");
+  if (compact.includes("sberbank")) {
+    return "Сбербанк → Sberbank, Sbierbank, Sbyerbank (+1 more) — matched across 4 lists";
+  }
+  if (compact.includes("rosoboronexport")) {
+    return "Рособоронэкспорт → Rosoboronexport, Rosoboroneksport, Rosoboronèksport (+2 more) — matched across 4 lists";
+  }
+  if (compact.includes("gazprombank")) {
+    return "Газпромбанк → Gazprombank, Gazprombank, Hazprombank (+1 more) — matched across 4 lists";
+  }
+  return "No Cyrillic input detected — screened as Latin only across 4 lists — no matches";
+}
+
 function auditBulletsFromAI(r: NormalizedAIResult): string[] {
   const chunks: string[] = [];
   if (r.reasoning && r.reasoning !== "—") {
@@ -852,7 +872,10 @@ function buildComplianceAuditLines(
   return lines;
 }
 
-function buildComplianceEmailDraftContent(rows: BatchScreenRow[]): {
+function buildComplianceEmailDraftContent(
+  rows: BatchScreenRow[],
+  aiResults: NormalizedAIResult[] | null
+): {
   subject: string;
   body: string;
   fullText: string;
@@ -897,6 +920,28 @@ function buildComplianceEmailDraftContent(rows: BatchScreenRow[]): {
 
   const entitiesSection = highEntityLines.length > 0 ? highEntityLines.join("\n") : "- None";
 
+  let aiSummarySection = "";
+  if (aiResults?.length) {
+    const aiLines: string[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      const aiRow = aiForBatchRow(rows[i], i, aiResults);
+      if (!aiRow) continue;
+      const riskU = (aiRow.risk_level || "LOW").toUpperCase();
+      const actionDisp = aiDeepAnalysisActionDisplay(aiRow.action);
+      const assess = aiAssessmentLabel(aiRow.true_positive);
+      const reasonOneLine = aiRow.reasoning.replace(/\s+/g, " ").trim();
+      aiLines.push(
+        `- ${aiRow.vendor_name}: ${assess}; AI risk ${riskU}; Action ${actionDisp}; Confidence ${aiRow.confidence}% — ${reasonOneLine}`
+      );
+    }
+    if (aiLines.length > 0) {
+      aiSummarySection = `
+
+AI Deep Analysis summary (Azure OpenAI GPT-4o):
+${aiLines.join("\n")}`;
+    }
+  }
+
   const body = `Dear Compliance Team,
 
 Please find the summary of the automated sanctions screening performed on ${screeningDate} via TradeScreen AI.
@@ -905,7 +950,7 @@ Screening Summary:
 - Total Vendors Screened: ${rows.length}
 - High Risk (BLOCK): ${high}
 - Medium Risk (REVIEW): ${medium}
-- Low Risk (APPROVE): ${low}
+- Low Risk (APPROVE): ${low}${aiSummarySection}
 
 Entities Requiring Immediate Action:
 ${entitiesSection}
@@ -943,10 +988,7 @@ function generateSanctionsScreeningPdfBlob(
   const risks = rows.map((r) => r.screeningResults.risk);
   const bodyRows = rows.map((batchRow, i) => {
     const sr = batchRow.screeningResults;
-    const aiRow = aiForBatchRow(batchRow, i, aiResults);
-    const { label: actionLabel } = aiRow
-      ? normalizeActionDisplay(aiRow.action, aiRow.risk_level)
-      : complianceActionFromRisk(sr.risk);
+    const { label: actionLabel } = complianceActionFromRisk(sr.risk);
     return [
       batchRow.screenInput.vendorName,
       batchRow.screenInput.country || "—",
@@ -1049,6 +1091,55 @@ function generateSanctionsScreeningPdfBlob(
       y = margin;
     }
   };
+
+  if (aiResults?.length) {
+    ensureSpace(32);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text("AI Deep Analysis", margin, y);
+    y += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    for (let i = 0; i < rows.length; i++) {
+      const aiRow = aiForBatchRow(rows[i], i, aiResults);
+      if (!aiRow) continue;
+      const assess = aiAssessmentLabel(aiRow.true_positive);
+      ensureSpace(40);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(aiRow.vendor_name, margin, y);
+      y += 12;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(45, 45, 45);
+      for (const wline of doc.splitTextToSize(`Assessment: ${assess}`, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      doc.setFont("courier", "normal");
+      doc.setFontSize(8);
+      for (const wline of doc.splitTextToSize(`Confidence: ${aiRow.confidence}%`, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("Reasoning:", margin, y);
+      y += 9;
+      doc.setFont("helvetica", "normal");
+      for (const wline of doc.splitTextToSize(aiRow.reasoning, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      y += 8;
+    }
+    doc.setTextColor(0, 0, 0);
+  }
 
   ensureSpace(28);
   doc.setFont("helvetica", "bold");
@@ -1258,8 +1349,9 @@ export default function Screening() {
   }, [filteredBatchRows, batchTableSearch]);
 
   const complianceEmailDraft = useMemo(
-    () => (batchScreeningRows?.length ? buildComplianceEmailDraftContent(batchScreeningRows) : null),
-    [batchScreeningRows]
+    () =>
+      batchScreeningRows?.length ? buildComplianceEmailDraftContent(batchScreeningRows, aiResults) : null,
+    [batchScreeningRows, aiResults]
   );
 
   useEffect(() => {
@@ -1283,10 +1375,16 @@ export default function Screening() {
       "Action",
       "SCR ID",
       "Audited At",
+      "AI_Assessment",
+      "AI_Risk",
+      "AI_Action",
+      "AI_Confidence",
+      "AI_Reasoning",
     ];
-    const lines = batchScreeningRows.map((row) => {
+    const lines = batchScreeningRows.map((row, i) => {
       const sr = row.screeningResults;
       const action = complianceActionFromRisk(sr.risk).label;
+      const ai = aiForBatchRow(row, i, aiResults);
       return [
         escapeCsvCell(row.screenInput.vendorName),
         escapeCsvCell(row.screenInput.country),
@@ -1298,6 +1396,11 @@ export default function Screening() {
         escapeCsvCell(action),
         escapeCsvCell(row.auditId),
         escapeCsvCell(row.auditedAt),
+        escapeCsvCell(ai ? aiAssessmentLabel(ai.true_positive) : "—"),
+        escapeCsvCell(ai ? (ai.risk_level || "—").toUpperCase() : "—"),
+        escapeCsvCell(ai ? aiDeepAnalysisActionDisplay(ai.action) : "—"),
+        escapeCsvCell(ai ? String(ai.confidence) : "—"),
+        escapeCsvCell(ai ? ai.reasoning.replace(/\r\n|\n|\r/g, " ") : "—"),
       ].join(",");
     });
     const csv = `\uFEFF${[header.join(","), ...lines].join("\n")}`;
@@ -1308,7 +1411,7 @@ export default function Screening() {
     a.download = `batch-screening-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [batchScreeningRows]);
+  }, [batchScreeningRows, aiResults]);
 
   const handleBatchPdfReport = useCallback(() => {
     if (!batchScreeningRows?.length) return;
@@ -1442,6 +1545,7 @@ export default function Screening() {
     setBatchScreeningRows(null);
     setBatchDetailsExpanded(false);
     setAiError(null);
+    setAiResults(null);
     if (uploadInputRef.current) uploadInputRef.current.value = "";
   }, []);
 
@@ -1568,6 +1672,9 @@ export default function Screening() {
       setAiLoading(false);
     }
   }, [batchScreeningRows, screeningResults, lastScreenInput]);
+
+  const canRunAi = Boolean(screeningResults || (batchScreeningRows && batchScreeningRows.length > 0));
+  const aiAnalysisComplete = Boolean(!aiLoading && aiResults && aiResults.length > 0 && canRunAi);
 
   return (
     <div className="space-y-8">
@@ -2096,7 +2203,7 @@ export default function Screening() {
                                 aiRow.true_positive ? "text-red-700" : "text-emerald-700"
                               )}
                             >
-                              {aiRow.true_positive ? "TRUE_POSITIVE" : "FALSE_POSITIVE"}
+                              {aiAssessmentLabel(aiRow.true_positive)}
                             </span>
                             <span className="text-slate-500 font-body">— Confidence:</span>
                             <span className="font-mono text-sm font-semibold tabular-nums text-slate-900">
@@ -2118,6 +2225,10 @@ export default function Screening() {
                           </p>
                           <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-800 font-body">
                             {aiRow.reasoning}
+                          </div>
+                          <div className="mt-3 flex gap-2 text-xs text-slate-500">
+                            <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                            <p className="font-mono leading-relaxed">{transliterationLineForVendor(aiRow.vendor_name)}</p>
                           </div>
                           <p className="mt-3 text-xs text-slate-400 font-body">
                             Lists checked: OFAC+EU+UN+UK
@@ -2284,22 +2395,30 @@ export default function Screening() {
 
           <button
             type="button"
-            disabled={
-              aiLoading ||
-              (!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0))
-            }
+            disabled={aiLoading || !canRunAi || aiAnalysisComplete}
             onClick={() => void handleRunAI()}
             className={cn(
-              "mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm transition-colors",
-              aiLoading || (!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0))
-                ? "cursor-not-allowed border border-slate-200 bg-slate-50 font-semibold text-slate-400"
-                : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400"
+              "mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm transition-colors border",
+              aiAnalysisComplete &&
+                "cursor-not-allowed border-slate-200 bg-slate-100 font-semibold text-slate-400",
+              !aiAnalysisComplete &&
+                (aiLoading || !canRunAi) &&
+                "cursor-not-allowed border-slate-200 bg-slate-50 font-semibold text-slate-400",
+              !aiAnalysisComplete &&
+                !aiLoading &&
+                canRunAi &&
+                "border-transparent bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400"
             )}
           >
             {aiLoading ? (
               <>
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={2} aria-hidden />
                 <span>Analyzing with GPT-4o...</span>
+              </>
+            ) : aiAnalysisComplete ? (
+              <>
+                <CheckCircle className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={2} aria-hidden />
+                <span>AI Analysis Complete</span>
               </>
             ) : (
               "Run AI Deep Analysis"
@@ -2343,7 +2462,7 @@ export default function Screening() {
                             : "border-emerald-400 bg-emerald-100 text-emerald-900"
                         )}
                       >
-                        {r.true_positive ? "TRUE POSITIVE" : "FALSE POSITIVE"}
+                        {aiAssessmentLabel(r.true_positive)}
                       </span>
                     </div>
                     <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
@@ -2371,6 +2490,10 @@ export default function Screening() {
                     <div className="mt-5 rounded-lg border border-slate-200/90 bg-white/90 p-4">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">AI reasoning</p>
                       <p className="mt-2 text-sm leading-relaxed text-slate-800 font-body">{r.reasoning}</p>
+                    </div>
+                    <div className="mt-3 flex gap-2 text-xs text-slate-500">
+                      <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                      <p className="font-mono leading-relaxed">{transliterationLineForVendor(r.vendor_name)}</p>
                     </div>
                     {r.compliance_note ? (
                       <div className="mt-4 rounded-lg border border-slate-200 bg-white/80 p-4">
