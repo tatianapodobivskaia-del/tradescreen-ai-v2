@@ -811,21 +811,6 @@ function aiActionSolidBadgeClasses(action: string): string {
   return "border-transparent bg-slate-600 text-white";
 }
 
-/** Hardcoded transliteration hints for demo entities; Latin-only otherwise */
-function transliterationLineForVendor(vendorName: string): string {
-  const compact = vendorName.trim().toLowerCase().replace(/\s+/g, "");
-  if (compact.includes("sberbank")) {
-    return "Сбербанк → Sberbank, Sbierbank, Sbyerbank (+1 more) — matched across 4 lists";
-  }
-  if (compact.includes("rosoboronexport")) {
-    return "Рособоронэкспорт → Rosoboronexport, Rosoboroneksport, Rosoboronèksport (+2 more) — matched across 4 lists";
-  }
-  if (compact.includes("gazprombank")) {
-    return "Газпромбанк → Gazprombank, Gazprombank, Hazprombank (+1 more) — matched across 4 lists";
-  }
-  return "No Cyrillic input detected — screened as Latin only across 4 lists — no matches";
-}
-
 function auditBulletsFromAI(r: NormalizedAIResult): string[] {
   const chunks: string[] = [];
   if (r.reasoning && r.reasoning !== "—") {
@@ -1249,6 +1234,19 @@ function generateSanctionsScreeningPdfBlob(
       y += 9;
       doc.setFont("helvetica", "normal");
       for (const wline of doc.splitTextToSize(aiRow.reasoning, maxW)) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+      const screeningBatchRow = rows[i];
+      const ti = screeningBatchRow.screeningResults.transliterationInfo;
+      const transLine = ti
+        ? `Cyrillic variants: ${ti.original} → ${ti.iso9}, ${ti.icao}, ${ti.bgn}, ${ti.informal} — screened across 4 lists`
+        : "Latin input — direct screening across 4 lists";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(45, 45, 45);
+      for (const wline of doc.splitTextToSize(transLine, maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
         y += 10;
@@ -2169,9 +2167,9 @@ export default function Screening() {
                               <div>{batchRow.screenInput.vendorName}</div>
                               {sr.transliterationInfo ? (
                                 <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
-                                  Cyrillic: {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9} (ISO 9),{" "}
-                                  {sr.transliterationInfo.icao} (ICAO), {sr.transliterationInfo.bgn} (BGN),{" "}
-                                  {sr.transliterationInfo.informal} (Informal)
+                                  {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9},{" "}
+                                  {sr.transliterationInfo.icao}, {sr.transliterationInfo.bgn},{" "}
+                                  {sr.transliterationInfo.informal}
                                 </p>
                               ) : null}
                             </td>
@@ -2301,10 +2299,18 @@ export default function Screening() {
                           <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-800 font-body">
                             {aiRow.reasoning}
                           </div>
-                          <div className="mt-3 flex gap-2 text-xs text-slate-500">
-                            <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                            <p className="font-mono leading-relaxed">{transliterationLineForVendor(aiRow.vendor_name)}</p>
-                          </div>
+                          {batchRow.screeningResults.transliterationInfo ? (
+                            <div className="mt-3 flex gap-2 text-xs text-slate-500">
+                              <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                              <p className="font-mono leading-relaxed">
+                                {batchRow.screeningResults.transliterationInfo.original} →{" "}
+                                {batchRow.screeningResults.transliterationInfo.iso9},{" "}
+                                {batchRow.screeningResults.transliterationInfo.icao},{" "}
+                                {batchRow.screeningResults.transliterationInfo.bgn},{" "}
+                                {batchRow.screeningResults.transliterationInfo.informal} — screened across 4 lists
+                              </p>
+                            </div>
+                          ) : null}
                           <p className="mt-3 text-xs text-slate-400 font-body">
                             Lists checked: OFAC+EU+UN+UK
                           </p>
@@ -2576,10 +2582,17 @@ export default function Screening() {
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">AI reasoning</p>
                       <p className="mt-2 text-sm leading-relaxed text-slate-800 font-body">{r.reasoning}</p>
                     </div>
-                    <div className="mt-3 flex gap-2 text-xs text-slate-500">
-                      <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                      <p className="font-mono leading-relaxed">{transliterationLineForVendor(r.vendor_name)}</p>
-                    </div>
+                    {screeningResults?.transliterationInfo ? (
+                      <div className="mt-3 flex gap-2 text-xs text-slate-500">
+                        <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                        <p className="font-mono leading-relaxed">
+                          {screeningResults.transliterationInfo.original} →{" "}
+                          {screeningResults.transliterationInfo.iso9}, {screeningResults.transliterationInfo.icao},{" "}
+                          {screeningResults.transliterationInfo.bgn}, {screeningResults.transliterationInfo.informal} —
+                          screened across 4 lists
+                        </p>
+                      </div>
+                    ) : null}
                     {r.compliance_note ? (
                       <div className="mt-4 rounded-lg border border-slate-200 bg-white/80 p-4">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Compliance note</p>
