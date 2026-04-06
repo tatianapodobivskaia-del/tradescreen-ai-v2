@@ -191,26 +191,61 @@ type ScoreBreakdown = {
 };
 
 function buildScoreBreakdown(
-  input: { country: string; amount: string; docType: string },
-  compositeScore: number
+  nameScore: number,
+  countryScore: number,
+  amountScore: number,
+  docScore: number,
+  compositeTotal: number
 ): ScoreBreakdown {
-  const total = compositeScore;
-  const hasC = input.country.trim().length > 0;
-  const hasA = input.amount.trim().length > 0;
-  const hasD = input.docType.trim().length > 0;
-  const name = Math.min(100, Math.round(total * 0.58));
-  const country = hasC ? Math.min(100, Math.round(total * 0.18)) : 0;
-  const amount = hasA ? Math.min(100, Math.round(total * 0.12)) : 0;
-  const doc = hasD ? Math.min(100, Math.round(total * 0.12)) : 0;
-  const sum = name + country + amount + doc;
-  const adj = sum > 0 ? (total / sum) : 1;
   return {
-    name: Math.round(name * adj),
-    country: Math.round(country * adj),
-    amount: Math.round(amount * adj),
-    doc: Math.round(doc * adj),
-    total,
+    name: Math.round(Math.min(100, nameScore)),
+    country: Math.round(Math.min(100, countryScore)),
+    amount: Math.round(Math.min(100, amountScore)),
+    doc: Math.round(Math.min(100, docScore)),
+    total: compositeTotal,
   };
+}
+
+/** High-risk jurisdictions (OFAC-style) — boosts composite when country matches */
+function highRiskJurisdiction(country: string): boolean {
+  const c = country.trim().toLowerCase();
+  if (!c) return false;
+  if (c.includes("russia") || c.includes("russian federation")) return true;
+  if (c === "iran" || c.includes("iran,") || c.endsWith(" iran") || c.startsWith("iran ")) return true;
+  if (c.includes("north korea") || c.includes("korea, north") || c === "dprk") return true;
+  if (c.includes("syria") && !c.includes("australia")) return true;
+  if (c.includes("cuba") && c.length < 20) return true;
+  return false;
+}
+
+function countryRiskScore(country: string): number {
+  if (!country.trim()) return 0;
+  if (highRiskJurisdiction(country)) return 92;
+  return 22;
+}
+
+function amountRiskScore(amountStr: string): number {
+  const n = parseAmountUsd(amountStr);
+  if (n <= 0) return 0;
+  if (n > 50_000) return Math.min(100, Math.round(55 + Math.log10(n / 50_000) * 25));
+  return Math.round(30 + (n / 50_000) * 35);
+}
+
+function docRiskScore(docType: string): number {
+  const d = docType.trim();
+  if (!d) return 0;
+  return Math.min(100, 68 + Math.min(12, Math.floor(d.length / 25)));
+}
+
+function formatUsdDisplay(raw: string): string {
+  const n = parseAmountUsd(raw);
+  if (!raw.trim() && n <= 0) return "—";
+  if (n <= 0) return raw.trim() || "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
 type ScreeningResultsState = {
@@ -252,13 +287,24 @@ function runClientScreening(input: {
     };
   });
 
-  const compositeScore = Math.max(...listHits.map((h) => h.similarity), 0);
+  const nameScore = Math.max(...listHits.map((h) => h.similarity), 0);
+  const countryScore = countryRiskScore(input.country);
+  const amountScore = amountRiskScore(input.amount);
+  const docScore = docRiskScore(input.docType);
+
+  let compositeScore: number;
+  if (highRiskJurisdiction(input.country)) {
+    compositeScore = Math.min(100, Math.round(0.12 * nameScore + 0.88 * countryScore));
+  } else {
+    compositeScore = Math.min(
+      100,
+      Math.round(nameScore * 0.38 + countryScore * 0.22 + amountScore * 0.2 + docScore * 0.2)
+    );
+  }
+
   const bestHit = listHits.reduce((a, b) => (b.similarity > a.similarity ? b : a), listHits[0]);
   const bestMatch = bestHit.similarity >= 45 ? bestHit.matchedEntity : "No strong list match";
-  const scoreBreakdown = buildScoreBreakdown(
-    { country: input.country, amount: input.amount, docType: input.docType },
-    compositeScore
-  );
+  const scoreBreakdown = buildScoreBreakdown(nameScore, countryScore, amountScore, docScore, compositeScore);
 
   return {
     listHits,
@@ -365,13 +411,27 @@ function mapHeaderToIndices(headers: string[]): {
       doc = i;
     }
   }
+  if (doc < 0) {
+    for (let i = 0; i < norm.length; i++) {
+      const h = norm[i];
+      if (
+        h.includes("document_type") ||
+        (h.includes("document") && !h.includes("vendor")) ||
+        h.endsWith("_doc") ||
+        h === "doc_type"
+      ) {
+        doc = i;
+        break;
+      }
+    }
+  }
   if (vendor < 0) return null;
   return { vendor, country, amount, doc };
 }
 
 function buildParsedRowsFromHeaderTable(rows: string[][]): ParsedUploadRow[] | null {
   if (rows.length < 2) return null;
-  const headers = rows[0].map((c) => String(c ?? ""));
+  const headers = rows[0].map((c) => String(c ?? "").replace(/^\uFEFF/, ""));
   const idx = mapHeaderToIndices(headers);
   if (!idx) return null;
   const out: ParsedUploadRow[] = [];
@@ -577,12 +637,6 @@ function generateAuditId(): string {
   return `SCR-2026-${part}`;
 }
 
-function formatAuditFooter(auditId: string, iso: string): string {
-  const d = new Date(iso);
-  const ts = d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "medium" });
-  return `${auditId} | ${ts}`;
-}
-
 function complianceActionFromRisk(risk: "HIGH" | "MEDIUM" | "LOW"): { label: string; badge: "HIGH" | "MEDIUM" | "LOW" } {
   if (risk === "HIGH") return { label: "BLOCK", badge: "HIGH" };
   if (risk === "MEDIUM") return { label: "REVIEW", badge: "MEDIUM" };
@@ -719,6 +773,55 @@ export default function Screening() {
     if (batchRiskFilter === "ALL") return batchScreeningRows;
     return batchScreeningRows.filter((r) => r.screeningResults.risk === batchRiskFilter);
   }, [batchScreeningRows, batchRiskFilter]);
+
+  const escapeCsvCell = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
+
+  const handleBatchExportCsv = useCallback(() => {
+    if (!batchScreeningRows?.length) return;
+    const header = [
+      "Vendor",
+      "Country",
+      "Amount",
+      "Document",
+      "SDN Match",
+      "Composite Score",
+      "Risk",
+      "Action",
+      "SCR ID",
+      "Audited At",
+    ];
+    const lines = batchScreeningRows.map((row, i) => {
+      const sr = row.screeningResults;
+      const ai = aiForBatchRow(row, i, aiResults);
+      const action = ai
+        ? normalizeActionDisplay(ai.action, ai.risk_level).label
+        : complianceActionFromRisk(sr.risk).label;
+      return [
+        escapeCsvCell(row.screenInput.vendorName),
+        escapeCsvCell(row.screenInput.country),
+        escapeCsvCell(row.screenInput.amount),
+        escapeCsvCell(row.screenInput.docType),
+        escapeCsvCell(sr.bestMatch),
+        escapeCsvCell(String(sr.compositeScore)),
+        escapeCsvCell(sr.risk),
+        escapeCsvCell(action),
+        escapeCsvCell(row.auditId),
+        escapeCsvCell(row.auditedAt),
+      ].join(",");
+    });
+    const csv = `\uFEFF${[header.join(","), ...lines].join("\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `batch-screening-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [batchScreeningRows, aiResults]);
+
+  const handleBatchPdfReport = useCallback(() => {
+    window.print();
+  }, []);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
@@ -1143,23 +1246,35 @@ export default function Screening() {
           </p>
         ) : batchScreeningRows && batchScreeningRows.length > 0 ? (
           <div className="mt-4 space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-6">
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 shadow-md ring-1 ring-slate-200/80">
               <h3 className="text-lg font-bold font-display text-slate-900">
                 {batchScreeningRows.length} vendors screened
               </h3>
-              <div className="mt-4 space-y-3 text-sm text-slate-800 font-body">
-                <p>
-                  <span className="font-bold font-display text-red-700">HIGH RISK ({batchRiskCounts.high}):</span>{" "}
-                  <span>{batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : "—"}</span>
-                </p>
-                <p>
-                  <span className="font-bold font-display text-amber-800">MEDIUM ({batchRiskCounts.medium}):</span>{" "}
-                  <span>{batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : "—"}</span>
-                </p>
-                <p>
-                  <span className="font-bold font-display text-emerald-800">LOW/CLEAR ({batchRiskCounts.low}):</span>{" "}
-                  <span>{batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : "—"}</span>
-                </p>
+              <div className="mt-4 flex flex-col gap-3">
+                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-red-100 bg-red-50/60 p-3">
+                  <span className="shrink-0 rounded-md border border-red-200 bg-red-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-red-900">
+                    HIGH RISK ({batchRiskCounts.high})
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
+                    {batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : "—"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-amber-100 bg-amber-50/60 p-3">
+                  <span className="shrink-0 rounded-md border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-amber-950">
+                    MEDIUM ({batchRiskCounts.medium})
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
+                    {batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : "—"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
+                  <span className="shrink-0 rounded-md border border-emerald-200 bg-emerald-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-emerald-900">
+                    LOW/CLEAR ({batchRiskCounts.low})
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
+                    {batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : "—"}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
@@ -1172,41 +1287,59 @@ export default function Screening() {
 
             {batchDetailsExpanded ? (
               <>
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
-                      { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
-                      { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
-                      { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
-                    ] as const
-                  ).map((tab) => {
-                    const count =
-                      tab.key === "ALL"
-                        ? batchRiskCounts.all
-                        : tab.key === "HIGH"
-                          ? batchRiskCounts.high
-                          : tab.key === "MEDIUM"
-                            ? batchRiskCounts.medium
-                            : batchRiskCounts.low;
-                    const active = batchRiskFilter === tab.key;
-                    return (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => setBatchRiskFilter(tab.key)}
-                        className={cn(
-                          "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
-                          active
-                            ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
-                            : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
-                        )}
-                      >
-                        <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
-                        {tab.label} ({count})
-                      </button>
-                    );
-                  })}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
+                        { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
+                        { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
+                        { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
+                      ] as const
+                    ).map((tab) => {
+                      const count =
+                        tab.key === "ALL"
+                          ? batchRiskCounts.all
+                          : tab.key === "HIGH"
+                            ? batchRiskCounts.high
+                            : tab.key === "MEDIUM"
+                              ? batchRiskCounts.medium
+                              : batchRiskCounts.low;
+                      const active = batchRiskFilter === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          type="button"
+                          onClick={() => setBatchRiskFilter(tab.key)}
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
+                            active
+                              ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
+                              : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                          )}
+                        >
+                          <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
+                          {tab.label} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleBatchPdfReport}
+                      className="rounded-lg border-2 border-red-600 bg-white px-3 py-2 text-xs font-bold font-display uppercase tracking-wide text-red-700 shadow-sm transition-colors hover:bg-red-50"
+                    >
+                      PDF Report
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBatchExportCsv}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold font-display uppercase tracking-wide text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                    >
+                      Export CSV
+                    </button>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -1248,7 +1381,7 @@ export default function Screening() {
                             <td className="px-3 py-3 font-semibold text-slate-900">{batchRow.screenInput.vendorName}</td>
                             <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.country || "—"}</td>
                             <td className="px-3 py-3 font-mono tabular-nums text-slate-800">
-                              {batchRow.screenInput.amount || "—"}
+                              {formatUsdDisplay(batchRow.screenInput.amount)}
                             </td>
                             <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.docType || "—"}</td>
                             <td className="max-w-[180px] px-3 py-3 font-data text-[11px] text-slate-900">
@@ -1291,11 +1424,6 @@ export default function Screening() {
                             </td>
                             <td className="whitespace-nowrap px-3 py-3 font-mono text-[10px] text-slate-700">
                               {batchRow.auditId}
-                            </td>
-                          </tr>
-                          <tr className="bg-slate-50/90">
-                            <td colSpan={9} className="border-b border-slate-200 px-3 py-2 font-mono text-[10px] text-slate-500">
-                              {formatAuditFooter(batchRow.auditId, batchRow.auditedAt)}
                             </td>
                           </tr>
                         </Fragment>
