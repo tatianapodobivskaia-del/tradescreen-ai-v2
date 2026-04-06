@@ -1,5 +1,66 @@
 const AZURE_API = "https://trade-compliance-screening-hscyeycsckc3avay.eastus-01.azurewebsites.net/api";
 
+const SCREEN_REQUEST_TIMEOUT_MS = 90_000;
+
+/** Payload for POST /api/screen (sanctions list screening). */
+export type ScreenVendorPayload = {
+  name: string;
+  country: string;
+  amount: number;
+  doc: string;
+  cyrillic: string;
+  sdn_match: string;
+  fuzzy_score: number;
+  pattern_risk: string;
+  sdn_score: number;
+  risk: string;
+};
+
+/** One vendor row returned from live sanctions screening. */
+export type ScreenVendorApiResult = {
+  vendor: string;
+  assessment: string;
+  risk: string;
+  action: string;
+  reasoning: string;
+  lists_checked?: string;
+};
+
+/** Live Azure sanctions screening against full list (~45K entities). */
+export async function postSanctionsScreen(vendors: ScreenVendorPayload[]): Promise<{
+  status: string;
+  results: ScreenVendorApiResult[];
+  lists_screened?: string[];
+  total_entities?: number;
+}> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), SCREEN_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${AZURE_API}/screen`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vendors }),
+      mode: "cors",
+      credentials: "omit",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`API error ${response.status}: ${text}`);
+    }
+
+    return response.json() as Promise<{
+      status: string;
+      results: ScreenVendorApiResult[];
+      lists_screened?: string[];
+      total_entities?: number;
+    }>;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 // AI Deep Analysis — sends flagged vendors for GPT-4o analysis
 export async function runAIDeepAnalysis(
   vendors: Array<{

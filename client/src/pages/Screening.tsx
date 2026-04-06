@@ -37,7 +37,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { runAIDeepAnalysis } from "../lib/api";
+import {
+  runAIDeepAnalysis,
+  postSanctionsScreen,
+  type ScreenVendorPayload,
+  type ScreenVendorApiResult,
+} from "../lib/api";
 import {
   isCyrillic,
   generateAllVariants,
@@ -380,6 +385,21 @@ type ScreeningResultsState = {
   bestMatch: string;
   scoreBreakdown: ScoreBreakdown;
   transliterationInfo: null | TransliterationScreeningInfo;
+  /** Populated when Azure /api/screen returns a match assessment */
+  remote?: {
+    assessment: string;
+    action: string;
+    reasoning: string;
+    listsChecked: string;
+  };
+};
+
+type ScreenPipelineInput = {
+  vendorName: string;
+  country: string;
+  amount: string;
+  docType: string;
+  cyrillicName: string;
 };
 
 function runClientScreening(input: {
@@ -448,6 +468,75 @@ function runClientScreening(input: {
 function parseAmountUsd(raw: string): number {
   const n = parseFloat(raw.replace(/[$,\s]/g, ""));
   return Number.isFinite(n) ? n : 0;
+}
+
+function buildVendorPayloadForAzure(input: ScreenPipelineInput, local: ScreeningResultsState): ScreenVendorPayload {
+  const topHit = local.listHits.reduce((a, b) => (b.similarity > a.similarity ? b : a), local.listHits[0]);
+  const sdnScore = Math.round(topHit?.similarity ?? 0);
+  return {
+    name: input.vendorName,
+    country: input.country.trim() || "—",
+    amount: parseAmountUsd(input.amount),
+    doc: input.docType.trim() || "—",
+    cyrillic: input.cyrillicName.trim() || "—",
+    sdn_match: local.bestMatch === "No strong list match" ? "None" : local.bestMatch,
+    fuzzy_score: local.compositeScore,
+    pattern_risk: local.risk,
+    sdn_score: sdnScore,
+    risk: local.risk,
+  };
+}
+
+function matchScreenApiResult(
+  results: ScreenVendorApiResult[] | undefined,
+  vendorName: string,
+  index?: number
+): ScreenVendorApiResult | undefined {
+  if (!results?.length) return undefined;
+  const key = vendorName.trim().toLowerCase();
+  const exact = results.find((r) => (r.vendor ?? "").trim().toLowerCase() === key);
+  if (exact) return exact;
+  if (index !== undefined && results[index]) return results[index];
+  return results.find((r) => key.includes((r.vendor ?? "").trim().toLowerCase()));
+}
+
+function parseApiRiskFromScreen(risk: string): "HIGH" | "MEDIUM" | "LOW" {
+  const u = risk.trim().toUpperCase();
+  if (u === "HIGH" || u === "BLOCK") return "HIGH";
+  if (u === "MEDIUM" || u === "REVIEW" || u === "FLAG") return "MEDIUM";
+  return "LOW";
+}
+
+function compositeScoreFromApiRisk(risk: "HIGH" | "MEDIUM" | "LOW"): number {
+  if (risk === "HIGH") return 94;
+  if (risk === "MEDIUM") return 62;
+  return 28;
+}
+
+function mergeRemoteScreening(
+  local: ScreeningResultsState,
+  apiRow: ScreenVendorApiResult | undefined
+): ScreeningResultsState {
+  if (!apiRow) {
+    return { ...local, remote: undefined };
+  }
+  const risk = parseApiRiskFromScreen(apiRow.risk);
+  const compositeScore = compositeScoreFromApiRisk(risk);
+  return {
+    ...local,
+    risk,
+    compositeScore,
+    scoreBreakdown: {
+      ...local.scoreBreakdown,
+      total: compositeScore,
+    },
+    remote: {
+      assessment: apiRow.assessment,
+      action: apiRow.action,
+      reasoning: apiRow.reasoning,
+      listsChecked: apiRow.lists_checked ?? "OFAC+EU+UN+UK",
+    },
+  };
 }
 
 /** One row from an uploaded file (vendor + optional metadata columns) */
@@ -881,6 +970,18 @@ function buildComplianceAuditLines(
   nameScore: number
 ): { kind: ComplianceAuditLineKind; text: string }[] {
   const lines: { kind: ComplianceAuditLineKind; text: string }[] = [];
+
+  if (sr.remote) {
+    lines.push({
+      kind: "shield",
+      text: `Live list screening (${sr.remote.listsChecked}): ${sr.remote.assessment.replace(/_/g, " ")} — recommended action ${sr.remote.action}`,
+    });
+    lines.push({
+      kind: "arrow",
+      text: sr.remote.reasoning,
+    });
+  }
+
   const matchLabel =
     bestMatchEntity && bestMatchEntity !== "No strong list match" ? bestMatchEntity : "listed entity";
 
@@ -1432,6 +1533,8 @@ export default function Screening() {
   const [batchRiskFilter, setBatchRiskFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
   const [batchDetailsExpanded, setBatchDetailsExpanded] = useState(false);
   const [batchTableSearch, setBatchTableSearch] = useState("");
+  const [screeningRemoteLoading, setScreeningRemoteLoading] = useState(false);
+  const [screeningRemoteFallback, setScreeningRemoteFallback] = useState(false);
   const [emailDraftOpen, setEmailDraftOpen] = useState(false);
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const emailCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1610,7 +1713,7 @@ export default function Screening() {
   }, [complianceEmailDraft]);
 
   const handleScreen = useCallback(
-    (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
+    async (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
       const vn = (vendorNameOverride !== undefined ? vendorNameOverride : vendorName).trim();
       if (!vn) return;
       setBatchScreeningRows(null);
@@ -1622,15 +1725,30 @@ export default function Screening() {
         cyrillicName: cyrillicName.trim(),
       };
       setLastScreenInput(input);
-      setScreeningResults(runClientScreening(input));
       setAiResults(null);
       setAiError(null);
+      setScreeningRemoteLoading(true);
+      setScreeningRemoteFallback(false);
+      const local = runClientScreening(input);
+      try {
+        const data = await postSanctionsScreen([buildVendorPayloadForAzure(input, local)]);
+        const merged = mergeRemoteScreening(
+          local,
+          matchScreenApiResult(data.results, input.vendorName, 0)
+        );
+        setScreeningResults(merged);
+      } catch {
+        setScreeningRemoteFallback(true);
+        setScreeningResults(local);
+      } finally {
+        setScreeningRemoteLoading(false);
+      }
     },
     [vendorName, country, amount, docType, cyrillicName]
   );
 
   /** Manual entry: read live form values so country / amount / doc always feed the scoring pipeline */
-  const handleManualSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+  const handleManualSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const fd = new FormData(form);
@@ -1653,24 +1771,39 @@ export default function Screening() {
 
     setBatchScreeningRows(null);
     setLastScreenInput(input);
-    setScreeningResults(runClientScreening(input));
     setAiResults(null);
     setAiError(null);
+    setScreeningRemoteLoading(true);
+    setScreeningRemoteFallback(false);
+    const local = runClientScreening(input);
+    try {
+      const data = await postSanctionsScreen([buildVendorPayloadForAzure(input, local)]);
+      const merged = mergeRemoteScreening(
+        local,
+        matchScreenApiResult(data.results, input.vendorName, 0)
+      );
+      setScreeningResults(merged);
+    } catch {
+      setScreeningRemoteFallback(true);
+      setScreeningResults(local);
+    } finally {
+      setScreeningRemoteLoading(false);
+    }
   }, []);
 
-  const runUploadScreening = useCallback(() => {
+  const runUploadScreening = useCallback(async () => {
     if (!parsedUploadRows?.length) return;
     setBatchRiskFilter("ALL");
     if (parsedUploadRows.length === 1) {
       const first = applyUploadColumnDefaults(parsedUploadRows[0], missingColumns);
       setVendorName(first.vendorName);
       setBatchScreeningRows(null);
-      handleScreen(first.vendorName, first);
+      await handleScreen(first.vendorName, first);
       setUploadScreeningDone(true);
       return;
     }
     const auditedAt = new Date().toISOString();
-    const rows: BatchScreenRow[] = parsedUploadRows.map((row) => {
+    const baseRows: BatchScreenRow[] = parsedUploadRows.map((row) => {
       const normalized = applyUploadColumnDefaults(row, missingColumns);
       const screenInput = {
         vendorName: normalized.vendorName,
@@ -1686,7 +1819,25 @@ export default function Screening() {
         screeningResults: runClientScreening(screenInput),
       };
     });
-    setBatchScreeningRows(rows);
+    setScreeningRemoteLoading(true);
+    setScreeningRemoteFallback(false);
+    try {
+      const vendors = baseRows.map((r) => buildVendorPayloadForAzure(r.screenInput, r.screeningResults));
+      const data = await postSanctionsScreen(vendors);
+      const mergedRows = baseRows.map((br, i) => ({
+        ...br,
+        screeningResults: mergeRemoteScreening(
+          br.screeningResults,
+          matchScreenApiResult(data.results, br.screenInput.vendorName, i)
+        ),
+      }));
+      setBatchScreeningRows(mergedRows);
+    } catch {
+      setScreeningRemoteFallback(true);
+      setBatchScreeningRows(baseRows);
+    } finally {
+      setScreeningRemoteLoading(false);
+    }
     setBatchDetailsExpanded(false);
     setScreeningResults(null);
     setLastScreenInput(null);
@@ -1704,6 +1855,7 @@ export default function Screening() {
     setBatchDetailsExpanded(false);
     setAiError(null);
     setAiResults(null);
+    setScreeningRemoteFallback(false);
     if (uploadInputRef.current) uploadInputRef.current.value = "";
   }, []);
 
@@ -1714,6 +1866,7 @@ export default function Screening() {
       setScreeningResults(null);
       setLastScreenInput(null);
       setAiResults(null);
+      setScreeningRemoteFallback(false);
       setParsedUploadRows(null);
       setMissingColumns([]);
       setUploadScreeningDone(false);
@@ -1899,9 +2052,13 @@ export default function Screening() {
                 {!uploadScreeningDone && (
                   <button
                     type="button"
-                    onClick={runUploadScreening}
-                    className="btn-premium btn-premium-primary mt-5 text-sm"
+                    disabled={screeningRemoteLoading}
+                    onClick={() => void runUploadScreening()}
+                    className="btn-premium btn-premium-primary mt-5 inline-flex items-center gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    {screeningRemoteLoading ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={2} aria-hidden />
+                    ) : null}
                     Run Sanctions Screening
                   </button>
                 )}
@@ -1951,7 +2108,12 @@ export default function Screening() {
             )}
           </div>
         ) : (
-          <form className="space-y-6" onSubmit={handleManualSubmit}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              void handleManualSubmit(e);
+            }}
+          >
             <div className="space-y-2">
               <label
                 htmlFor="vendor-name"
@@ -2056,7 +2218,14 @@ export default function Screening() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button type="submit" className="btn-premium btn-premium-primary shrink-0 text-sm">
+              <button
+                type="submit"
+                disabled={screeningRemoteLoading}
+                className="btn-premium btn-premium-primary inline-flex shrink-0 items-center gap-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {screeningRemoteLoading ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={2} aria-hidden />
+                ) : null}
                 Screen This Vendor
               </button>
               <span className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
@@ -2070,6 +2239,13 @@ export default function Screening() {
       {/* Results + AI Deep Analysis */}
       <div className="premium-card rounded-xl p-8">
         <h2 className="text-base font-bold font-display text-slate-900">Screening results</h2>
+
+        {screeningRemoteFallback ? (
+          <div className="mt-4 flex gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 font-body">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" strokeWidth={2} aria-hidden />
+            <p>API unavailable — showing results from local demo dataset</p>
+          </div>
+        ) : null}
 
         {missingColumns.length > 0 && (
           <div className="mt-4 flex gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
