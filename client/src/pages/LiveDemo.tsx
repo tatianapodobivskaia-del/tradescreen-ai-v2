@@ -766,7 +766,7 @@ function PdfReportModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="absolute right-4 top-4 rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100"
           aria-label="Close dialog"
         >
           <X className="h-5 w-5" />
@@ -1043,7 +1043,7 @@ TradeScreen AI — Demo Export`;
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="absolute right-4 top-4 z-10 rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100"
           aria-label="Close dialog"
         >
           <X className="h-5 w-5" />
@@ -1347,7 +1347,7 @@ function ScenarioCard({
         <button
           type="button"
           onClick={resetDemo}
-          className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800 hover:text-white"
+          className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800"
         >
           Reset demo
         </button>
@@ -1362,7 +1362,7 @@ function ScenarioCard({
               className={cn(
                 "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
                 "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-                "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+                "transition-opacity duration-200 hover:opacity-90"
               )}
             >
               <Play className="h-4 w-4 fill-current" strokeWidth={2} />
@@ -1390,7 +1390,7 @@ function ScenarioCard({
               className={cn(
                 "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
                 "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-                "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+                "transition-opacity duration-200 hover:opacity-90"
               )}
             >
               Run AI Deep Analysis
@@ -1417,7 +1417,7 @@ function ScenarioCard({
               className={cn(
                 "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
                 "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-                "transition-[opacity,box-shadow] duration-200 hover:opacity-90 hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.45)]"
+                "transition-opacity duration-200 hover:opacity-90"
               )}
             >
               Scan Document with AI
@@ -1610,7 +1610,7 @@ function ScenarioCard({
                       <button
                         type="button"
                         onClick={() => setAnalysisExpanded(true)}
-                        className="mt-3 text-xs font-semibold text-amber-800 underline-offset-2 hover:underline"
+                        className="mt-3 text-xs font-semibold text-amber-800 underline-offset-2 transition-colors hover:bg-amber-100/50"
                       >
                         Show More ▼
                       </button>
@@ -1740,7 +1740,7 @@ export default function LiveDemo() {
               return next;
             });
           }}
-          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:border-cyan-300 hover:bg-amber-50/80 hover:text-amber-800"
+          className="absolute right-0 top-0 z-10 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-amber-50/80"
           title={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-label={soundOn ? "Mute sounds" : "Enable sounds"}
           aria-pressed={soundOn}
