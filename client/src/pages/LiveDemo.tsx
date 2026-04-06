@@ -1620,7 +1620,7 @@ function ScenarioCard({
                 )}
 
                 {(phase3 === "running" || phase3 === "complete") && phase2 === "complete" && (
-                  <div className="mt-6 w-full min-w-0 border-t border-slate-200 pt-6">
+                  <div className="mt-6 w-full min-h-[400px] min-w-0 border-t border-slate-200 pt-6">
                     <AgentPipeline
                       progress={agentProgress}
                       phases={phases}
