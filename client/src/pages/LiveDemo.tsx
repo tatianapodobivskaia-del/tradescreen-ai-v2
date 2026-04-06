@@ -1353,52 +1353,58 @@ function ScenarioCard({
         </button>
       </div>
 
-      {phase1 === "idle" && (
-        <button
-          type="button"
-          onClick={runPhase1}
-          className={cn(
-            "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+      {(phase1 === "idle" || phase1 === "running") && (
+        <div className="mt-4 flex min-h-[44px] w-full min-w-0 items-stretch justify-center sm:w-auto">
+          {phase1 === "idle" && (
+            <button
+              type="button"
+              onClick={runPhase1}
+              className={cn(
+                "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
+                "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+                "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+              )}
+            >
+              <Play className="h-4 w-4 fill-current" strokeWidth={2} />
+              Run Demo
+            </button>
           )}
-        >
-          <Play className="h-4 w-4 fill-current" strokeWidth={2} />
-          Run Demo
-        </button>
-      )}
-
-      {phase1 === "running" && (
-        <div
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-400 sm:w-auto sm:px-8"
-          aria-disabled
-        >
-          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-          Screening in progress…
+          {phase1 === "running" && (
+            <div
+              className="inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold font-display text-slate-400 sm:w-auto sm:px-8"
+              aria-disabled
+            >
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+              Screening in progress…
+            </div>
+          )}
         </div>
       )}
 
-      {phase1 === "complete" && phase2 === "idle" && (
-        <button
-          type="button"
-          onClick={runPhase2}
-          className={cn(
-            "mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
-            "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
-            "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+      {phase1 === "complete" && (phase2 === "idle" || phase2 === "running") && (
+        <div className="mt-4 flex min-h-[44px] w-full min-w-0 items-stretch justify-center sm:w-auto">
+          {phase2 === "idle" && (
+            <button
+              type="button"
+              onClick={runPhase2}
+              className={cn(
+                "inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold font-display sm:w-auto sm:px-8",
+                "bg-gradient-to-r from-[#06b6d4] to-[#22d3ee] text-slate-950 shadow-lg shadow-[#06b6d4]/25",
+                "transition-colors duration-200 hover:from-[#22d3ee] hover:to-[#22d3ee]"
+              )}
+            >
+              Run AI Deep Analysis
+            </button>
           )}
-        >
-          Run AI Deep Analysis
-        </button>
-      )}
-
-      {phase2 === "running" && (
-        <div
-          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold text-slate-400 sm:w-auto sm:px-8"
-          aria-disabled
-        >
-          <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-          Analyzing…
+          {phase2 === "running" && (
+            <div
+              className="inline-flex h-[44px] min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800 py-3 text-sm font-bold font-display text-slate-400 sm:w-auto sm:px-8"
+              aria-disabled
+            >
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+              Analyzing…
+            </div>
+          )}
         </div>
       )}
 
