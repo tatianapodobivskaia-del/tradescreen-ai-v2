@@ -49,7 +49,6 @@ import {
   expandScreeningNeedles,
   generateLatinVariants,
 } from "../lib/transliteration";
-import { watchlistEntities } from "@/lib/mockData";
 
 /** Full alphabetical country list (50+) */
 const COUNTRY_OPTIONS = [
@@ -161,60 +160,6 @@ const DOCUMENT_TYPES = [
 
 const LIST_LABELS = ["OFAC SDN", "EU Consolidated", "UN Security Council", "UK OFSI"] as const;
 
-function levenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  if (m === 0) return n;
-  if (n === 0) return m;
-  const row = Array.from({ length: n + 1 }, (_, j) => j);
-  for (let i = 1; i <= m; i++) {
-    let prev = row[0];
-    row[0] = i;
-    for (let j = 1; j <= n; j++) {
-      const cur = row[j];
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + cost);
-      prev = cur;
-    }
-  }
-  return row[n];
-}
-
-function fuzzyPercent(a: string, b: string): number {
-  const s1 = a.toLowerCase().trim();
-  const s2 = b.toLowerCase().trim();
-  if (!s1 || !s2) return 0;
-  const dist = levenshtein(s1, s2);
-  const maxLen = Math.max(s1.length, s2.length);
-  return Math.round((1 - dist / maxLen) * 100);
-}
-
-/** Best match score vs entity name/aliases — token + substring aware so short names (e.g. Sberbank) score ~100 vs full SDN strings */
-function maximumFuzzyScore(needle: string, candidate: string): number {
-  const n = needle.trim().toLowerCase();
-  const c = candidate.trim().toLowerCase();
-  if (!n || !c) return 0;
-  let best = fuzzyPercent(n, c);
-  if (c.includes(n) || n.includes(c)) {
-    best = Math.max(best, 98);
-  }
-  const compactN = n.replace(/\s+/g, "");
-  const compactC = c.replace(/\s+/g, "");
-  if (compactN.length >= 4 && (compactC.includes(compactN) || compactN.includes(compactC))) {
-    best = Math.max(best, 99);
-  }
-  const tokens = c.split(/[\s\-/,.]+/).filter((w) => w.length >= 2);
-  for (const tok of tokens) {
-    if (tok.length >= 3) {
-      best = Math.max(best, fuzzyPercent(n, tok));
-    }
-    if (tok.length >= 4 && (tok.startsWith(n) || n.startsWith(tok))) {
-      best = Math.max(best, 98);
-    }
-  }
-  return Math.min(100, best);
-}
-
 type TransliterationScreeningInfo = {
   variants: string[];
   standards: {
@@ -276,33 +221,6 @@ function ScreeningVariantsCollapsible({ info }: { info: TransliterationScreening
       ) : null}
     </details>
   );
-}
-
-function bestScoreAgainstEntity(
-  needles: string[],
-  entityName: string,
-  aliases: string[]
-): { score: number; matchedAs: string } {
-  let best = 0;
-  let matchedAs = entityName;
-  const candidates = [entityName, ...aliases];
-  for (const needle of needles) {
-    if (!needle.trim()) continue;
-    for (const c of candidates) {
-      const sc = maximumFuzzyScore(needle, c);
-      if (sc > best) {
-        best = sc;
-        matchedAs = c;
-      }
-    }
-  }
-  return { score: best, matchedAs };
-}
-
-function riskFromScore(score: number): "HIGH" | "MEDIUM" | "LOW" {
-  if (score >= 85) return "HIGH";
-  if (score >= 50) return "MEDIUM";
-  return "LOW";
 }
 
 type ListHitRow = {
@@ -402,102 +320,47 @@ type ScreenPipelineInput = {
   cyrillicName: string;
 };
 
-function runClientScreening(input: {
-  vendorName: string;
-  country: string;
-  amount: string;
-  docType: string;
-  cyrillicName: string;
-}): ScreeningResultsState {
+/** Unique name strings sent to POST /api/screen (original + transliteration / needle expansion). */
+function collectNamesForApiScreening(input: ScreenPipelineInput): {
+  names: string[];
+  transliterationInfo: TransliterationScreeningInfo | null;
+} {
   const { needles, transliterationInfo } = buildScreeningNeedlesAndTransliteration(
     input.vendorName,
     input.cyrillicName
   );
-
-  const listHits: ListHitRow[] = LIST_LABELS.map((list) => {
-    const inList = watchlistEntities.filter((e) => e.list === list);
-    let best = 0;
-    let bestEntity = "";
-    let bestName = "";
-    for (const e of inList) {
-      const { score, matchedAs } = bestScoreAgainstEntity(needles, e.name, e.aliases);
-      if (score > best) {
-        best = score;
-        bestEntity = e.name;
-        bestName = matchedAs;
-      }
-    }
-    const tier = riskFromScore(best);
-    return {
-      list,
-      matchedEntity: best >= 45 ? bestEntity : "—",
-      similarity: best,
-      tier: best >= 45 ? tier : "LOW",
-    };
-  });
-
-  const nameScore = Math.max(...listHits.map((h) => h.similarity), 0);
-  const countryScore = countryRiskScore(input.country);
-  const amountScore = amountRiskScore(input.amount);
-  const docScore = docRiskScore(input.docType);
-
-  let compositeScore: number;
-  if (highRiskJurisdiction(input.country)) {
-    compositeScore = Math.min(100, Math.round(0.12 * nameScore + 0.88 * countryScore));
-  } else {
-    compositeScore = Math.min(
-      100,
-      Math.round(nameScore * 0.38 + countryScore * 0.22 + amountScore * 0.2 + docScore * 0.2)
-    );
+  const set = new Set<string>();
+  for (const n of needles) {
+    const t = n.trim();
+    if (t) set.add(t);
   }
+  if (transliterationInfo) {
+    for (const v of transliterationInfo.variants) {
+      const t = v.trim();
+      if (t) set.add(t);
+    }
+  }
+  return { names: Array.from(set), transliterationInfo };
+}
 
-  const bestHit = listHits.reduce((a, b) => (b.similarity > a.similarity ? b : a), listHits[0]);
-  const bestMatch = bestHit.similarity >= 45 ? bestHit.matchedEntity : "No strong list match";
-  const scoreBreakdown = buildScoreBreakdown(nameScore, countryScore, amountScore, docScore, compositeScore);
-
+function buildMinimalVendorPayload(name: string, input: ScreenPipelineInput): ScreenVendorPayload {
   return {
-    listHits,
-    compositeScore,
-    risk: riskFromScore(compositeScore),
-    bestMatch,
-    scoreBreakdown,
-    transliterationInfo,
+    name,
+    country: input.country.trim() || "—",
+    amount: parseAmountUsd(input.amount),
+    doc: input.docType.trim() || "—",
+    cyrillic: input.cyrillicName.trim() || "",
+    sdn_match: "",
+    fuzzy_score: 0,
+    pattern_risk: "LOW",
+    sdn_score: 0,
+    risk: "LOW",
   };
 }
 
 function parseAmountUsd(raw: string): number {
   const n = parseFloat(raw.replace(/[$,\s]/g, ""));
   return Number.isFinite(n) ? n : 0;
-}
-
-function buildVendorPayloadForAzure(input: ScreenPipelineInput, local: ScreeningResultsState): ScreenVendorPayload {
-  const topHit = local.listHits.reduce((a, b) => (b.similarity > a.similarity ? b : a), local.listHits[0]);
-  const sdnScore = Math.round(topHit?.similarity ?? 0);
-  return {
-    name: input.vendorName,
-    country: input.country.trim() || "—",
-    amount: parseAmountUsd(input.amount),
-    doc: input.docType.trim() || "—",
-    cyrillic: input.cyrillicName.trim() || "—",
-    sdn_match: local.bestMatch === "No strong list match" ? "None" : local.bestMatch,
-    fuzzy_score: local.compositeScore,
-    pattern_risk: local.risk,
-    sdn_score: sdnScore,
-    risk: local.risk,
-  };
-}
-
-function matchScreenApiResult(
-  results: ScreenVendorApiResult[] | undefined,
-  vendorName: string,
-  index?: number
-): ScreenVendorApiResult | undefined {
-  if (!results?.length) return undefined;
-  const key = vendorName.trim().toLowerCase();
-  const exact = results.find((r) => (r.vendor ?? "").trim().toLowerCase() === key);
-  if (exact) return exact;
-  if (index !== undefined && results[index]) return results[index];
-  return results.find((r) => key.includes((r.vendor ?? "").trim().toLowerCase()));
 }
 
 function parseApiRiskFromScreen(risk: string): "HIGH" | "MEDIUM" | "LOW" {
@@ -513,29 +376,72 @@ function compositeScoreFromApiRisk(risk: "HIGH" | "MEDIUM" | "LOW"): number {
   return 28;
 }
 
-function mergeRemoteScreening(
-  local: ScreeningResultsState,
+function riskRank(r: "HIGH" | "MEDIUM" | "LOW"): number {
+  if (r === "HIGH") return 3;
+  if (r === "MEDIUM") return 2;
+  return 1;
+}
+
+function pickWorstRiskResult(rows: ScreenVendorApiResult[]): ScreenVendorApiResult | undefined {
+  if (!rows.length) return undefined;
+  let pick = rows[0];
+  let bestRank = riskRank(parseApiRiskFromScreen(pick.risk));
+  for (let i = 1; i < rows.length; i++) {
+    const rr = riskRank(parseApiRiskFromScreen(rows[i].risk));
+    if (rr > bestRank) {
+      bestRank = rr;
+      pick = rows[i];
+    }
+  }
+  return pick;
+}
+
+/** Per-list rows reflect unified API coverage (all four lists screened in one call). */
+function listHitsAllScreened(tier: "HIGH" | "MEDIUM" | "LOW"): ListHitRow[] {
+  return LIST_LABELS.map((list) => ({
+    list,
+    matchedEntity: "Screened",
+    similarity: 100,
+    tier,
+  }));
+}
+
+function buildScreeningResultsFromApi(
+  input: ScreenPipelineInput,
+  transliterationInfo: TransliterationScreeningInfo | null,
   apiRow: ScreenVendorApiResult | undefined
 ): ScreeningResultsState {
-  if (!apiRow) {
-    return { ...local, remote: undefined };
-  }
-  const risk = parseApiRiskFromScreen(apiRow.risk);
+  const risk = apiRow ? parseApiRiskFromScreen(apiRow.risk) : "LOW";
   const compositeScore = compositeScoreFromApiRisk(risk);
-  return {
-    ...local,
-    risk,
+  const countryScore = countryRiskScore(input.country);
+  const amountScore = amountRiskScore(input.amount);
+  const docScore = docRiskScore(input.docType);
+  const scoreBreakdown = buildScoreBreakdown(
     compositeScore,
-    scoreBreakdown: {
-      ...local.scoreBreakdown,
-      total: compositeScore,
-    },
-    remote: {
-      assessment: apiRow.assessment,
-      action: apiRow.action,
-      reasoning: apiRow.reasoning,
-      listsChecked: apiRow.lists_checked ?? "OFAC+EU+UN+UK",
-    },
+    countryScore,
+    amountScore,
+    docScore,
+    compositeScore
+  );
+  const listsChecked = apiRow?.lists_checked ?? "OFAC+EU+UN+UK";
+  const bestMatch = apiRow
+    ? `${apiRow.assessment.replace(/_/g, " ")} · ${listsChecked}`
+    : "—";
+  return {
+    listHits: listHitsAllScreened(risk),
+    compositeScore,
+    risk,
+    bestMatch,
+    scoreBreakdown,
+    transliterationInfo,
+    remote: apiRow
+      ? {
+          assessment: apiRow.assessment,
+          action: apiRow.action,
+          reasoning: apiRow.reasoning,
+          listsChecked,
+        }
+      : undefined,
   };
 }
 
@@ -931,12 +837,6 @@ function auditBulletsFromAI(r: NormalizedAIResult): string[] {
   return chunks.length ? chunks.slice(0, 8) : ["—"];
 }
 
-function fallbackAuditBullets(sr: ScreeningResultsState): string[] {
-  const top = sr.listHits.filter((h) => h.similarity >= 45).slice(0, 4);
-  if (top.length === 0) return ["No material list matches above screening threshold."];
-  return top.map((h) => `${h.list}: ${h.matchedEntity} (${h.similarity}% match).`);
-}
-
 function aiForBatchRow(
   batch: BatchScreenRow,
   index: number,
@@ -965,9 +865,7 @@ type ComplianceAuditLineKind = "alert" | "shield" | "arrow";
 
 function buildComplianceAuditLines(
   sr: ScreeningResultsState,
-  input: { country: string; amount: string },
-  bestMatchEntity: string,
-  nameScore: number
+  input: { country: string; amount: string }
 ): { kind: ComplianceAuditLineKind; text: string }[] {
   const lines: { kind: ComplianceAuditLineKind; text: string }[] = [];
 
@@ -980,40 +878,12 @@ function buildComplianceAuditLines(
       kind: "arrow",
       text: sr.remote.reasoning,
     });
-  }
-
-  const matchLabel =
-    bestMatchEntity && bestMatchEntity !== "No strong list match" ? bestMatchEntity : "listed entity";
-
-  if (nameScore >= 90) {
-    lines.push({
-      kind: "alert",
-      text: `Direct SDN match (${Math.round(nameScore)}% similarity) with "${matchLabel}" — immediate escalation required`,
-    });
-  } else if (nameScore >= 75) {
-    lines.push({
-      kind: "alert",
-      text: `Strong list match (${Math.round(nameScore)}% similarity) with "${matchLabel}" — manual review required`,
-    });
-  }
-
-  if (nameScore >= 85) {
+  } else {
     lines.push({
       kind: "arrow",
-      text: "Match confidence: HIGH — strong entity correlation detected",
+      text: "No live screening data (offline mode).",
     });
-  } else if (nameScore >= 50) {
-    lines.push({
-      kind: "arrow",
-      text: "Match confidence: MODERATE — corroborate screening factors before proceeding",
-    });
-  }
-
-  if (nameScore >= 90) {
-    lines.push({
-      kind: "shield",
-      text: "Name directly matches known SDN entity — AUTO BLOCK — potential sanctions violation if transaction proceeds",
-    });
+    return lines;
   }
 
   if (highRiskJurisdiction(input.country)) {
@@ -1073,13 +943,10 @@ function buildComplianceEmailDraftContent(
     const batchRow = rows[i];
     if (batchRow.screeningResults.risk !== "HIGH") continue;
     const sr = batchRow.screeningResults;
-    const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
-    const auditLines = buildComplianceAuditLines(
-      sr,
-      { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
-      sr.bestMatch,
-      nameScore
-    );
+    const auditLines = buildComplianceAuditLines(sr, {
+      country: batchRow.screenInput.country,
+      amount: batchRow.screenInput.amount,
+    });
     const firstBullet = auditLines[0]?.text ?? "—";
     const ti = sr.transliterationInfo;
     let variantAppend = "";
@@ -1319,13 +1186,10 @@ function generateSanctionsScreeningPdfBlob(
   for (let i = 0; i < rows.length; i++) {
     const batchRow = rows[i];
     const sr = batchRow.screeningResults;
-    const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
-    const auditLines = buildComplianceAuditLines(
-      sr,
-      { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
-      sr.bestMatch,
-      nameScore
-    );
+    const auditLines = buildComplianceAuditLines(sr, {
+      country: batchRow.screenInput.country,
+      amount: batchRow.screenInput.amount,
+    });
 
     ensureSpace(20);
     doc.setFont("helvetica", "bold");
@@ -1729,17 +1593,19 @@ export default function Screening() {
       setAiError(null);
       setScreeningRemoteLoading(true);
       setScreeningRemoteFallback(false);
-      const local = runClientScreening(input);
       try {
-        const data = await postSanctionsScreen([buildVendorPayloadForAzure(input, local)]);
-        const merged = mergeRemoteScreening(
-          local,
-          matchScreenApiResult(data.results, input.vendorName, 0)
-        );
-        setScreeningResults(merged);
+        const { names, transliterationInfo } = collectNamesForApiScreening(input);
+        if (names.length === 0) {
+          setScreeningResults(null);
+          return;
+        }
+        const vendors = names.map((name) => buildMinimalVendorPayload(name, input));
+        const data = await postSanctionsScreen(vendors);
+        const apiRow = pickWorstRiskResult(data.results ?? []);
+        setScreeningResults(buildScreeningResultsFromApi(input, transliterationInfo, apiRow));
       } catch {
         setScreeningRemoteFallback(true);
-        setScreeningResults(local);
+        setScreeningResults(null);
       } finally {
         setScreeningRemoteLoading(false);
       }
@@ -1775,17 +1641,19 @@ export default function Screening() {
     setAiError(null);
     setScreeningRemoteLoading(true);
     setScreeningRemoteFallback(false);
-    const local = runClientScreening(input);
     try {
-      const data = await postSanctionsScreen([buildVendorPayloadForAzure(input, local)]);
-      const merged = mergeRemoteScreening(
-        local,
-        matchScreenApiResult(data.results, input.vendorName, 0)
-      );
-      setScreeningResults(merged);
+      const { names, transliterationInfo } = collectNamesForApiScreening(input);
+      if (names.length === 0) {
+        setScreeningResults(null);
+        return;
+      }
+      const vendors = names.map((name) => buildMinimalVendorPayload(name, input));
+      const data = await postSanctionsScreen(vendors);
+      const apiRow = pickWorstRiskResult(data.results ?? []);
+      setScreeningResults(buildScreeningResultsFromApi(input, transliterationInfo, apiRow));
     } catch {
       setScreeningRemoteFallback(true);
-      setScreeningResults(local);
+      setScreeningResults(null);
     } finally {
       setScreeningRemoteLoading(false);
     }
@@ -1803,9 +1671,9 @@ export default function Screening() {
       return;
     }
     const auditedAt = new Date().toISOString();
-    const baseRows: BatchScreenRow[] = parsedUploadRows.map((row) => {
+    const stubs = parsedUploadRows.map((row) => {
       const normalized = applyUploadColumnDefaults(row, missingColumns);
-      const screenInput = {
+      const screenInput: ScreenPipelineInput = {
         vendorName: normalized.vendorName,
         country: normalized.country,
         amount: normalized.amount,
@@ -1816,25 +1684,41 @@ export default function Screening() {
         auditId: generateAuditId(),
         auditedAt,
         screenInput,
-        screeningResults: runClientScreening(screenInput),
       };
     });
     setScreeningRemoteLoading(true);
     setScreeningRemoteFallback(false);
     try {
-      const vendors = baseRows.map((r) => buildVendorPayloadForAzure(r.screenInput, r.screeningResults));
-      const data = await postSanctionsScreen(vendors);
-      const mergedRows = baseRows.map((br, i) => ({
-        ...br,
-        screeningResults: mergeRemoteScreening(
-          br.screeningResults,
-          matchScreenApiResult(data.results, br.screenInput.vendorName, i)
+      type FlatEntry = { rowIndex: number; name: string; screenInput: ScreenPipelineInput };
+      const transliterationByRow: (TransliterationScreeningInfo | null)[] = [];
+      const flat: FlatEntry[] = [];
+      for (let i = 0; i < stubs.length; i++) {
+        const { names, transliterationInfo } = collectNamesForApiScreening(stubs[i].screenInput);
+        transliterationByRow[i] = transliterationInfo;
+        for (const name of names) {
+          flat.push({ rowIndex: i, name, screenInput: stubs[i].screenInput });
+        }
+      }
+      const vendorsPayload = flat.map((f) => buildMinimalVendorPayload(f.name, f.screenInput));
+      const data = await postSanctionsScreen(vendorsPayload);
+      const results = data.results ?? [];
+      const grouped: ScreenVendorApiResult[][] = Array.from({ length: stubs.length }, () => []);
+      for (let j = 0; j < flat.length; j++) {
+        const apiRow = results[j];
+        if (apiRow) grouped[flat[j].rowIndex].push(apiRow);
+      }
+      const mergedRows: BatchScreenRow[] = stubs.map((stub, i) => ({
+        ...stub,
+        screeningResults: buildScreeningResultsFromApi(
+          stub.screenInput,
+          transliterationByRow[i],
+          pickWorstRiskResult(grouped[i])
         ),
       }));
       setBatchScreeningRows(mergedRows);
     } catch {
       setScreeningRemoteFallback(true);
-      setBatchScreeningRows(baseRows);
+      setBatchScreeningRows(null);
     } finally {
       setScreeningRemoteLoading(false);
     }
@@ -1934,7 +1818,7 @@ export default function Screening() {
         amount: parseAmountUsd(row.screenInput.amount),
         doc: row.screenInput.docType || "—",
         cyrillic: row.screenInput.cyrillicName || "—",
-        sdn_match: row.screeningResults.bestMatch,
+        sdn_match: row.screeningResults.remote?.assessment ?? row.screeningResults.bestMatch,
         fuzzy_score: row.screeningResults.compositeScore,
         risk: row.screeningResults.risk,
       }));
@@ -1965,7 +1849,7 @@ export default function Screening() {
         amount: parseAmountUsd(lastScreenInput.amount),
         doc: lastScreenInput.docType || "—",
         cyrillic: lastScreenInput.cyrillicName || "—",
-        sdn_match: screeningResults.bestMatch,
+        sdn_match: screeningResults.remote?.assessment ?? screeningResults.bestMatch,
         fuzzy_score: screeningResults.compositeScore,
         risk: screeningResults.risk,
       },
@@ -2243,7 +2127,7 @@ export default function Screening() {
         {screeningRemoteFallback ? (
           <div className="mt-4 flex gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 font-body">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" strokeWidth={2} aria-hidden />
-            <p>API unavailable — showing results from local demo dataset</p>
+            <p>API unavailable — showing offline mode</p>
           </div>
         ) : null}
 
@@ -2421,14 +2305,13 @@ export default function Screening() {
                         batchTableRows.map((batchRow) => {
                       const sr = batchRow.screeningResults;
                       const breakdown = sr.scoreBreakdown;
-                      const { label: actionLabel, badge: actionBadge } = complianceActionFromRisk(sr.risk);
-                      const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
-                      const auditLines = buildComplianceAuditLines(
-                        sr,
-                        { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
-                        sr.bestMatch,
-                        nameScore
-                      );
+                      const { label: actionLabel, badge: actionBadge } = sr.remote
+                        ? normalizeActionDisplay(sr.remote.action, sr.risk)
+                        : complianceActionFromRisk(sr.risk);
+                      const auditLines = buildComplianceAuditLines(sr, {
+                        country: batchRow.screenInput.country,
+                        amount: batchRow.screenInput.amount,
+                      });
                       return (
                         <Fragment key={batchRow.auditId}>
                           <tr className="border-b border-slate-100 align-top odd:bg-white even:bg-slate-50/80">
@@ -2692,9 +2575,18 @@ export default function Screening() {
                 </span>
               </div>
               <p className="mt-2 text-xs text-slate-600 font-body">
-                Best SDN / list match:{" "}
+                Assessment / lists checked:{" "}
                 <span className="font-data font-semibold text-slate-900">{screeningResults.bestMatch}</span>
               </p>
+              {screeningResults.remote ? (
+                <div className="mt-3 space-y-1 rounded-lg border border-slate-100 bg-white px-3 py-2 text-xs text-slate-700 font-body">
+                  <p>
+                    <span className="font-semibold text-slate-500">Recommended action:</span>{" "}
+                    {screeningResults.remote.action}
+                  </p>
+                  <p className="text-slate-600">{screeningResults.remote.reasoning}</p>
+                </div>
+              ) : null}
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
@@ -2736,8 +2628,8 @@ export default function Screening() {
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-sm font-bold font-display text-slate-900">AI Deep Analysis</h3>
           <p className="mt-1 text-xs text-slate-500 font-body">
-            Contextual risk explanation and narrative reasoning — powered by Azure (GPT-4o). Screening above stays on your
-            device; only this step calls the API.
+            Contextual risk explanation and narrative reasoning — powered by Azure (GPT-4o). List screening above uses the
+            live sanctions API; this step requests an additional narrative analysis.
           </p>
 
           <button
