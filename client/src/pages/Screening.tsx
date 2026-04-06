@@ -485,6 +485,7 @@ export default function Screening() {
           <div>
             <div
               className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40"
+              onClick={() => document.getElementById("screening-upload-input")?.click()}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -508,6 +509,7 @@ export default function Screening() {
               <p className="text-sm font-semibold text-slate-600 font-body">Drop File Here</p>
               <label
                 htmlFor="screening-upload-input"
+                onClick={(e) => e.stopPropagation()}
                 className="mt-1 inline-block cursor-pointer text-sm font-semibold text-cyan-600 underline-offset-2 transition-colors hover:text-cyan-700 hover:underline font-body"
               >
                 Click to Browse
