@@ -1,8 +1,8 @@
 /*
  * SCREENING PAGE — Upload document + manual entry
  */
-import { useState, useCallback } from "react";
-import { Search, Upload, Loader2 } from "lucide-react";
+import { useState, useCallback, useRef } from "react";
+import { Search, Upload, Loader2, CheckCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
@@ -344,6 +344,10 @@ export default function Screening() {
   const [aiResults, setAiResults] = useState<NormalizedAIResult[] | null>(null);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  /** Non-null after a successful parse with at least one vendor; cleared when choosing a new file */
+  const [parsedUploadVendors, setParsedUploadVendors] = useState<string[] | null>(null);
+  const [uploadScreeningDone, setUploadScreeningDone] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string) => {
@@ -364,8 +368,26 @@ export default function Screening() {
     [vendorName, country, amount, docType, cyrillicName]
   );
 
+  const runUploadScreening = useCallback(() => {
+    if (!parsedUploadVendors?.length) return;
+    const first = parsedUploadVendors[0];
+    setVendorName(first);
+    handleScreen(first);
+    setUploadScreeningDone(true);
+  }, [parsedUploadVendors, handleScreen]);
+
+  const resetUpload = useCallback(() => {
+    setParsedUploadVendors(null);
+    setUploadedFile(null);
+    setUploadScreeningDone(false);
+    setAiError(null);
+    if (uploadInputRef.current) uploadInputRef.current.value = "";
+  }, []);
+
   const handleFileUpload = useCallback(
     async (file: File) => {
+      setParsedUploadVendors(null);
+      setUploadScreeningDone(false);
       setUploadedFile(file.name);
       setAiError(null);
       setIsLoading(true);
@@ -402,9 +424,8 @@ export default function Screening() {
         }
 
         if (vendorNames.length > 0) {
-          setVendorName(vendorNames[0]);
+          setParsedUploadVendors(vendorNames);
           setIsLoading(false);
-          setTimeout(() => handleScreen(), 100);
         } else {
           setAiError("No vendor names found in file. Try Manual Entry.");
           setIsLoading(false);
@@ -414,7 +435,7 @@ export default function Screening() {
         setIsLoading(false);
       }
     },
-    [handleScreen]
+    []
   );
 
   const handleRunAI = useCallback(async () => {
@@ -483,44 +504,85 @@ export default function Screening() {
 
         {activeTab === "upload" ? (
           <div>
-            <div
-              className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40"
-              onClick={() => document.getElementById("screening-upload-input")?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            <input
+              ref={uploadInputRef}
+              id="screening-upload-input"
+              type="file"
+              className="sr-only"
+              accept=".csv,.txt,.xlsx,.xls,.docx,.doc"
+              onChange={(e) => {
+                if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
               }}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
-              }}
-            >
-              <input
-                id="screening-upload-input"
-                type="file"
-                className="sr-only"
-                accept=".csv,.txt,.xlsx,.xls,.docx,.doc"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
+            />
+            {parsedUploadVendors !== null && parsedUploadVendors.length > 0 ? (
+              <div
+                className="rounded-xl border-2 border-emerald-200 bg-emerald-50/60 p-10 text-center transition-colors"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                 }}
-              />
-              <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
-              <p className="text-sm font-semibold text-slate-600 font-body">Drop File Here</p>
-              <label
-                htmlFor="screening-upload-input"
-                onClick={(e) => e.stopPropagation()}
-                className="mt-1 inline-block cursor-pointer text-sm font-semibold text-cyan-600 underline-offset-2 transition-colors hover:text-cyan-700 hover:underline font-body"
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+                }}
               >
-                Click to Browse
-              </label>
-              <p className="mt-2 text-xs text-slate-400 font-body">
-                Supports CSV, Excel, Word, TXT
-              </p>
-              {uploadedFile && (
-                <p className="mt-3 text-sm font-semibold text-cyan-600">{uploadedFile} uploaded</p>
-              )}
-            </div>
+                <CheckCircle className="mx-auto mb-4 h-12 w-12 text-emerald-600" aria-hidden />
+                <p className="text-sm font-semibold text-slate-800 font-body">{uploadedFile}</p>
+                <p className="mt-2 text-sm text-slate-600 font-body">
+                  {parsedUploadVendors.length} vendor{parsedUploadVendors.length === 1 ? "" : "s"} loaded
+                  {!uploadScreeningDone ? " — ready to screen" : ""}
+                </p>
+                {!uploadScreeningDone && (
+                  <button
+                    type="button"
+                    onClick={runUploadScreening}
+                    className="btn-premium btn-premium-primary mt-5 text-sm"
+                  >
+                    Run Sanctions Screening
+                  </button>
+                )}
+                <p className="mt-5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetUpload();
+                      uploadInputRef.current?.click();
+                    }}
+                    className="text-sm font-semibold text-cyan-600 underline-offset-2 transition-colors hover:text-cyan-700 hover:underline font-body"
+                  >
+                    Click to upload a different file
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <div
+                className="group cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-12 text-center transition-colors hover:border-cyan-500/40"
+                onClick={() => uploadInputRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
+                }}
+              >
+                <Upload className="mx-auto mb-4 h-12 w-12 text-slate-300 transition-colors group-hover:text-cyan-500" />
+                <p className="text-sm font-semibold text-slate-600 font-body">Drop File Here</p>
+                <label
+                  htmlFor="screening-upload-input"
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-1 inline-block cursor-pointer text-sm font-semibold text-cyan-600 underline-offset-2 transition-colors hover:text-cyan-700 hover:underline font-body"
+                >
+                  Click to Browse
+                </label>
+                <p className="mt-2 text-xs text-slate-400 font-body">
+                  Supports CSV, Excel, Word, TXT
+                </p>
+              </div>
+            )}
             {isLoading && (
               <p className="mt-4 text-center text-sm font-medium text-amber-800 font-body">Processing file…</p>
             )}
