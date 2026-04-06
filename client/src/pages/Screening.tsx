@@ -196,6 +196,137 @@ function maximumFuzzyScore(needle: string, candidate: string): number {
   return Math.min(100, best);
 }
 
+const CYRILLIC_RE = /[\u0400-\u04FF]/;
+
+function hasCyrillic(s: string): boolean {
+  return CYRILLIC_RE.test(s);
+}
+
+function mapSingleCyrLetter(cl: string): string {
+  const map: Record<string, string> = {
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    ё: "yo",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "kh",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "shch",
+    ъ: "",
+    ы: "y",
+    ь: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
+    є: "ye",
+    і: "i",
+    ї: "yi",
+    ґ: "g",
+  };
+  return map[cl] ?? "";
+}
+
+function transliterateSegment(text: string, yePolicy: "alwaysE" | "smartYe"): string {
+  let out = "";
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (!CYRILLIC_RE.test(ch)) {
+      out += ch;
+      continue;
+    }
+    const cl = ch.toLowerCase();
+    if (cl === "е") {
+      if (yePolicy === "alwaysE") {
+        out += "e";
+      } else {
+        const prev = i > 0 ? text[i - 1] : "";
+        const useYe =
+          i === 0 ||
+          /\s/.test(prev) ||
+          prev === "\u044a" ||
+          prev === "\u042a" ||
+          prev === "\u044c" ||
+          prev === "\u042c";
+        out += useYe ? "ye" : "e";
+      }
+      continue;
+    }
+    out += mapSingleCyrLetter(cl);
+  }
+  return out;
+}
+
+function generateTransliterationVariants(text: string): string[] {
+  if (!hasCyrillic(text)) return [];
+  const v1 = transliterateSegment(text, "alwaysE").trim();
+  const v2 = transliterateSegment(text, "smartYe").trim();
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of [v1, v2]) {
+    if (v.length === 0) continue;
+    const k = v.toLowerCase();
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push(v);
+    }
+  }
+  return out;
+}
+
+function expandScreeningNeedles(
+  vendorName: string,
+  cyrillicName: string
+): {
+  needles: string[];
+  transliterationInfo: null | { original: string; variants: string[] };
+} {
+  const base = [vendorName, cyrillicName].map((s) => s.trim()).filter((s) => s.length > 0);
+  const needleSet = new Set<string>();
+  for (const n of base) {
+    needleSet.add(n);
+  }
+  for (const n of base) {
+    if (!hasCyrillic(n)) continue;
+    for (const v of generateTransliterationVariants(n)) {
+      needleSet.add(v);
+    }
+  }
+
+  let transliterationInfo: null | { original: string; variants: string[] } = null;
+  const primaryOriginal =
+    vendorName.trim().length > 0 && hasCyrillic(vendorName)
+      ? vendorName.trim()
+      : cyrillicName.trim().length > 0 && hasCyrillic(cyrillicName)
+        ? cyrillicName.trim()
+        : null;
+  if (primaryOriginal) {
+    transliterationInfo = {
+      original: primaryOriginal,
+      variants: generateTransliterationVariants(primaryOriginal),
+    };
+  }
+
+  return { needles: Array.from(needleSet), transliterationInfo };
+}
+
 function bestScoreAgainstEntity(
   needles: string[],
   entityName: string,
@@ -302,6 +433,7 @@ type ScreeningResultsState = {
   risk: "HIGH" | "MEDIUM" | "LOW";
   bestMatch: string;
   scoreBreakdown: ScoreBreakdown;
+  transliterationInfo: null | { original: string; variants: string[] };
 };
 
 function runClientScreening(input: {
@@ -311,7 +443,7 @@ function runClientScreening(input: {
   docType: string;
   cyrillicName: string;
 }): ScreeningResultsState {
-  const needles = [input.vendorName, input.cyrillicName].filter((s) => s.trim().length > 0);
+  const { needles, transliterationInfo } = expandScreeningNeedles(input.vendorName, input.cyrillicName);
 
   const listHits: ListHitRow[] = LIST_LABELS.map((list) => {
     const inList = watchlistEntities.filter((e) => e.list === list);
@@ -360,6 +492,7 @@ function runClientScreening(input: {
     risk: riskFromScore(compositeScore),
     bestMatch,
     scoreBreakdown,
+    transliterationInfo,
   };
 }
 
@@ -691,14 +824,6 @@ function riskBadgeClasses(level: string): string {
   return "border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
-function actionBadgeClasses(action: string): string {
-  const u = action.toUpperCase();
-  if (u === "BLOCK") return "border-red-300 bg-red-100 text-red-900";
-  if (u === "FLAG" || u === "REVIEW") return "border-cyan-300 bg-amber-100 text-amber-950";
-  if (u === "APPROVE") return "border-emerald-300 bg-emerald-100 text-emerald-900";
-  return "border-slate-300 bg-slate-100 text-slate-800";
-}
-
 type BatchScreenRow = {
   auditId: string;
   auditedAt: string;
@@ -742,7 +867,15 @@ function aiDeepAnalysisActionDisplay(action: string): string {
 }
 
 function aiAssessmentLabel(truePositive: boolean): string {
-  return truePositive ? "True Positive" : "False Positive";
+  return truePositive ? "Confirmed Match" : "No Direct Match";
+}
+
+function aiActionSolidBadgeClasses(action: string): string {
+  const a = action.toUpperCase();
+  if (a === "BLOCK") return "border-transparent bg-red-600 text-white";
+  if (a === "FLAG" || a === "REVIEW") return "border-transparent bg-amber-500 text-white";
+  if (a === "APPROVE") return "border-transparent bg-emerald-600 text-white";
+  return "border-transparent bg-slate-600 text-white";
 }
 
 /** Hardcoded transliteration hints for demo entities; Latin-only otherwise */
@@ -2099,7 +2232,15 @@ export default function Screening() {
                       return (
                         <Fragment key={batchRow.auditId}>
                           <tr className="border-b border-slate-100 align-top odd:bg-white even:bg-slate-50/80">
-                            <td className="px-3 py-3 font-semibold text-slate-900">{batchRow.screenInput.vendorName}</td>
+                            <td className="px-3 py-3 font-semibold text-slate-900">
+                              <div>{batchRow.screenInput.vendorName}</div>
+                              {sr.transliterationInfo ? (
+                                <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
+                                  Cyrillic variants: {sr.transliterationInfo.original} →{" "}
+                                  {sr.transliterationInfo.variants.slice(0, 3).join(", ")}
+                                </p>
+                              ) : null}
+                            </td>
                             <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.country || "—"}</td>
                             <td className="px-3 py-3 font-mono tabular-nums text-slate-800">
                               {formatUsdCurrencyAmount(batchRow.screenInput.amount)}
@@ -2214,7 +2355,7 @@ export default function Screening() {
                             <span
                               className={cn(
                                 "inline-flex rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
-                                actionBadgeClasses(aiRow.action)
+                                aiActionSolidBadgeClasses(aiRow.action)
                               )}
                             >
                               {actionDisplay}
@@ -2314,6 +2455,12 @@ export default function Screening() {
               <p className="mt-1 text-sm font-semibold text-slate-900">{lastScreenInput?.vendorName}</p>
               {lastScreenInput?.cyrillicName ? (
                 <p className="text-xs text-slate-600 font-body">{lastScreenInput.cyrillicName}</p>
+              ) : null}
+              {screeningResults.transliterationInfo ? (
+                <p className="mt-1 max-w-xl font-mono text-xs text-slate-500">
+                  Cyrillic variants: {screeningResults.transliterationInfo.original} →{" "}
+                  {screeningResults.transliterationInfo.variants.slice(0, 3).join(", ")}
+                </p>
               ) : null}
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-700">
                 <span>
@@ -2418,7 +2565,7 @@ export default function Screening() {
             ) : aiAnalysisComplete ? (
               <>
                 <CheckCircle className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={2} aria-hidden />
-                <span>AI Analysis Complete</span>
+                <span>Analysis Complete</span>
               </>
             ) : (
               "Run AI Deep Analysis"
@@ -2481,7 +2628,7 @@ export default function Screening() {
                       <span
                         className={cn(
                           "rounded-md border px-2.5 py-1 text-xs font-bold font-display uppercase",
-                          actionBadgeClasses(actionU)
+                          aiActionSolidBadgeClasses(r.action)
                         )}
                       >
                         {actionU}
