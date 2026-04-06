@@ -1,7 +1,7 @@
 /*
  * SCREENING PAGE — Upload document + manual entry
  */
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo, Fragment } from "react";
 import { Search, Upload, Loader2, CheckCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
@@ -181,11 +181,44 @@ type ListHitRow = {
   tier: "HIGH" | "MEDIUM" | "LOW";
 };
 
+/** Client-side score breakdown (aligned to composite total; mirrors typical compliance breakdown layout) */
+type ScoreBreakdown = {
+  name: number;
+  country: number;
+  amount: number;
+  doc: number;
+  total: number;
+};
+
+function buildScoreBreakdown(
+  input: { country: string; amount: string; docType: string },
+  compositeScore: number
+): ScoreBreakdown {
+  const total = compositeScore;
+  const hasC = input.country.trim().length > 0;
+  const hasA = input.amount.trim().length > 0;
+  const hasD = input.docType.trim().length > 0;
+  const name = Math.min(100, Math.round(total * 0.58));
+  const country = hasC ? Math.min(100, Math.round(total * 0.18)) : 0;
+  const amount = hasA ? Math.min(100, Math.round(total * 0.12)) : 0;
+  const doc = hasD ? Math.min(100, Math.round(total * 0.12)) : 0;
+  const sum = name + country + amount + doc;
+  const adj = sum > 0 ? (total / sum) : 1;
+  return {
+    name: Math.round(name * adj),
+    country: Math.round(country * adj),
+    amount: Math.round(amount * adj),
+    doc: Math.round(doc * adj),
+    total,
+  };
+}
+
 type ScreeningResultsState = {
   listHits: ListHitRow[];
   compositeScore: number;
   risk: "HIGH" | "MEDIUM" | "LOW";
   bestMatch: string;
+  scoreBreakdown: ScoreBreakdown;
 };
 
 function runClientScreening(input: {
@@ -222,12 +255,17 @@ function runClientScreening(input: {
   const compositeScore = Math.max(...listHits.map((h) => h.similarity), 0);
   const bestHit = listHits.reduce((a, b) => (b.similarity > a.similarity ? b : a), listHits[0]);
   const bestMatch = bestHit.similarity >= 45 ? bestHit.matchedEntity : "No strong list match";
+  const scoreBreakdown = buildScoreBreakdown(
+    { country: input.country, amount: input.amount, docType: input.docType },
+    compositeScore
+  );
 
   return {
     listHits,
     compositeScore,
     risk: riskFromScore(compositeScore),
     bestMatch,
+    scoreBreakdown,
   };
 }
 
@@ -253,6 +291,8 @@ type NormalizedAIResult = {
   action: string;
   compliance_note: string;
   evasion_indicators: string[];
+  /** Optional detailed breakdown from API */
+  score_breakdown: ScoreBreakdown | null;
 };
 
 type RawAIResult = Record<string, unknown>;
@@ -281,6 +321,34 @@ function confidenceFromRaw(raw: RawAIResult, truePositive: boolean): number {
   return Math.round(Math.min(100, Math.max(0, n)));
 }
 
+function num(v: unknown): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : parseFloat(String(v));
+  return Number.isFinite(n) ? Math.round(Math.min(100, Math.max(0, n))) : null;
+}
+
+function parseScoreBreakdownFromRaw(raw: RawAIResult): ScoreBreakdown | null {
+  const sb = raw.score_breakdown ?? raw.scoreBreakdown;
+  if (sb && typeof sb === "object" && !Array.isArray(sb)) {
+    const o = sb as Record<string, unknown>;
+    const name = num(o.name) ?? num(o.name_score);
+    const country = num(o.country) ?? num(o.country_score);
+    const amount = num(o.amount) ?? num(o.amount_score);
+    const doc = num(o.doc) ?? num(o.document) ?? num(o.doc_score);
+    const total = num(o.total) ?? num(o.composite);
+    if (name !== null && total !== null) {
+      return {
+        name,
+        country: country ?? 0,
+        amount: amount ?? 0,
+        doc: doc ?? 0,
+        total,
+      };
+    }
+  }
+  return null;
+}
+
 function normalizeAIResult(raw: RawAIResult): NormalizedAIResult {
   const truePositive = parseTruePositive(raw);
   const vendorName = str(raw.vendor_name) || str(raw.vendor) || "—";
@@ -304,6 +372,7 @@ function normalizeAIResult(raw: RawAIResult): NormalizedAIResult {
     action,
     compliance_note: complianceNote,
     evasion_indicators: evasion,
+    score_breakdown: parseScoreBreakdownFromRaw(raw),
   };
 }
 
@@ -320,6 +389,101 @@ function actionBadgeClasses(action: string): string {
   if (u === "FLAG" || u === "REVIEW") return "border-cyan-300 bg-amber-100 text-amber-950";
   if (u === "APPROVE") return "border-emerald-300 bg-emerald-100 text-emerald-900";
   return "border-slate-300 bg-slate-100 text-slate-800";
+}
+
+type BatchScreenRow = {
+  auditId: string;
+  auditedAt: string;
+  screenInput: {
+    vendorName: string;
+    country: string;
+    amount: string;
+    docType: string;
+    cyrillicName: string;
+  };
+  screeningResults: ScreeningResultsState;
+};
+
+function generateAuditId(): string {
+  const part = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `SCR-2026-${part}`;
+}
+
+function formatAuditFooter(auditId: string, iso: string): string {
+  const d = new Date(iso);
+  const ts = d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "medium" });
+  return `${auditId} | ${ts}`;
+}
+
+function complianceActionFromRisk(risk: "HIGH" | "MEDIUM" | "LOW"): { label: string; badge: "HIGH" | "MEDIUM" | "LOW" } {
+  if (risk === "HIGH") return { label: "BLOCK", badge: "HIGH" };
+  if (risk === "MEDIUM") return { label: "REVIEW", badge: "MEDIUM" };
+  return { label: "APPROVE", badge: "LOW" };
+}
+
+function normalizeActionDisplay(action: string, risk: string): { label: string; badge: "HIGH" | "MEDIUM" | "LOW" } {
+  const a = action.toUpperCase();
+  const r = risk.toUpperCase() as "HIGH" | "MEDIUM" | "LOW";
+  if (a === "BLOCK") return { label: "BLOCK", badge: "HIGH" };
+  if (a === "FLAG" || a === "REVIEW") return { label: "REVIEW", badge: "MEDIUM" };
+  if (a === "APPROVE") return { label: "APPROVE", badge: "LOW" };
+  return complianceActionFromRisk(r === "HIGH" || r === "MEDIUM" || r === "LOW" ? r : "LOW");
+}
+
+function auditBulletsFromAI(r: NormalizedAIResult): string[] {
+  const chunks: string[] = [];
+  if (r.reasoning && r.reasoning !== "—") {
+    chunks.push(
+      ...r.reasoning
+        .split(/\n+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+  }
+  if (r.compliance_note) chunks.push(r.compliance_note);
+  if (r.evasion_indicators.length) chunks.push(...r.evasion_indicators);
+  return chunks.length ? chunks.slice(0, 8) : ["—"];
+}
+
+function fallbackAuditBullets(sr: ScreeningResultsState): string[] {
+  const top = sr.listHits.filter((h) => h.similarity >= 45).slice(0, 4);
+  if (top.length === 0) return ["No material list matches above screening threshold."];
+  return top.map((h) => `${h.list}: ${h.matchedEntity} (${h.similarity}% match).`);
+}
+
+function aiForBatchRow(
+  batch: BatchScreenRow,
+  index: number,
+  aiList: NormalizedAIResult[] | null
+): NormalizedAIResult | undefined {
+  if (!aiList?.length) return undefined;
+  const byName = aiList.find(
+    (a) => a.vendor_name.trim().toLowerCase() === batch.screenInput.vendorName.trim().toLowerCase()
+  );
+  if (byName) return byName;
+  return aiList[index];
+}
+
+function ScoreBreakdownBlock({ breakdown }: { breakdown: ScoreBreakdown }) {
+  return (
+    <div className="min-w-[7.5rem] text-[10px] leading-snug text-slate-700">
+      <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5">
+        <span className="text-slate-500">Name:</span>
+        <span className="text-right font-mono tabular-nums">{breakdown.name}</span>
+        <span className="text-slate-500">Country:</span>
+        <span className="text-right font-mono tabular-nums">{breakdown.country}</span>
+        <span className="text-slate-500">Amount:</span>
+        <span className="text-right font-mono tabular-nums">{breakdown.amount}</span>
+        <span className="text-slate-500">Doc:</span>
+        <span className="text-right font-mono tabular-nums">{breakdown.doc}</span>
+      </div>
+      <div className="my-1.5 border-t border-slate-200" />
+      <div className="grid grid-cols-[auto_1fr] gap-x-2">
+        <span className="font-semibold text-slate-600">Total:</span>
+        <span className="text-right font-mono text-[11px] font-semibold tabular-nums text-slate-900">{breakdown.total}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function Screening() {
@@ -348,11 +512,35 @@ export default function Screening() {
   const [parsedUploadVendors, setParsedUploadVendors] = useState<string[] | null>(null);
   const [uploadScreeningDone, setUploadScreeningDone] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  /** Multi-vendor file upload screening (2+ vendors); null when using single-vendor flow */
+  const [batchScreeningRows, setBatchScreeningRows] = useState<BatchScreenRow[] | null>(null);
+  const [batchRiskFilter, setBatchRiskFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
+
+  const batchRiskCounts = useMemo(() => {
+    if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+    for (const r of batchScreeningRows) {
+      const risk = r.screeningResults.risk;
+      if (risk === "HIGH") high++;
+      else if (risk === "MEDIUM") medium++;
+      else low++;
+    }
+    return { all: batchScreeningRows.length, high, medium, low };
+  }, [batchScreeningRows]);
+
+  const filteredBatchRows = useMemo(() => {
+    if (!batchScreeningRows?.length) return [];
+    if (batchRiskFilter === "ALL") return batchScreeningRows;
+    return batchScreeningRows.filter((r) => r.screeningResults.risk === batchRiskFilter);
+  }, [batchScreeningRows, batchRiskFilter]);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string) => {
       const vn = (vendorNameOverride !== undefined ? vendorNameOverride : vendorName).trim();
       if (!vn) return;
+      setBatchScreeningRows(null);
       const input = {
         vendorName: vn,
         country: country.trim(),
@@ -370,22 +558,54 @@ export default function Screening() {
 
   const runUploadScreening = useCallback(() => {
     if (!parsedUploadVendors?.length) return;
-    const first = parsedUploadVendors[0];
-    setVendorName(first);
-    handleScreen(first);
+    setBatchRiskFilter("ALL");
+    if (parsedUploadVendors.length === 1) {
+      const first = parsedUploadVendors[0];
+      setVendorName(first);
+      setBatchScreeningRows(null);
+      handleScreen(first);
+      setUploadScreeningDone(true);
+      return;
+    }
+    const auditedAt = new Date().toISOString();
+    const rows: BatchScreenRow[] = parsedUploadVendors.map((vn) => {
+      const screenInput = {
+        vendorName: vn,
+        country: country.trim(),
+        amount: amount.trim(),
+        docType: docType.trim(),
+        cyrillicName: cyrillicName.trim(),
+      };
+      return {
+        auditId: generateAuditId(),
+        auditedAt,
+        screenInput,
+        screeningResults: runClientScreening(screenInput),
+      };
+    });
+    setBatchScreeningRows(rows);
+    setScreeningResults(null);
+    setLastScreenInput(null);
+    setAiResults(null);
+    setAiError(null);
     setUploadScreeningDone(true);
-  }, [parsedUploadVendors, handleScreen]);
+  }, [parsedUploadVendors, handleScreen, country, amount, docType, cyrillicName]);
 
   const resetUpload = useCallback(() => {
     setParsedUploadVendors(null);
     setUploadedFile(null);
     setUploadScreeningDone(false);
+    setBatchScreeningRows(null);
     setAiError(null);
     if (uploadInputRef.current) uploadInputRef.current.value = "";
   }, []);
 
   const handleFileUpload = useCallback(
     async (file: File) => {
+      setBatchScreeningRows(null);
+      setScreeningResults(null);
+      setLastScreenInput(null);
+      setAiResults(null);
       setParsedUploadVendors(null);
       setUploadScreeningDone(false);
       setUploadedFile(file.name);
@@ -439,6 +659,34 @@ export default function Screening() {
   );
 
   const handleRunAI = useCallback(async () => {
+    if (batchScreeningRows && batchScreeningRows.length > 0) {
+      setAiLoading(true);
+      setAiError(null);
+      setAiResults(null);
+      const vendors = batchScreeningRows.map((row) => ({
+        name: row.screenInput.vendorName,
+        country: row.screenInput.country || "—",
+        amount: parseAmountUsd(row.screenInput.amount),
+        doc: row.screenInput.docType || "—",
+        cyrillic: row.screenInput.cyrillicName || "—",
+        sdn_match: row.screeningResults.bestMatch,
+        fuzzy_score: row.screeningResults.compositeScore,
+        risk: row.screeningResults.risk,
+      }));
+      try {
+        const data = await runAIDeepAnalysis(vendors);
+        const rows = data.results ?? [];
+        setAiResults(rows.map((row) => normalizeAIResult(row as unknown as RawAIResult)));
+      } catch {
+        setAiError(
+          "AI analysis unavailable — check your internet connection. Screening results above are still valid."
+        );
+      } finally {
+        setAiLoading(false);
+      }
+      return;
+    }
+
     if (!screeningResults || !lastScreenInput) return;
 
     setAiLoading(true);
@@ -469,7 +717,7 @@ export default function Screening() {
     } finally {
       setAiLoading(false);
     }
-  }, [screeningResults, lastScreenInput]);
+  }, [batchScreeningRows, screeningResults, lastScreenInput]);
 
   return (
     <div className="space-y-8">
@@ -709,11 +957,143 @@ export default function Screening() {
       <div className="premium-card rounded-xl p-8">
         <h2 className="text-base font-bold font-display text-slate-900">Screening results</h2>
 
-        {!screeningResults ? (
+        {!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0) ? (
           <p className="mt-2 text-sm text-slate-500 font-body">
             Match scores, list hits, and recommended actions will appear here after you screen a vendor.
           </p>
-        ) : (
+        ) : batchScreeningRows && batchScreeningRows.length > 0 ? (
+          <div className="mt-4 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { key: "ALL" as const, label: "ALL", dot: "bg-slate-400" },
+                  { key: "HIGH" as const, label: "HIGH RISK", dot: "bg-red-500" },
+                  { key: "MEDIUM" as const, label: "MEDIUM", dot: "bg-amber-500" },
+                  { key: "LOW" as const, label: "LOW / CLEAR", dot: "bg-emerald-500" },
+                ] as const
+              ).map((tab) => {
+                const count =
+                  tab.key === "ALL"
+                    ? batchRiskCounts.all
+                    : tab.key === "HIGH"
+                      ? batchRiskCounts.high
+                      : tab.key === "MEDIUM"
+                        ? batchRiskCounts.medium
+                        : batchRiskCounts.low;
+                const active = batchRiskFilter === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setBatchRiskFilter(tab.key)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px] font-bold font-display uppercase tracking-wide transition-colors",
+                      active
+                        ? "border-cyan-200 bg-white text-slate-900 shadow-sm"
+                        : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                    )}
+                  >
+                    <span className={cn("h-2 w-2 shrink-0 rounded-full", tab.dot)} aria-hidden />
+                    {tab.label} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table className="w-full min-w-[960px] text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
+                    <th className="px-3 py-2 font-display">Vendor</th>
+                    <th className="px-3 py-2 font-display">Country</th>
+                    <th className="px-3 py-2 font-display">Amount</th>
+                    <th className="px-3 py-2 font-display">Document</th>
+                    <th className="px-3 py-2 font-display">SDN match</th>
+                    <th className="px-3 py-2 font-display">Score breakdown</th>
+                    <th className="px-3 py-2 font-display">Risk</th>
+                    <th className="min-w-[200px] px-3 py-2 font-display">Action & audit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredBatchRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-3 py-8 text-center text-sm text-slate-500 font-body">
+                        No vendors match this filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBatchRows.map((batchRow) => {
+                      const idx = batchScreeningRows!.indexOf(batchRow);
+                      const aiRow = aiForBatchRow(batchRow, idx, aiResults);
+                      const sr = batchRow.screeningResults;
+                      const breakdown =
+                        aiRow?.score_breakdown ?? sr.scoreBreakdown;
+                      const { label: actionLabel, badge: actionBadge } = aiRow
+                        ? normalizeActionDisplay(aiRow.action, aiRow.risk_level)
+                        : complianceActionFromRisk(sr.risk);
+                      const bullets = aiRow ? auditBulletsFromAI(aiRow) : fallbackAuditBullets(sr);
+                      return (
+                        <Fragment key={batchRow.auditId}>
+                          <tr className="border-b border-slate-100 align-top odd:bg-white even:bg-slate-50/80">
+                            <td className="px-3 py-3 font-semibold text-slate-900">{batchRow.screenInput.vendorName}</td>
+                            <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.country || "—"}</td>
+                            <td className="px-3 py-3 font-mono tabular-nums text-slate-800">
+                              {batchRow.screenInput.amount || "—"}
+                            </td>
+                            <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.docType || "—"}</td>
+                            <td className="max-w-[180px] px-3 py-3 font-data text-[11px] text-slate-900">
+                              {sr.bestMatch}
+                            </td>
+                            <td className="px-3 py-3">
+                              <ScoreBreakdownBlock breakdown={breakdown} />
+                            </td>
+                            <td className="px-3 py-3">
+                              <span
+                                className={cn(
+                                  "rounded-md border px-2 py-0.5 text-[10px] font-bold font-display uppercase",
+                                  sr.risk === "HIGH" && "border-red-200 bg-red-100 text-red-800",
+                                  sr.risk === "MEDIUM" && "border-cyan-200 bg-amber-100 text-amber-950",
+                                  sr.risk === "LOW" && "border-emerald-200 bg-emerald-100 text-emerald-900"
+                                )}
+                              >
+                                {sr.risk}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-[11px] font-bold text-slate-900">{actionLabel}</span>
+                                <span
+                                  className={cn(
+                                    "rounded border px-1.5 py-0.5 text-[10px] font-bold font-display uppercase",
+                                    actionBadge === "HIGH" && "border-red-300 bg-red-100 text-red-900",
+                                    actionBadge === "MEDIUM" && "border-cyan-300 bg-amber-100 text-amber-950",
+                                    actionBadge === "LOW" && "border-emerald-300 bg-emerald-100 text-emerald-900"
+                                  )}
+                                >
+                                  {actionBadge}
+                                </span>
+                              </div>
+                              <ul className="mt-2 list-inside list-disc space-y-1 text-[11px] leading-snug text-slate-700 font-body">
+                                {bullets.map((b, bi) => (
+                                  <li key={`${batchRow.auditId}-b-${bi}`}>{b}</li>
+                                ))}
+                              </ul>
+                            </td>
+                          </tr>
+                          <tr className="bg-slate-50/90">
+                            <td colSpan={8} className="border-b border-slate-200 px-3 py-2 font-mono text-[10px] text-slate-500">
+                              {formatAuditFooter(batchRow.auditId, batchRow.auditedAt)}
+                            </td>
+                          </tr>
+                        </Fragment>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : screeningResults ? (
           <div className="mt-4 space-y-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Input summary</p>
@@ -790,7 +1170,7 @@ export default function Screening() {
               </table>
             </div>
           </div>
-        )}
+        ) : null}
 
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-sm font-bold font-display text-slate-900">AI Deep Analysis</h3>
@@ -801,11 +1181,14 @@ export default function Screening() {
 
           <button
             type="button"
-            disabled={!screeningResults || aiLoading}
+            disabled={
+              aiLoading ||
+              (!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0))
+            }
             onClick={() => void handleRunAI()}
             className={cn(
               "mt-4 inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm transition-colors",
-              !screeningResults || aiLoading
+              aiLoading || (!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0))
                 ? "cursor-not-allowed border border-slate-200 bg-slate-50 font-semibold text-slate-400"
                 : "bg-cyan-500 font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:bg-cyan-400"
             )}
@@ -826,7 +1209,7 @@ export default function Screening() {
             </p>
           )}
 
-          {aiResults && aiResults.length > 0 && (
+          {aiResults && aiResults.length > 0 && !(batchScreeningRows && batchScreeningRows.length > 0) && (
             <div className="mt-6 space-y-4">
               {aiResults.map((r, idx) => {
                 const riskU = (r.risk_level || "LOW").toUpperCase();
