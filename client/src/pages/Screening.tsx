@@ -1207,8 +1207,8 @@ export default function Screening() {
     const pdfBlobUrl = URL.createObjectURL(blob);
     const dateStr = new Date().toISOString().split("T")[0];
     const downloadName = `Sanctions_Report_${dateStr}.pdf`;
-    const htmlContent = `<!DOCTYPE html>
-<html><head><title>TradeScreen AI — Screening Report</title>
+    const htmlContent = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>TradeScreen AI &mdash; Screening Report</title>
 <style>
   body { margin: 0; font-family: Inter, sans-serif; background: #f1f5f9; }
   .toolbar { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #0f172a; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; }
@@ -1220,7 +1220,7 @@ export default function Screening() {
   iframe { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; width: 100%; height: calc(100vh - 56px); border: none; }
 </style></head><body>
 <div class="toolbar">
-  <h1>TradeScreen AI — Sanctions Screening Report</h1>
+  <h1>TradeScreen AI &mdash; Sanctions Screening Report</h1>
   <div class="buttons">
     <button type="button" class="btn-download" onclick="downloadPdf()">Download PDF</button>
     <button type="button" class="btn-print" onclick="var f=document.querySelector('iframe');if(f&&f.contentWindow)f.contentWindow.print()">Print</button>
