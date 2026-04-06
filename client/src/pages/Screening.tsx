@@ -2,6 +2,8 @@
  * SCREENING PAGE — Upload document + manual entry
  */
 import { useState, useCallback, useRef, useMemo, Fragment } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Search, Upload, Loader2, CheckCircle, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
@@ -821,6 +823,199 @@ function buildComplianceAuditLines(
   return lines;
 }
 
+function generateSanctionsScreeningPdfBlob(
+  rows: BatchScreenRow[],
+  aiResults: NormalizedAIResult[] | null
+): Blob {
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const margin = 48;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+  for (const r of rows) {
+    const risk = r.screeningResults.risk;
+    if (risk === "HIGH") high++;
+    else if (risk === "MEDIUM") medium++;
+    else low++;
+  }
+
+  const risks = rows.map((r) => r.screeningResults.risk);
+  const bodyRows = rows.map((batchRow, i) => {
+    const sr = batchRow.screeningResults;
+    const aiRow = aiForBatchRow(batchRow, i, aiResults);
+    const { label: actionLabel } = aiRow
+      ? normalizeActionDisplay(aiRow.action, aiRow.risk_level)
+      : complianceActionFromRisk(sr.risk);
+    return [
+      batchRow.screenInput.vendorName,
+      batchRow.screenInput.country || "—",
+      formatUsdCurrencyAmount(batchRow.screenInput.amount),
+      displayDocumentType(batchRow.screenInput.docType),
+      sr.bestMatch,
+      `${sr.compositeScore}%`,
+      sr.risk,
+      actionLabel,
+    ];
+  });
+
+  let yPos = margin;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text("TradeScreen AI — Sanctions Screening Report", margin, yPos);
+  yPos += 28;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(55, 55, 55);
+  doc.text(new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }), margin, yPos);
+  yPos += 20;
+  doc.setFontSize(8);
+  doc.setTextColor(110, 110, 110);
+  doc.text("Academic Research Prototype — Not for production compliance use", margin, yPos);
+  yPos += 28;
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  doc.text(
+    `Summary: ${rows.length} vendors screened — HIGH RISK: ${high}, MEDIUM: ${medium}, LOW/CLEAR: ${low}`,
+    margin,
+    yPos
+  );
+  yPos += 22;
+
+  autoTable(doc, {
+    startY: yPos,
+    margin: { left: margin, right: margin, bottom: 52 },
+    head: [
+      [
+        "VENDOR",
+        "COUNTRY",
+        "AMOUNT",
+        "DOCUMENT",
+        "SDN MATCH",
+        "SCORE (Total)",
+        "RISK",
+        "ACTION",
+      ],
+    ],
+    body: bodyRows,
+    theme: "grid",
+    styles: {
+      fontSize: 8,
+      cellPadding: 3.5,
+      lineColor: [90, 90, 90],
+      lineWidth: 0.35,
+      textColor: [26, 26, 26],
+    },
+    headStyles: {
+      fillColor: [248, 248, 248],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      lineWidth: 0.4,
+      lineColor: [70, 70, 70],
+    },
+    columnStyles: {
+      5: { font: "courier", halign: "right" },
+    },
+    didParseCell: (data) => {
+      if (data.section !== "body") return;
+      if (data.column.index === 5) {
+        data.cell.styles.font = "courier";
+      }
+      if (data.column.index === 6) {
+        const risk = risks[data.row.index];
+        if (risk === "HIGH") {
+          data.cell.styles.fillColor = [254, 242, 242];
+          data.cell.styles.textColor = [185, 28, 28];
+        } else if (risk === "MEDIUM") {
+          data.cell.styles.fillColor = [255, 251, 235];
+          data.cell.styles.textColor = [180, 83, 9];
+        } else {
+          data.cell.styles.fillColor = [236, 253, 245];
+          data.cell.styles.textColor = [4, 120, 87];
+        }
+      }
+    },
+  });
+
+  const lastY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? yPos;
+  let y = lastY + 28;
+  const maxW = pageW - margin * 2;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageH - 56) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  ensureSpace(28);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text("Audit trail", margin, y);
+  y += 18;
+
+  for (let i = 0; i < rows.length; i++) {
+    const batchRow = rows[i];
+    const sr = batchRow.screeningResults;
+    const nameScore = Math.max(...sr.listHits.map((h) => h.similarity), 0);
+    const auditLines = buildComplianceAuditLines(
+      sr,
+      { country: batchRow.screenInput.country, amount: batchRow.screenInput.amount },
+      sr.bestMatch,
+      nameScore
+    );
+
+    ensureSpace(20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(batchRow.screenInput.vendorName, margin, y);
+    y += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    for (const line of auditLines) {
+      const txt = `• ${line.text}`;
+      const wrapped = doc.splitTextToSize(txt, maxW);
+      for (const wline of wrapped) {
+        ensureSpace(10);
+        doc.text(wline, margin, y);
+        y += 10;
+      }
+    }
+    y += 4;
+    doc.setFont("courier", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(45, 45, 45);
+    const scrLine = `SCR ID: ${formatScrFooterCell(batchRow.auditId, batchRow.auditedAt)}`;
+    const scrWrapped = doc.splitTextToSize(scrLine, maxW);
+    for (const wline of scrWrapped) {
+      ensureSpace(10);
+      doc.text(wline, margin, y);
+      y += 10;
+    }
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    y += 14;
+  }
+
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Generated by TradeScreen AI | © 2026 Tatiana Podobivskaia", pageW / 2, pageH - 28, {
+      align: "center",
+    });
+  }
+
+  return doc.output("blob");
+}
+
 function ComplianceAuditTrail({
   lines,
   scrFooter,
@@ -1003,8 +1198,12 @@ export default function Screening() {
   }, [batchScreeningRows, aiResults]);
 
   const handleBatchPdfReport = useCallback(() => {
-    window.print();
-  }, []);
+    if (!batchScreeningRows?.length) return;
+    const blob = generateSanctionsScreeningPdfBlob(batchScreeningRows, aiResults);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 120_000);
+  }, [batchScreeningRows, aiResults]);
 
   const handleScreen = useCallback(
     (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
