@@ -226,8 +226,11 @@ function ScreeningVariantsCollapsible({ info }: { info: TransliterationScreening
 type ListHitRow = {
   list: string;
   matchedEntity: string;
+  /** Unused for API-driven rows (replaced by status column). */
   similarity: number;
   tier: "HIGH" | "MEDIUM" | "LOW";
+  statusLabel: string;
+  statusTier: "HIGH" | "MEDIUM" | "LOW";
 };
 
 /** Client-side score breakdown (aligned to composite total; mirrors typical compliance breakdown layout) */
@@ -396,14 +399,90 @@ function pickWorstRiskResult(rows: ScreenVendorApiResult[]): ScreenVendorApiResu
   return pick;
 }
 
-/** Per-list rows reflect unified API coverage (all four lists screened in one call). */
-function listHitsAllScreened(tier: "HIGH" | "MEDIUM" | "LOW"): ListHitRow[] {
-  return LIST_LABELS.map((list) => ({
-    list,
-    matchedEntity: "Screened",
-    similarity: 100,
-    tier,
-  }));
+function normalizeApiAssessmentLabel(raw: string): string {
+  return raw.trim().toUpperCase().replace(/\s+/g, "_");
+}
+
+/** Best-effort sanctioned-entity name extracted from API reasoning (TRUE_POSITIVE / HIGH). */
+function matchedEntityFromApiReasoning(reasoning: string): string | null {
+  const r = reasoning.trim();
+  if (!r) return null;
+  const quoted = r.match(/["""']([A-Za-z0-9&][^"""']{0,120})["""']/);
+  if (quoted?.[1]) return quoted[1].trim();
+  const paren = r.match(/\(([^)]{2,100})\)/);
+  if (paren?.[1]) {
+    const inner = paren[1].trim();
+    if (!/^\d+$/.test(inner) && !/^usd|^eur|\$/i.test(inner)) return inner;
+  }
+  const entityWord = r.match(/\bentity\s+["']?([A-Za-z\u0400-\u04FF0-9][^.,;]{1,80})/i);
+  if (entityWord?.[1]) return entityWord[1].trim();
+  const against = r.match(/\b(?:against|to|with)\s+["']?([A-Z\u0400][A-Za-z\u0400-\u04FF\s&.-]{1,80})/);
+  if (against?.[1]) return against[1].trim().replace(/\s+$/u, "");
+  const listHit = r.match(
+    /\b(?:OFAC|SDN|EU|UN|OFSI)\b[^.]{0,40}?\b([A-Z][A-Za-z][A-Za-z\s&.-]{2,60}?)(?:\s+was|\s+is|\.|,|$)/i
+  );
+  if (listHit?.[1]) return listHit[1].trim();
+  return null;
+}
+
+type ListHitSharedMeta = Omit<ListHitRow, "list">;
+
+function buildListHitSharedMeta(
+  input: ScreenPipelineInput,
+  apiRow: ScreenVendorApiResult | undefined,
+  risk: "HIGH" | "MEDIUM" | "LOW"
+): ListHitSharedMeta {
+  const assessment = apiRow ? normalizeApiAssessmentLabel(apiRow.assessment) : "";
+  const reasoning = apiRow?.reasoning?.trim() ?? "";
+  const extracted = matchedEntityFromApiReasoning(reasoning);
+
+  if (assessment === "FALSE_POSITIVE") {
+    return {
+      matchedEntity: "No match",
+      similarity: 0,
+      tier: "LOW",
+      statusLabel: "Screened — No Match",
+      statusTier: "LOW",
+    };
+  }
+
+  if (assessment === "TRUE_POSITIVE" || risk === "HIGH") {
+    return {
+      matchedEntity: extracted ?? "—",
+      similarity: 0,
+      tier: "HIGH",
+      statusLabel: "Screened — Match Found",
+      statusTier: "HIGH",
+    };
+  }
+
+  if (risk === "MEDIUM") {
+    return {
+      matchedEntity: extracted ?? "—",
+      similarity: 0,
+      tier: "MEDIUM",
+      statusLabel: "Screened — Possible Match",
+      statusTier: "MEDIUM",
+    };
+  }
+
+  return {
+    matchedEntity: "No match",
+    similarity: 0,
+    tier: "LOW",
+    statusLabel: "Screened — No Match",
+    statusTier: "LOW",
+  };
+}
+
+/** Per-list rows: same meta on all four lists (API does not return per-list breakdown). */
+function buildListHitsForApiScreening(
+  input: ScreenPipelineInput,
+  apiRow: ScreenVendorApiResult | undefined,
+  risk: "HIGH" | "MEDIUM" | "LOW"
+): ListHitRow[] {
+  const meta = buildListHitSharedMeta(input, apiRow, risk);
+  return LIST_LABELS.map((list) => ({ list, ...meta }));
 }
 
 function buildScreeningResultsFromApi(
@@ -428,7 +507,7 @@ function buildScreeningResultsFromApi(
     ? `${apiRow.assessment.replace(/_/g, " ")} · ${listsChecked}`
     : "—";
   return {
-    listHits: listHitsAllScreened(risk),
+    listHits: buildListHitsForApiScreening(input, apiRow, risk),
     compositeScore,
     risk,
     bestMatch,
@@ -2595,7 +2674,7 @@ export default function Screening() {
                   <tr className="border-b border-slate-200 bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
                     <th className="px-3 py-2 font-display">List</th>
                     <th className="px-3 py-2 font-display">Matched entity</th>
-                    <th className="px-3 py-2 text-right font-display tabular-nums">Fuzzy %</th>
+                    <th className="px-3 py-2 font-display">Status</th>
                     <th className="px-3 py-2 font-display">Risk</th>
                   </tr>
                 </thead>
@@ -2604,8 +2683,18 @@ export default function Screening() {
                     <tr key={row.list} className="border-b border-slate-100 odd:bg-white even:bg-slate-50/80">
                       <td className="px-3 py-2 font-medium text-slate-800">{row.list}</td>
                       <td className="px-3 py-2 font-data text-[11px] text-slate-900">{row.matchedEntity}</td>
-                      <td className="px-3 py-2 text-right font-data tabular-nums text-slate-800">
-                        {row.similarity}%
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-slate-800 font-body">{row.statusLabel}</span>
+                          <span
+                            className={cn(
+                              "rounded border px-1.5 py-0.5 text-[10px] font-bold",
+                              tierStyle(row.statusTier)
+                            )}
+                          >
+                            {row.statusTier}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-3 py-2">
                         <span
