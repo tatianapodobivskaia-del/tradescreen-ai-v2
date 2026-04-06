@@ -65,6 +65,21 @@ export default function AboutResearcher() {
                 </div>
               </div>
             ))}
+            <div className="flex items-start gap-4 p-5 rounded-xl bg-slate-50 border border-slate-100">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-slate-800 font-display">
+                  ACAMS AML and Sanctions Screening Foundations (2026)
+                </h4>
+                <p className="text-sm text-slate-600 font-body mt-0.5">ACAMS</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-400 font-body">Professional certification</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
