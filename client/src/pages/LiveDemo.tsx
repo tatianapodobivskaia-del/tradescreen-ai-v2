@@ -1327,7 +1327,7 @@ function ScenarioCard({
 
   const showDemoPanel = phase1 !== "idle" || phase2 !== "locked" || phase3 !== "locked";
 
-  const lightPanel = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
+  const lightPanel = "min-h-[600px] rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
 
   return (
     <article className="flex w-full min-w-0 max-w-full flex-col rounded-xl border border-slate-700/80 bg-slate-900/95 p-6 text-left shadow-lg shadow-black/30">
@@ -1427,7 +1427,7 @@ function ScenarioCard({
       )}
 
       {showDemoPanel && (
-          <div className={cn("mt-5 w-full min-w-0 max-w-full min-h-[600px]", lightPanel)}>
+          <div className={cn("mt-5 w-full min-w-0 max-w-full", lightPanel)}>
             <p className="mb-1 text-center text-[10px] font-bold font-display uppercase tracking-[0.2em] text-slate-500">
               {activeStep === 1 && "Sanctions list screening"}
               {activeStep === 2 && "AI deep analysis"}
