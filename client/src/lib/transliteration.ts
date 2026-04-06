@@ -255,15 +255,22 @@ export function generateAllVariants(input: string): {
 
   if (isCyrillic(trimmed)) {
     const combinatorial = transliterateCombinatorial(trimmed);
+    // Expand each combinatorial variant through REVERSE_MAP
+    const expanded = new Set<string>();
+    for (const variant of combinatorial) {
+      const reverseVariants = generateLatinVariants(variant);
+      reverseVariants.forEach((v) => expanded.add(v));
+    }
+    const allVariants = [...expanded].slice(0, 20);
     return {
-      variants: combinatorial,
+      variants: allVariants,
       standards: {
         iso9: transliterateISO9(trimmed),
         icao: transliterateICAO(trimmed),
         bgn: transliterateBGN(trimmed),
         informal: transliterateInformal(trimmed),
       },
-      direction: 'cyrillic',
+      direction: 'cyrillic' as const,
     };
   }
 
