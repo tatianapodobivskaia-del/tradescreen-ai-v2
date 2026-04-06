@@ -2,7 +2,7 @@
  * SCREENING PAGE — Upload document + manual entry
  */
 import { useState, useCallback, useRef, useMemo, Fragment } from "react";
-import { Search, Upload, Loader2, CheckCircle, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Search, Upload, Loader2, CheckCircle, AlertTriangle, ShieldAlert, Info } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { cn } from "@/lib/utils";
@@ -263,10 +263,9 @@ function docRiskScore(docType: string): number {
   return Math.min(100, 68 + Math.min(12, Math.floor(d.length / 25)));
 }
 
-function formatUsdDisplay(raw: string): string {
+/** Batch / upload results: USD from parsed string (always currency-formatted for table) */
+function formatUsdCurrencyAmount(raw: string): string {
   const n = parseAmountUsd(raw);
-  if (!raw.trim() && n <= 0) return "—";
-  if (n <= 0) return raw.trim() || "—";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -387,89 +386,129 @@ function rowsFromDelimitedText(text: string): string[][] {
   return lines.map(parseCsvLine);
 }
 
-/** Prefer explicit document headers over generic "doc" to avoid wrong column mapping */
-function findDocColumnIndex(norm: string[]): number {
-  const priority = [
-    "document_type",
-    "type_of_document",
-    "doc_type",
-    "document",
-    "doc",
-  ];
-  for (const p of priority) {
-    const i = norm.indexOf(p);
+/** Upload file column aliases — used by handleFileUpload after matrix parse */
+const UPLOAD_COLUMN_MAPS = {
+  name: ["vendor_name", "vendor", "name", "entity", "fio"],
+  country: ["country", "origin", "location", "residence"],
+  amount: ["amount", "value", "total", "price", "sum"],
+  doc: ["document_type", "document", "doc", "type", "doc_type"],
+} as const;
+
+function findFirstColumnIndexForKeys(normHeaders: string[], keys: readonly string[]): number {
+  const sorted = [...keys].sort((a, b) => b.length - a.length);
+  for (const key of sorted) {
+    const i = normHeaders.indexOf(key);
     if (i >= 0) return i;
   }
-  for (let i = 0; i < norm.length; i++) {
-    const h = norm[i];
-    if (h.includes("document_type") || (h.includes("document") && !h.includes("vendor"))) return i;
-    if (h.endsWith("_doc") && !h.includes("vendor")) return i;
+  for (let i = 0; i < normHeaders.length; i++) {
+    const h = normHeaders[i];
+    for (const key of sorted) {
+      if (key.length <= 4) {
+        if (h === key) return i;
+      } else if (h === key || h.includes(key)) {
+        return i;
+      }
+    }
   }
   return -1;
 }
 
-function mapHeaderToIndices(headers: string[]): {
-  vendor: number;
-  country: number;
-  amount: number;
-  doc: number;
-} | null {
-  const norm = headers.map((h) => normalizeHeaderKey(String(h ?? "")));
-  let vendor = -1;
-  let country = -1;
-  let amount = -1;
-  for (let i = 0; i < norm.length; i++) {
-    const h = norm[i];
-    if (
-      vendor < 0 &&
-      (h === "vendor_name" ||
-        h === "vendor" ||
-        h === "name" ||
-        h === "company" ||
-        h === "entity" ||
-        h === "entity_name" ||
-        h === "legal_name" ||
-        h === "beneficiary" ||
-        h === "counterparty")
-    ) {
-      vendor = i;
-    }
-    if (country < 0 && (h === "country" || h === "nation" || h === "country_code")) country = i;
-    if (
-      amount < 0 &&
-      (h === "amount" ||
-        h === "transaction_amount" ||
-        h === "usd" ||
-        h === "value" ||
-        h === "transaction" ||
-        h === "transaction_value")
-    ) {
-      amount = i;
+function findDocColumnIndexWithMaps(normHeaders: string[]): number {
+  const keys = [...UPLOAD_COLUMN_MAPS.doc].sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    const i = normHeaders.indexOf(key);
+    if (i >= 0) return i;
+  }
+  for (let i = 0; i < normHeaders.length; i++) {
+    const h = normHeaders[i];
+    for (const key of keys) {
+      if (key === "type") {
+        if (h === "type") return i;
+        if (h.includes("document") && h.includes("type")) return i;
+        continue;
+      }
+      if (key.length <= 4) {
+        if (h === key) return i;
+      } else if (h === key || (h.includes(key) && !h.includes("vendor"))) {
+        return i;
+      }
     }
   }
-  const doc = findDocColumnIndex(norm);
-  if (vendor < 0) return null;
-  return { vendor, country, amount, doc };
+  return -1;
 }
 
-function buildParsedRowsFromHeaderTable(rows: string[][]): ParsedUploadRow[] | null {
-  if (rows.length < 2) return null;
-  const headers = rows[0].map((c) => String(c ?? "").replace(/^\uFEFF/, ""));
-  const idx = mapHeaderToIndices(headers);
-  if (!idx) return null;
+function inferMissingColumnsFromWidth(width: number): string[] {
+  const m: string[] = [];
+  if (width < 2) m.push("Country", "Amount", "Document");
+  else if (width < 3) m.push("Amount", "Document");
+  else if (width < 4) m.push("Document");
+  return m;
+}
+
+function applyUploadColumnDefaults(row: ParsedUploadRow, missingCols: string[]): ParsedUploadRow {
+  const miss = new Set(missingCols);
+  return {
+    vendorName: row.vendorName,
+    country: miss.has("Country") ? "Unknown" : row.country.trim(),
+    amount: miss.has("Amount") ? "0" : row.amount.trim(),
+    docType: miss.has("Document") ? "Document" : row.docType.trim(),
+  };
+}
+
+function normalizeUploadMatrixWithColumnMaps(matrix: string[][]): {
+  rows: ParsedUploadRow[];
+  missingColumns: string[];
+} {
+  if (matrix.length === 0) return { rows: [], missingColumns: [] };
+
+  const headerRow = matrix[0].map((c) => normalizeHeaderKey(String(c ?? "").replace(/^\uFEFF/, "")));
+
+  let nameIdx = findFirstColumnIndexForKeys(headerRow, UPLOAD_COLUMN_MAPS.name);
+  const countryIdx = findFirstColumnIndexForKeys(headerRow, UPLOAD_COLUMN_MAPS.country);
+  const amountIdx = findFirstColumnIndexForKeys(headerRow, UPLOAD_COLUMN_MAPS.amount);
+  const docIdx = findDocColumnIndexWithMaps(headerRow);
+
+  const anyMapped = [nameIdx, countryIdx, amountIdx, docIdx].some((i) => i >= 0);
+
+  if (!anyMapped) {
+    const rows = buildParsedRowsWithoutNamedHeader(matrix);
+    return {
+      rows,
+      missingColumns: inferMissingColumnsFromWidth(matrix[0]?.length ?? 0),
+    };
+  }
+
+  const missingColumns: string[] = [];
+  if (countryIdx < 0) missingColumns.push("Country");
+  if (amountIdx < 0) missingColumns.push("Amount");
+  if (docIdx < 0) missingColumns.push("Document");
+  if (nameIdx < 0) {
+    nameIdx = 0;
+  }
+
   const out: ParsedUploadRow[] = [];
-  for (let r = 1; r < rows.length; r++) {
-    const row = rows[r];
-    const vn = String(row[idx.vendor] ?? "").trim();
+  for (let r = 1; r < matrix.length; r++) {
+    const row = matrix[r];
+    const vn = String(row[nameIdx] ?? "").trim();
     if (!vn) continue;
     out.push({
       vendorName: vn,
-      country: idx.country >= 0 ? String(row[idx.country] ?? "").trim() : "",
-      amount: idx.amount >= 0 ? String(row[idx.amount] ?? "").trim() : "",
-      docType: idx.doc >= 0 ? String(row[idx.doc] ?? "").trim() : "",
+      country: countryIdx >= 0 ? String(row[countryIdx] ?? "").trim() : "",
+      amount: amountIdx >= 0 ? String(row[amountIdx] ?? "").trim() : "",
+      docType: docIdx >= 0 ? String(row[docIdx] ?? "").trim() : "",
     });
   }
-  return out.length > 0 ? out : null;
+
+  if (out.length === 0) {
+    const rows = buildParsedRowsWithoutNamedHeader(matrix);
+    return {
+      rows,
+      missingColumns:
+        missingColumns.length > 0 ? missingColumns : inferMissingColumnsFromWidth(matrix[0]?.length ?? 0),
+    };
+  }
+
+  return { rows: out, missingColumns };
 }
 
 /** Fallback: column 0 = vendor; optional cols 1–3 = country, amount, document */
@@ -493,13 +532,6 @@ function buildParsedRowsWithoutNamedHeader(rows: string[][]): ParsedUploadRow[] 
     .filter((r) => r.vendorName.length > 0);
 }
 
-function parseSpreadsheetRows(rows: string[][]): ParsedUploadRow[] {
-  if (rows.length === 0) return [];
-  const fromHeaders = buildParsedRowsFromHeaderTable(rows);
-  if (fromHeaders && fromHeaders.length > 0) return fromHeaders;
-  return buildParsedRowsWithoutNamedHeader(rows);
-}
-
 function parseWordLinesToRows(lines: string[]): string[][] {
   if (lines.length === 0) return [];
   const first = lines[0];
@@ -512,17 +544,19 @@ function parseWordLinesToRows(lines: string[]): string[][] {
   return [];
 }
 
-function parseWordPlainText(text: string): ParsedUploadRow[] {
+function parseWordPlainText(text: string): { rows: ParsedUploadRow[]; missingColumns: string[] } {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return [];
+  if (lines.length === 0) return { rows: [], missingColumns: [] };
   const matrix = parseWordLinesToRows(lines);
   if (matrix.length > 0) {
-    const parsed = parseSpreadsheetRows(matrix);
-    if (parsed.length > 0) return parsed;
+    return normalizeUploadMatrixWithColumnMaps(matrix);
   }
-  return lines
-    .filter((l) => l.length > 2 && l.length < 100)
-    .map((l) => ({ vendorName: l, country: "", amount: "", docType: "" }));
+  return {
+    rows: lines
+      .filter((l) => l.length > 2 && l.length < 100)
+      .map((l) => ({ vendorName: l, country: "", amount: "", docType: "" })),
+    missingColumns: ["Country", "Amount", "Document"],
+  };
 }
 
 function tierStyle(tier: string): string {
@@ -873,6 +907,7 @@ export default function Screening() {
   const [isLoading, setIsLoading] = useState(false);
   /** Non-null after a successful parse with at least one vendor; cleared when choosing a new file */
   const [parsedUploadRows, setParsedUploadRows] = useState<ParsedUploadRow[] | null>(null);
+  const [missingColumns, setMissingColumns] = useState<string[]>([]);
   const [uploadScreeningDone, setUploadScreeningDone] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   /** Multi-vendor file upload screening (2+ vendors); null when using single-vendor flow */
@@ -995,7 +1030,7 @@ export default function Screening() {
     if (!parsedUploadRows?.length) return;
     setBatchRiskFilter("ALL");
     if (parsedUploadRows.length === 1) {
-      const first = parsedUploadRows[0];
+      const first = applyUploadColumnDefaults(parsedUploadRows[0], missingColumns);
       setVendorName(first.vendorName);
       setBatchScreeningRows(null);
       handleScreen(first.vendorName, first);
@@ -1004,11 +1039,12 @@ export default function Screening() {
     }
     const auditedAt = new Date().toISOString();
     const rows: BatchScreenRow[] = parsedUploadRows.map((row) => {
+      const normalized = applyUploadColumnDefaults(row, missingColumns);
       const screenInput = {
-        vendorName: row.vendorName,
-        country: row.country,
-        amount: row.amount,
-        docType: row.docType,
+        vendorName: normalized.vendorName,
+        country: normalized.country,
+        amount: normalized.amount,
+        docType: normalized.docType,
         cyrillicName: cyrillicName.trim(),
       };
       return {
@@ -1025,10 +1061,11 @@ export default function Screening() {
     setAiResults(null);
     setAiError(null);
     setUploadScreeningDone(true);
-  }, [parsedUploadRows, handleScreen, cyrillicName]);
+  }, [parsedUploadRows, missingColumns, handleScreen, cyrillicName]);
 
   const resetUpload = useCallback(() => {
     setParsedUploadRows(null);
+    setMissingColumns([]);
     setUploadedFile(null);
     setUploadScreeningDone(false);
     setBatchScreeningRows(null);
@@ -1045,29 +1082,37 @@ export default function Screening() {
       setLastScreenInput(null);
       setAiResults(null);
       setParsedUploadRows(null);
+      setMissingColumns([]);
       setUploadScreeningDone(false);
       setUploadedFile(file.name);
       setAiError(null);
       setIsLoading(true);
       const ext = file.name.split(".").pop()?.toLowerCase();
       let parsedRows: ParsedUploadRow[] = [];
+      let uploadMissingColumns: string[] = [];
 
       try {
         if (ext === "csv" || ext === "txt") {
           const text = await file.text();
           const matrix = rowsFromDelimitedText(text);
-          parsedRows = parseSpreadsheetRows(matrix);
+          const out = normalizeUploadMatrixWithColumnMaps(matrix);
+          parsedRows = out.rows;
+          uploadMissingColumns = out.missingColumns;
         } else if (ext === "xlsx" || ext === "xls") {
           const buf = await file.arrayBuffer();
           const wb = XLSX.read(buf, { type: "array" });
           const ws = wb.Sheets[wb.SheetNames[0]];
           const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1 }) as string[][];
           const matrix = rows.map((row) => row.map((c) => (c === undefined || c === null ? "" : String(c))));
-          parsedRows = parseSpreadsheetRows(matrix);
+          const out = normalizeUploadMatrixWithColumnMaps(matrix);
+          parsedRows = out.rows;
+          uploadMissingColumns = out.missingColumns;
         } else if (ext === "docx" || ext === "doc") {
           const buf = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: buf });
-          parsedRows = parseWordPlainText(result.value);
+          const out = parseWordPlainText(result.value);
+          parsedRows = out.rows;
+          uploadMissingColumns = out.missingColumns;
         } else {
           setAiError("Unsupported file format. Please upload CSV, Excel, PDF, Word, or TXT.");
           setIsLoading(false);
@@ -1076,13 +1121,16 @@ export default function Screening() {
 
         if (parsedRows.length > 0) {
           setParsedUploadRows(parsedRows);
+          setMissingColumns(uploadMissingColumns);
           setIsLoading(false);
         } else {
           setAiError("No vendor names found in file. Try Manual Entry.");
+          setMissingColumns([]);
           setIsLoading(false);
         }
       } catch {
         setAiError("Error reading file. Try a different format or use Manual Entry.");
+        setMissingColumns([]);
         setIsLoading(false);
       }
     },
@@ -1388,6 +1436,16 @@ export default function Screening() {
       <div className="premium-card rounded-xl p-8">
         <h2 className="text-base font-bold font-display text-slate-900">Screening results</h2>
 
+        {missingColumns.length > 0 && (
+          <div className="mt-4 flex gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            <Info className="h-5 w-5 shrink-0 text-blue-600" aria-hidden />
+            <p className="font-body">
+              Missing columns: {missingColumns.join(", ")}. Default values will be used (Country: Unknown, Amount: $0, Doc:
+              Document).
+            </p>
+          </div>
+        )}
+
         {!screeningResults && !(batchScreeningRows && batchScreeningRows.length > 0) ? (
           <p className="mt-2 text-sm text-slate-500 font-body">
             Match scores, list hits, and recommended actions will appear here after you screen a vendor.
@@ -1549,7 +1607,7 @@ export default function Screening() {
                             <td className="px-3 py-3 font-semibold text-slate-900">{batchRow.screenInput.vendorName}</td>
                             <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.country || "—"}</td>
                             <td className="px-3 py-3 font-mono tabular-nums text-slate-800">
-                              {formatUsdDisplay(batchRow.screenInput.amount)}
+                              {formatUsdCurrencyAmount(batchRow.screenInput.amount)}
                             </td>
                             <td className="px-3 py-3 text-slate-700">{displayDocumentType(batchRow.screenInput.docType)}</td>
                             <td className="max-w-[180px] px-3 py-3 font-data text-[11px] text-slate-900">
