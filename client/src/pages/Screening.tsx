@@ -1452,44 +1452,58 @@ export default function Screening() {
           </p>
         ) : batchScreeningRows && batchScreeningRows.length > 0 ? (
           <div className="mt-4 space-y-4">
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 shadow-md ring-1 ring-slate-200/80">
-              <h3 className="text-lg font-bold font-display text-slate-900">
-                {batchScreeningRows.length} vendors screened
-              </h3>
-              <div className="mt-4 flex flex-col gap-3">
-                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-red-100 bg-red-50/60 p-3">
-                  <span className="shrink-0 rounded-md border border-red-200 bg-red-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-red-900">
-                    HIGH RISK ({batchRiskCounts.high})
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
-                    {batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : "—"}
-                  </span>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="min-w-0 border-t-4 border-red-600 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">HIGH RISK</span>
+                  <ShieldAlert className="h-4 w-4 shrink-0 text-red-600" aria-hidden />
                 </div>
-                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-amber-100 bg-amber-50/60 p-3">
-                  <span className="shrink-0 rounded-md border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-amber-950">
-                    MEDIUM ({batchRiskCounts.medium})
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
-                    {batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : "—"}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-start gap-2 rounded-lg border border-emerald-100 bg-emerald-50/60 p-3">
-                  <span className="shrink-0 rounded-md border border-emerald-200 bg-emerald-100 px-2 py-1 text-[10px] font-bold font-display uppercase tracking-wide text-emerald-900">
-                    LOW/CLEAR ({batchRiskCounts.low})
-                  </span>
-                  <span className="min-w-0 flex-1 text-sm text-slate-800 font-body">
-                    {batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : "—"}
-                  </span>
-                </div>
+                <p className="mt-2 text-2xl font-mono font-bold text-red-600">{batchRiskCounts.high}</p>
+                <p
+                  className="mt-2 truncate text-[11px] text-slate-500"
+                  title={
+                    batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : undefined
+                  }
+                >
+                  {batchNamesByRisk.high.length ? batchNamesByRisk.high.join(", ") : "—"}
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setBatchDetailsExpanded((e) => !e)}
-                className="btn-premium btn-premium-primary mt-6 text-sm"
-              >
-                {batchDetailsExpanded ? "Hide details" : "View Details"}
-              </button>
+              <div className="min-w-0 border-t-4 border-amber-500 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">MEDIUM</span>
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                </div>
+                <p className="mt-2 text-2xl font-mono font-bold text-amber-600">{batchRiskCounts.medium}</p>
+                <p
+                  className="mt-2 truncate text-[11px] text-slate-500"
+                  title={
+                    batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : undefined
+                  }
+                >
+                  {batchNamesByRisk.medium.length ? batchNamesByRisk.medium.join(", ") : "—"}
+                </p>
+              </div>
+              <div className="min-w-0 border-t-4 border-emerald-500 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">LOW / CLEAR</span>
+                  <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                </div>
+                <p className="mt-2 text-2xl font-mono font-bold text-emerald-600">{batchRiskCounts.low}</p>
+                <p
+                  className="mt-2 truncate text-[11px] text-slate-500"
+                  title={batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : undefined}
+                >
+                  {batchNamesByRisk.low.length ? batchNamesByRisk.low.join(", ") : "—"}
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setBatchDetailsExpanded((e) => !e)}
+              className="w-full border border-slate-300 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              {batchDetailsExpanded ? "Hide Details" : "View Full Screening Table"}
+            </button>
 
             {batchDetailsExpanded ? (
               <>
