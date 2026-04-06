@@ -56,7 +56,9 @@ export default function AboutResearcher() {
                   <GraduationCap className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <h4 className="text-base font-semibold text-slate-800 font-display">{edu.degree}</h4>
+                  <h4 className="text-base font-semibold text-slate-800 font-display">
+                    {edu.degree.replace("BI & Analytics", "Business Intelligence & Data Analytics")}
+                  </h4>
                   <p className="text-sm text-slate-600 font-body mt-0.5">{edu.institution}</p>
                   <div className="flex items-center gap-1.5 mt-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
@@ -71,12 +73,12 @@ export default function AboutResearcher() {
               </div>
               <div>
                 <h4 className="text-base font-semibold text-slate-800 font-display">
-                  ACAMS AML and Sanctions Screening Foundations (2026)
+                  ACAMS AML and Sanctions Screening Foundations (2026) — Focus: sanctions screening, AML risk, name matching
                 </h4>
                 <p className="text-sm text-slate-600 font-body mt-0.5">ACAMS</p>
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-400 font-body">Professional certification</span>
+                  <span className="text-xs text-slate-400 font-body">Industry Training</span>
                 </div>
               </div>
             </div>
