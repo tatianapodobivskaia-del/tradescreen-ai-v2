@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { runAIDeepAnalysis } from "../lib/api";
+import { generateAllVariants, isCyrillic } from "../lib/transliteration";
 import { watchlistEntities } from "@/lib/mockData";
 
 /** Full alphabetical country list (50+) */
@@ -196,107 +197,22 @@ function maximumFuzzyScore(needle: string, candidate: string): number {
   return Math.min(100, best);
 }
 
-const CYRILLIC_RE = /[\u0400-\u04FF]/;
-
-function hasCyrillic(s: string): boolean {
-  return CYRILLIC_RE.test(s);
-}
-
-function mapSingleCyrLetter(cl: string): string {
-  const map: Record<string, string> = {
-    а: "a",
-    б: "b",
-    в: "v",
-    г: "g",
-    д: "d",
-    ё: "yo",
-    ж: "zh",
-    з: "z",
-    и: "i",
-    й: "y",
-    к: "k",
-    л: "l",
-    м: "m",
-    н: "n",
-    о: "o",
-    п: "p",
-    р: "r",
-    с: "s",
-    т: "t",
-    у: "u",
-    ф: "f",
-    х: "kh",
-    ц: "ts",
-    ч: "ch",
-    ш: "sh",
-    щ: "shch",
-    ъ: "",
-    ы: "y",
-    ь: "",
-    э: "e",
-    ю: "yu",
-    я: "ya",
-    є: "ye",
-    і: "i",
-    ї: "yi",
-    ґ: "g",
-  };
-  return map[cl] ?? "";
-}
-
-function transliterateSegment(text: string, yePolicy: "alwaysE" | "smartYe"): string {
-  let out = "";
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (!CYRILLIC_RE.test(ch)) {
-      out += ch;
-      continue;
-    }
-    const cl = ch.toLowerCase();
-    if (cl === "е") {
-      if (yePolicy === "alwaysE") {
-        out += "e";
-      } else {
-        const prev = i > 0 ? text[i - 1] : "";
-        const useYe =
-          i === 0 ||
-          /\s/.test(prev) ||
-          prev === "\u044a" ||
-          prev === "\u042a" ||
-          prev === "\u044c" ||
-          prev === "\u042c";
-        out += useYe ? "ye" : "e";
-      }
-      continue;
-    }
-    out += mapSingleCyrLetter(cl);
-  }
-  return out;
-}
-
-function generateTransliterationVariants(text: string): string[] {
-  if (!hasCyrillic(text)) return [];
-  const v1 = transliterateSegment(text, "alwaysE").trim();
-  const v2 = transliterateSegment(text, "smartYe").trim();
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const v of [v1, v2]) {
-    if (v.length === 0) continue;
-    const k = v.toLowerCase();
-    if (!seen.has(k)) {
-      seen.add(k);
-      out.push(v);
-    }
-  }
-  return out;
-}
+type TransliterationScreeningInfo = {
+  original: string;
+  iso9: string;
+  icao: string;
+  bgn: string;
+  informal: string;
+  uniqueVariants: string[];
+};
 
 function expandScreeningNeedles(
   vendorName: string,
   cyrillicName: string
 ): {
   needles: string[];
-  transliterationInfo: null | { original: string; variants: string[] };
+  transliterationInfo: null | TransliterationScreeningInfo;
+  latinOnlyLabel: boolean;
 } {
   const base = [vendorName, cyrillicName].map((s) => s.trim()).filter((s) => s.length > 0);
   const needleSet = new Set<string>();
@@ -304,27 +220,39 @@ function expandScreeningNeedles(
     needleSet.add(n);
   }
   for (const n of base) {
-    if (!hasCyrillic(n)) continue;
-    for (const v of generateTransliterationVariants(n)) {
-      needleSet.add(v);
+    if (isCyrillic(n)) {
+      const { unique } = generateAllVariants(n);
+      for (const u of unique) {
+        needleSet.add(u);
+      }
     }
   }
 
-  let transliterationInfo: null | { original: string; variants: string[] } = null;
+  const hasAnyCyrillic = base.some((n) => isCyrillic(n));
+  let transliterationInfo: null | TransliterationScreeningInfo = null;
   const primaryOriginal =
-    vendorName.trim().length > 0 && hasCyrillic(vendorName)
+    vendorName.trim().length > 0 && isCyrillic(vendorName)
       ? vendorName.trim()
-      : cyrillicName.trim().length > 0 && hasCyrillic(cyrillicName)
+      : cyrillicName.trim().length > 0 && isCyrillic(cyrillicName)
         ? cyrillicName.trim()
         : null;
   if (primaryOriginal) {
+    const v = generateAllVariants(primaryOriginal);
     transliterationInfo = {
       original: primaryOriginal,
-      variants: generateTransliterationVariants(primaryOriginal),
+      iso9: v.iso9,
+      icao: v.icao,
+      bgn: v.bgn,
+      informal: v.informal,
+      uniqueVariants: v.unique,
     };
   }
 
-  return { needles: Array.from(needleSet), transliterationInfo };
+  return {
+    needles: Array.from(needleSet),
+    transliterationInfo,
+    latinOnlyLabel: !hasAnyCyrillic,
+  };
 }
 
 function bestScoreAgainstEntity(
@@ -433,7 +361,8 @@ type ScreeningResultsState = {
   risk: "HIGH" | "MEDIUM" | "LOW";
   bestMatch: string;
   scoreBreakdown: ScoreBreakdown;
-  transliterationInfo: null | { original: string; variants: string[] };
+  transliterationInfo: null | TransliterationScreeningInfo;
+  latinOnlyLabel: boolean;
 };
 
 function runClientScreening(input: {
@@ -443,7 +372,10 @@ function runClientScreening(input: {
   docType: string;
   cyrillicName: string;
 }): ScreeningResultsState {
-  const { needles, transliterationInfo } = expandScreeningNeedles(input.vendorName, input.cyrillicName);
+  const { needles, transliterationInfo, latinOnlyLabel } = expandScreeningNeedles(
+    input.vendorName,
+    input.cyrillicName
+  );
 
   const listHits: ListHitRow[] = LIST_LABELS.map((list) => {
     const inList = watchlistEntities.filter((e) => e.list === list);
@@ -493,6 +425,7 @@ function runClientScreening(input: {
     bestMatch,
     scoreBreakdown,
     transliterationInfo,
+    latinOnlyLabel,
   };
 }
 
@@ -2236,8 +2169,13 @@ export default function Screening() {
                               <div>{batchRow.screenInput.vendorName}</div>
                               {sr.transliterationInfo ? (
                                 <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
-                                  Cyrillic variants: {sr.transliterationInfo.original} →{" "}
-                                  {sr.transliterationInfo.variants.slice(0, 3).join(", ")}
+                                  Cyrillic variants: {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9},{" "}
+                                  {sr.transliterationInfo.icao}, {sr.transliterationInfo.bgn}, {sr.transliterationInfo.informal}{" "}
+                                  — best match across 4 lists
+                                </p>
+                              ) : sr.latinOnlyLabel ? (
+                                <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
+                                  Latin input — direct screening
                                 </p>
                               ) : null}
                             </td>
@@ -2459,8 +2397,12 @@ export default function Screening() {
               {screeningResults.transliterationInfo ? (
                 <p className="mt-1 max-w-xl font-mono text-xs text-slate-500">
                   Cyrillic variants: {screeningResults.transliterationInfo.original} →{" "}
-                  {screeningResults.transliterationInfo.variants.slice(0, 3).join(", ")}
+                  {screeningResults.transliterationInfo.iso9}, {screeningResults.transliterationInfo.icao},{" "}
+                  {screeningResults.transliterationInfo.bgn}, {screeningResults.transliterationInfo.informal} — best match
+                  across 4 lists
                 </p>
+              ) : screeningResults.latinOnlyLabel ? (
+                <p className="mt-1 max-w-xl font-mono text-xs text-slate-500">Latin input — direct screening</p>
               ) : null}
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-700">
                 <span>
