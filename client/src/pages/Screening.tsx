@@ -30,7 +30,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { runAIDeepAnalysis } from "../lib/api";
-import { generateAllVariants, isCyrillic } from "../lib/transliteration";
+import {
+  isCyrillic,
+  generateAllVariants,
+  expandScreeningNeedles,
+  generateLatinVariants,
+} from "../lib/transliteration";
 import { watchlistEntities } from "@/lib/mockData";
 
 /** Full alphabetical country list (50+) */
@@ -198,61 +203,66 @@ function maximumFuzzyScore(needle: string, candidate: string): number {
 }
 
 type TransliterationScreeningInfo = {
-  original: string;
-  iso9: string;
-  icao: string;
-  bgn: string;
-  informal: string;
-  uniqueVariants: string[];
+  variants: string[];
+  standards: {
+    iso9: string;
+    icao: string;
+    bgn: string;
+    informal: string;
+  } | null;
+  direction: "cyrillic" | "latin";
 };
 
-function expandScreeningNeedles(
+if (typeof generateLatinVariants !== "function") {
+  throw new Error("transliteration: generateLatinVariants unavailable");
+}
+
+function buildScreeningNeedlesAndTransliteration(
   vendorName: string,
   cyrillicName: string
 ): {
   needles: string[];
-  transliterationInfo: null | TransliterationScreeningInfo;
-  latinOnlyLabel: boolean;
+  transliterationInfo: TransliterationScreeningInfo | null;
 } {
   const base = [vendorName, cyrillicName].map((s) => s.trim()).filter((s) => s.length > 0);
   const needleSet = new Set<string>();
   for (const n of base) {
-    needleSet.add(n);
-  }
-  for (const n of base) {
-    if (isCyrillic(n)) {
-      const { unique } = generateAllVariants(n);
-      for (const u of unique) {
-        needleSet.add(u);
-      }
+    for (const needle of expandScreeningNeedles(n)) {
+      needleSet.add(needle);
     }
   }
 
-  const hasAnyCyrillic = base.some((n) => isCyrillic(n));
-  let transliterationInfo: null | TransliterationScreeningInfo = null;
-  const primaryOriginal =
-    vendorName.trim().length > 0 && isCyrillic(vendorName)
-      ? vendorName.trim()
-      : cyrillicName.trim().length > 0 && isCyrillic(cyrillicName)
-        ? cyrillicName.trim()
-        : null;
-  if (primaryOriginal) {
-    const v = generateAllVariants(primaryOriginal);
-    transliterationInfo = {
-      original: primaryOriginal,
-      iso9: v.iso9,
-      icao: v.icao,
-      bgn: v.bgn,
-      informal: v.informal,
-      uniqueVariants: v.unique,
-    };
-  }
+  const primaryForDisplay = vendorName.trim() || cyrillicName.trim();
+  const transliterationInfo: TransliterationScreeningInfo | null =
+    primaryForDisplay.length > 0 ? generateAllVariants(primaryForDisplay) : null;
 
   return {
     needles: Array.from(needleSet),
     transliterationInfo,
-    latinOnlyLabel: !hasAnyCyrillic,
   };
+}
+
+function ScreeningVariantsCollapsible({ info }: { info: TransliterationScreeningInfo }) {
+  return (
+    <details className="mt-1 max-w-[min(100%,28rem)] font-mono text-xs text-slate-500">
+      <summary className="cursor-pointer select-none text-slate-600 hover:text-slate-800">
+        Screening variants ({info.direction}) · {info.variants.length}
+      </summary>
+      <ul className="mt-1.5 max-h-44 overflow-y-auto border border-slate-100 bg-slate-50/60 py-1.5 pl-5 pr-2">
+        {info.variants.map((v, idx) => (
+          <li key={`${idx}-${v}`} className="list-disc py-0.5">
+            {v}
+          </li>
+        ))}
+      </ul>
+      {info.standards ? (
+        <p className="mt-2 border-t border-slate-100 pt-2 text-[10px] leading-snug text-slate-500">
+          ISO 9: {info.standards.iso9} · ICAO: {info.standards.icao} · BGN: {info.standards.bgn} · Informal:{" "}
+          {info.standards.informal}
+        </p>
+      ) : null}
+    </details>
+  );
 }
 
 function bestScoreAgainstEntity(
@@ -362,7 +372,6 @@ type ScreeningResultsState = {
   bestMatch: string;
   scoreBreakdown: ScoreBreakdown;
   transliterationInfo: null | TransliterationScreeningInfo;
-  latinOnlyLabel: boolean;
 };
 
 function runClientScreening(input: {
@@ -372,7 +381,7 @@ function runClientScreening(input: {
   docType: string;
   cyrillicName: string;
 }): ScreeningResultsState {
-  const { needles, transliterationInfo, latinOnlyLabel } = expandScreeningNeedles(
+  const { needles, transliterationInfo } = buildScreeningNeedlesAndTransliteration(
     input.vendorName,
     input.cyrillicName
   );
@@ -425,7 +434,6 @@ function runClientScreening(input: {
     bestMatch,
     scoreBreakdown,
     transliterationInfo,
-    latinOnlyLabel,
   };
 }
 
@@ -964,8 +972,16 @@ function buildComplianceEmailDraftContent(
       nameScore
     );
     const firstBullet = auditLines[0]?.text ?? "—";
+    const ti = sr.transliterationInfo;
+    let variantAppend = "";
+    if (ti) {
+      variantAppend = ` | Screening variants (${ti.direction}): ${ti.variants.join("; ")}`;
+      if (ti.standards) {
+        variantAppend += ` | ISO 9: ${ti.standards.iso9}; ICAO: ${ti.standards.icao}; BGN: ${ti.standards.bgn}; Informal: ${ti.standards.informal}`;
+      }
+    }
     highEntityLines.push(
-      `- ${batchRow.screenInput.vendorName} (Score: ${sr.compositeScore}%) — ${firstBullet}`
+      `- ${batchRow.screenInput.vendorName} (Score: ${sr.compositeScore}%) — ${firstBullet}${variantAppend}`
     );
   }
 
@@ -1015,6 +1031,16 @@ Compliance Officer`;
 
   const fullText = `Subject: ${subject}\n\n${body}`;
   return { subject, body, fullText };
+}
+
+function formatTransliterationBlockForPdf(ti: TransliterationScreeningInfo): string {
+  const parts = [`Variants: ${ti.variants.join(", ")}`];
+  if (ti.standards) {
+    parts.push(
+      `ISO 9: ${ti.standards.iso9}; ICAO: ${ti.standards.icao}; BGN: ${ti.standards.bgn}; Informal: ${ti.standards.informal}`
+    );
+  }
+  return parts.join(" | ");
 }
 
 function generateSanctionsScreeningPdfBlob(
@@ -1147,6 +1173,37 @@ function generateSanctionsScreeningPdfBlob(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
+  doc.text("Screening / transliteration variants", margin, y);
+  y += 18;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(45, 45, 45);
+  for (const batchRow of rows) {
+    const ti = batchRow.screeningResults.transliterationInfo;
+    if (!ti) continue;
+    const header = `${batchRow.screenInput.vendorName} (${ti.direction}${
+      isCyrillic(batchRow.screenInput.vendorName) ? ", Cyrillic vendor field" : ", Latin vendor field"
+    }):`;
+    for (const wline of doc.splitTextToSize(header, maxW)) {
+      ensureSpace(10);
+      doc.text(wline, margin, y);
+      y += 10;
+    }
+    const bodyTxt = formatTransliterationBlockForPdf(ti);
+    for (const wline of doc.splitTextToSize(bodyTxt, maxW)) {
+      ensureSpace(10);
+      doc.text(wline, margin, y);
+      y += 10;
+    }
+    y += 6;
+  }
+  doc.setTextColor(0, 0, 0);
+  y += 8;
+
+  ensureSpace(28);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
   doc.text("Audit trail", margin, y);
   y += 18;
 
@@ -1240,13 +1297,13 @@ function generateSanctionsScreeningPdfBlob(
       }
       const screeningBatchRow = rows[i];
       const ti = screeningBatchRow.screeningResults.transliterationInfo;
-      const transLine = ti
-        ? `Cyrillic variants: ${ti.original} → ${ti.iso9}, ${ti.icao}, ${ti.bgn}, ${ti.informal} — screened across 4 lists`
-        : "Latin input — direct screening across 4 lists";
+      const transBlock = ti
+        ? `${formatTransliterationBlockForPdf(ti)} — screened across 4 lists`
+        : "No transliteration metadata.";
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(45, 45, 45);
-      for (const wline of doc.splitTextToSize(transLine, maxW)) {
+      for (const wline of doc.splitTextToSize(transBlock, maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
         y += 10;
@@ -2166,11 +2223,7 @@ export default function Screening() {
                             <td className="px-3 py-3 font-semibold text-slate-900">
                               <div>{batchRow.screenInput.vendorName}</div>
                               {sr.transliterationInfo ? (
-                                <p className="mt-1 max-w-[280px] font-mono text-xs text-slate-500">
-                                  {sr.transliterationInfo.original} → {sr.transliterationInfo.iso9},{" "}
-                                  {sr.transliterationInfo.icao}, {sr.transliterationInfo.bgn},{" "}
-                                  {sr.transliterationInfo.informal}
-                                </p>
+                                <ScreeningVariantsCollapsible info={sr.transliterationInfo} />
                               ) : null}
                             </td>
                             <td className="px-3 py-3 text-slate-700">{batchRow.screenInput.country || "—"}</td>
@@ -2302,13 +2355,9 @@ export default function Screening() {
                           {batchRow.screeningResults.transliterationInfo ? (
                             <div className="mt-3 flex gap-2 text-xs text-slate-500">
                               <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                              <p className="font-mono leading-relaxed">
-                                {batchRow.screeningResults.transliterationInfo.original} →{" "}
-                                {batchRow.screeningResults.transliterationInfo.iso9},{" "}
-                                {batchRow.screeningResults.transliterationInfo.icao},{" "}
-                                {batchRow.screeningResults.transliterationInfo.bgn},{" "}
-                                {batchRow.screeningResults.transliterationInfo.informal} — screened across 4 lists
-                              </p>
+                              <div className="min-w-0 flex-1 text-xs text-slate-500">
+                                <ScreeningVariantsCollapsible info={batchRow.screeningResults.transliterationInfo} />
+                              </div>
                             </div>
                           ) : null}
                           <p className="mt-3 text-xs text-slate-400 font-body">
@@ -2397,14 +2446,9 @@ export default function Screening() {
                 <p className="text-xs text-slate-600 font-body">{lastScreenInput.cyrillicName}</p>
               ) : null}
               {screeningResults.transliterationInfo ? (
-                <p className="mt-1 max-w-xl font-mono text-xs text-slate-500">
-                  Cyrillic variants: {screeningResults.transliterationInfo.original} →{" "}
-                  {screeningResults.transliterationInfo.iso9}, {screeningResults.transliterationInfo.icao},{" "}
-                  {screeningResults.transliterationInfo.bgn}, {screeningResults.transliterationInfo.informal} — best match
-                  across 4 lists
-                </p>
-              ) : screeningResults.latinOnlyLabel ? (
-                <p className="mt-1 max-w-xl font-mono text-xs text-slate-500">Latin input — direct screening</p>
+                <div className="mt-1 max-w-xl font-mono text-xs text-slate-500">
+                  <ScreeningVariantsCollapsible info={screeningResults.transliterationInfo} />
+                </div>
               ) : null}
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-700">
                 <span>
@@ -2585,12 +2629,9 @@ export default function Screening() {
                     {screeningResults?.transliterationInfo ? (
                       <div className="mt-3 flex gap-2 text-xs text-slate-500">
                         <Languages className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                        <p className="font-mono leading-relaxed">
-                          {screeningResults.transliterationInfo.original} →{" "}
-                          {screeningResults.transliterationInfo.iso9}, {screeningResults.transliterationInfo.icao},{" "}
-                          {screeningResults.transliterationInfo.bgn}, {screeningResults.transliterationInfo.informal} —
-                          screened across 4 lists
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <ScreeningVariantsCollapsible info={screeningResults.transliterationInfo} />
+                        </div>
                       </div>
                     ) : null}
                     {r.compliance_note ? (

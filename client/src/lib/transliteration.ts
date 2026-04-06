@@ -1,476 +1,292 @@
+// =============================================================================
+// TradeScreen AI — Multi-Script Transliteration Engine
+// Academic Research Prototype | Tatiana Podobivskaia © 2026
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// 1. COMBINATORIAL CYRILLIC → LATIN (TM mapping, cap 20 variants)
+// ---------------------------------------------------------------------------
+
+const TM: Record<string, string | string[]> = {
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'E',
+  'Ж': ['Zh', 'J'], 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L',
+  'М': 'M', 'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T',
+  'У': 'U', 'Ф': 'F', 'Х': 'Kh', 'Ц': ['Ts', 'Tc', 'C'], 'Ч': 'Ch',
+  'Ш': 'Sh', 'Щ': ['Shch', 'Sch'], 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E',
+  'Ю': ['Yu', 'Iu'], 'Я': ['Ya', 'Ia'],
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+  'ж': ['zh', 'j'], 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l',
+  'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+  'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': ['ts', 'tc', 'c'], 'ч': 'ch',
+  'ш': 'sh', 'щ': ['shch', 'sch'], 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e',
+  'ю': ['yu', 'iu'], 'я': ['ya', 'ia'],
+};
+
+const MAX_VARIANTS = 20;
+
 /**
- * Cyrillic → Latin transliteration (ISO 9, ICAO, BGN/PCGN, Informal).
- * Core maps follow the four standards; extended Cyrillic letters use the same tables where defined,
- * otherwise fall back to informal Latin approximations.
+ * Combinatorial Cyrillic → Latin transliteration.
+ * Ambiguous chars (ж, щ, ц, ю, я…) produce multiple variants.
+ * Returns up to MAX_VARIANTS unique Latin strings.
  */
+export function transliterateCombinatorial(input: string): string[] {
+  let variants: string[] = [''];
 
-export const CYRILLIC_RE = /[\u0400-\u04FF]/;
+  for (const char of input) {
+    const mapped = TM[char];
 
-export function isCyrillic(input: string): boolean {
-  return CYRILLIC_RE.test(input);
-}
+    if (mapped === undefined) {
+      // Non-Cyrillic char — pass through
+      variants = variants.map((v) => v + char);
+      continue;
+    }
 
-type CharMap = Record<string, string>;
+    if (Array.isArray(mapped)) {
+      const next: string[] = [];
+      for (const alt of mapped) {
+        for (const v of variants) {
+          next.push(v + alt);
+        }
+      }
+      variants = next;
+    } else {
+      variants = variants.map((v) => v + mapped);
+    }
 
-/** ISO 9:1995 systematic (scientific) — user-specified */
-export const iso9Map: CharMap = {
-  а: "a",
-  б: "b",
-  в: "v",
-  г: "g",
-  д: "d",
-  е: "e",
-  ё: "ë",
-  ж: "ž",
-  з: "z",
-  и: "i",
-  й: "j",
-  к: "k",
-  л: "l",
-  м: "m",
-  н: "n",
-  о: "o",
-  п: "p",
-  р: "r",
-  с: "s",
-  т: "t",
-  у: "u",
-  ф: "f",
-  х: "h",
-  ц: "c",
-  ч: "č",
-  ш: "š",
-  щ: "ŝ",
-  ъ: "ʺ",
-  ы: "y",
-  ь: "ʹ",
-  э: "è",
-  ю: "û",
-  я: "â",
-  і: "ì",
-  ї: "ï",
-  є: "ê",
-  ґ: "g̀",
-  ў: "ù",
-  ђ: "đ",
-  ѓ: "ǵ",
-  ј: "ǰ",
-  љ: "ľ",
-  њ: "ň",
-  ћ: "ć",
-  ќ: "ḱ",
-  ѝ: "ì",
-  џ: "dž",
-  ҁ: "k",
-  ғ: "ġ",
-  ҕ: "ǵ",
-  җ: "ž",
-  ҙ: "ẑ",
-  қ: "q",
-  ҝ: "q",
-  ҟ: "k",
-  ҡ: "q",
-  ң: "ṅ",
-  ҥ: "ṅ",
-  ҧ: "ṕ",
-  ҩ: "ħ",
-  ҫ: "ç",
-  ҭ: "t",
-  ү: "u",
-  ұ: "u",
-  ҳ: "h",
-  ҵ: "c",
-  ҷ: "c",
-  ҹ: "c",
-  һ: "h",
-  ҽ: "æ",
-  ҿ: "æ",
-  ӂ: "ž",
-  ӄ: "q",
-  ӆ: "ḱ",
-  ӈ: "ṅ",
-  ӊ: "ṅ",
-  ӌ: "dž",
-  ӎ: "m",
-  ӑ: "ă",
-  ӓ: "ä",
-  ӕ: "æ",
-  ӗ: "ĕ",
-  ә: "ə",
-  ӛ: "ë",
-  ӝ: "ž",
-  ӟ: "z",
-  ӡ: "ẑ",
-  ӣ: "ī",
-  ӥ: "i",
-  ӧ: "ö",
-  ө: "ô",
-  ӫ: "ö",
-  ӭ: "ī",
-  ӯ: "ū",
-  ӱ: "ü",
-  ӳ: "ü",
-  ӵ: "č",
-  ӷ: "ǵ",
-  ӹ: "y",
-  ӻ: "g",
-  ӽ: "h",
-  ӿ: "h",
-};
-
-/** ICAO (Doc 9303) — user-specified */
-export const icaoMap: CharMap = {
-  а: "a",
-  б: "b",
-  в: "v",
-  г: "g",
-  д: "d",
-  е: "e",
-  ё: "e",
-  ж: "zh",
-  з: "z",
-  и: "i",
-  й: "i",
-  к: "k",
-  л: "l",
-  м: "m",
-  н: "n",
-  о: "o",
-  п: "p",
-  р: "r",
-  с: "s",
-  т: "t",
-  у: "u",
-  ф: "f",
-  х: "kh",
-  ц: "ts",
-  ч: "ch",
-  ш: "sh",
-  щ: "shch",
-  ъ: "ie",
-  ы: "y",
-  ь: "",
-  э: "e",
-  ю: "iu",
-  я: "ia",
-  і: "i",
-  ї: "i",
-  є: "e",
-  ґ: "g",
-  ў: "u",
-  ј: "j",
-  љ: "lj",
-  њ: "nj",
-  ђ: "dj",
-  ћ: "ts",
-  џ: "dzh",
-  ѓ: "g",
-  ѕ: "dz",
-  ќ: "k",
-  ѝ: "i",
-  ѡ: "o",
-  ѣ: "e",
-  ѥ: "je",
-  ѧ: "ja",
-  ѩ: "ja",
-  ѫ: "u",
-  ѭ: "ju",
-  ѯ: "dz",
-  ѱ: "ps",
-  ѳ: "f",
-  ѵ: "y",
-  ѷ: "v",
-  ѹ: "ou",
-  ѻ: "o",
-  ѽ: "ot",
-  ѿ: "o",
-  ҁ: "k",
-  ғ: "g",
-  ҕ: "g",
-  җ: "zh",
-  ҙ: "z",
-  қ: "k",
-  ҝ: "g",
-  ҟ: "k",
-  ҡ: "q",
-  ң: "ng",
-  ҥ: "n",
-  ҧ: "p",
-  ҩ: "kh",
-  ҫ: "ts",
-  ҭ: "t",
-  ү: "u",
-  ұ: "u",
-  ҳ: "kh",
-  ҵ: "ts",
-  ҷ: "ch",
-  ҹ: "ch",
-  һ: "h",
-};
-
-/** BGN/PCGN static letters (е is contextual in transliterateBGN) */
-export const bgnMap: CharMap = {
-  а: "a",
-  б: "b",
-  в: "v",
-  г: "g",
-  д: "d",
-  ж: "zh",
-  з: "z",
-  и: "i",
-  й: "y",
-  к: "k",
-  л: "l",
-  м: "m",
-  н: "n",
-  о: "o",
-  п: "p",
-  р: "r",
-  с: "s",
-  т: "t",
-  у: "u",
-  ф: "f",
-  х: "kh",
-  ц: "ts",
-  ч: "ch",
-  ш: "sh",
-  щ: "shch",
-  ъ: "ʺ",
-  ы: "y",
-  ь: "ʹ",
-  э: "e",
-  ю: "yu",
-  я: "ya",
-  ё: "yë",
-  і: "i",
-  ї: "yi",
-  є: "ye",
-  ґ: "g",
-  ў: "w",
-  ј: "y",
-  љ: "ly",
-  њ: "ny",
-  ђ: "dh",
-  ћ: "ć",
-  џ: "zh",
-  ѓ: "g",
-  ѕ: "z",
-  ќ: "k",
-  ѝ: "i",
-};
-
-/** Informal — user-specified */
-export const informalMap: CharMap = {
-  а: "a",
-  б: "b",
-  в: "v",
-  г: "g",
-  д: "d",
-  е: "e",
-  ё: "yo",
-  ж: "zh",
-  з: "z",
-  и: "i",
-  й: "y",
-  к: "k",
-  л: "l",
-  м: "m",
-  н: "n",
-  о: "o",
-  п: "p",
-  р: "r",
-  с: "s",
-  т: "t",
-  у: "u",
-  ф: "f",
-  х: "kh",
-  ц: "ts",
-  ч: "ch",
-  ш: "sh",
-  щ: "sch",
-  ъ: "",
-  ы: "y",
-  ь: "",
-  э: "e",
-  ю: "yu",
-  я: "ya",
-  і: "i",
-  ї: "yi",
-  є: "ye",
-  ґ: "g",
-  ў: "u",
-  ј: "j",
-  љ: "lj",
-  њ: "nj",
-  ђ: "dj",
-  ћ: "ch",
-  џ: "dz",
-  ѓ: "g",
-  ѕ: "dz",
-  ќ: "k",
-  ѝ: "i",
-  ѡ: "o",
-  ѣ: "e",
-  ѥ: "ye",
-  ѧ: "ja",
-  ѩ: "ja",
-  ѫ: "u",
-  ѭ: "yu",
-  ѯ: "dz",
-  ѱ: "ps",
-  ѳ: "f",
-  ѵ: "y",
-  ѷ: "v",
-  ѹ: "ou",
-  ѻ: "o",
-  ѽ: "ot",
-  ѿ: "o",
-  ҁ: "k",
-  ғ: "g",
-  ҕ: "g",
-  җ: "zh",
-  ҙ: "z",
-  қ: "k",
-  ҝ: "g",
-  ҟ: "k",
-  ҡ: "q",
-  ң: "ng",
-  ҥ: "n",
-  ҧ: "p",
-  ҩ: "kh",
-  ҫ: "ts",
-  ҭ: "t",
-  ү: "u",
-  ұ: "u",
-  ҳ: "kh",
-  ҵ: "ts",
-  ҷ: "ch",
-  ҹ: "ch",
-  һ: "h",
-};
-
-function expandMapKeys(map: CharMap): CharMap {
-  const out: CharMap = { ...map };
-  for (const [k, v] of Object.entries(map)) {
-    if (k.length === 1) {
-      const u = k.toUpperCase();
-      if (u !== k && out[u] === undefined) out[u] = v;
+    // Cap early to avoid exponential blowup
+    if (variants.length > MAX_VARIANTS) {
+      variants = variants.slice(0, MAX_VARIANTS);
     }
   }
-  return out;
+
+  return [...new Set(variants)].slice(0, MAX_VARIANTS);
 }
 
-function applyCharMap(input: string, map: CharMap, fallback: CharMap): string {
-  const m = expandMapKeys(map);
-  const fb = expandMapKeys(fallback);
-  let out = "";
-  for (const ch of input) {
-    if (m[ch]) {
-      out += m[ch];
-      continue;
-    }
-    const low = ch.toLowerCase();
-    if (m[low]) {
-      out += m[low];
-      continue;
-    }
-    if (!CYRILLIC_RE.test(ch)) {
-      out += ch;
-      continue;
-    }
-    out += fb[ch] ?? fb[low] ?? "";
-  }
-  return out;
+// ---------------------------------------------------------------------------
+// 2. LATIN → ALL VARIANTS (REVERSE_MAP, 2-pass, cap 20)
+// ---------------------------------------------------------------------------
+
+interface ReverseRule {
+  p: RegExp;
+  a: string[];
 }
 
-/** BGN/PCGN: е → ye at word start / after vowel or ъь / after space or hyphen */
-const BGN_YE_PREV = new Set([
-  "а",
-  "е",
-  "ё",
-  "и",
-  "о",
-  "у",
-  "ы",
-  "э",
-  "ю",
-  "я",
-  "і",
-  "ї",
-  "є",
-  "ъ",
-  "ь",
-]);
+const REVERSE_MAP: ReverseRule[] = [
+  { p: /shch/gi, a: ['shch', 'sch', 'stch', 'shtch', 'sc'] },
+  { p: /tsch/gi, a: ['tsch', 'ch', 'tch', 'cz'] },
+  { p: /sch(?=[aeiou])/gi, a: ['sch', 'shch', 'sh'] },
+  { p: /zh/gi, a: ['zh', 'j', 'dj', 'dzh'] },
+  { p: /(?<![ds])j(?=[aeiou])/gi, a: ['j', 'zh', 'dzh'] },
+  { p: /kh/gi, a: ['kh', 'h', 'ch', 'x'] },
+  { p: /ts(?=[aeiou])/gi, a: ['ts', 'tc', 'c', 'tz', 'z'] },
+  { p: /yu/gi, a: ['yu', 'iu', 'ju', 'you'] },
+  { p: /iu/gi, a: ['iu', 'yu', 'ju'] },
+  { p: /ya/gi, a: ['ya', 'ia', 'ja'] },
+  { p: /ia(?=[^a-z]|$)/gi, a: ['ia', 'ya', 'ja', 'iya'] },
+  { p: /yo/gi, a: ['yo', 'io', 'jo'] },
+  { p: /ye/gi, a: ['ye', 'ie', 'je'] },
+  { p: /aia$/gi, a: ['aia', 'aya', 'aja'] },
+  { p: /skaia$/gi, a: ['skaia', 'skaya', 'skaja'] },
+  { p: /aya$/gi, a: ['aya', 'aia', 'aja'] },
+  { p: /iy$/gi, a: ['iy', 'y', 'ii', 'i', 'yy'] },
+  { p: /sky$/gi, a: ['sky', 'skiy', 'skii', 'ski', 'skij'] },
+  { p: /skaya$/gi, a: ['skaya', 'skaia', 'skaja'] },
+  { p: /ov$/gi, a: ['ov', 'off', 'ow'] },
+  { p: /ev$/gi, a: ['ev', 'eff', 'ew', 'yev'] },
+  { p: /ova$/gi, a: ['ova', 'off', 'owa'] },
+  { p: /eva$/gi, a: ['eva', 'ewa', 'yeva'] },
+  { p: /enko$/gi, a: ['enko', 'yenko', 'ienko'] },
+  { p: /ch(?=[aeiou])/gi, a: ['ch', 'tch', 'cz'] },
+  { p: /v(?=[aeiou])/gi, a: ['v', 'w', 'b'] },
+  { p: /oo/gi, a: ['oo', 'ou', 'u'] },
+  { p: /ee/gi, a: ['ee', 'ie', 'ye'] },
+  { p: /ph/gi, a: ['ph', 'f'] },
+  { p: /ks/gi, a: ['ks', 'x'] },
+  { p: /tz/gi, a: ['tz', 'ts', 'c', 'z'] },
+  { p: /ou/gi, a: ['ou', 'oo', 'u'] },
+  { p: /sh(?!ch)/gi, a: ['sh', 'sch'] },
+  { p: /(?<=[aeiou])y(?=[aeiou])/gi, a: ['y', 'i', ''] },
+  { p: /iv/gi, a: ['iv', 'iw'] },
+  { p: /sk/gi, a: ['sk', 'sc'] },
+];
 
-export function transliterateBGN(input: string): string {
-  const m = expandMapKeys(bgnMap);
-  const fb = expandMapKeys(informalMap);
-  let out = "";
-  let wordStart = true;
+/**
+ * Latin → All Variants via REVERSE_MAP (2-pass).
+ * Generates alternative spellings of a Latin name.
+ * Returns up to MAX_VARIANTS unique strings.
+ */
+export function generateLatinVariants(input: string): string[] {
+  const allVariants = new Set<string>([input.toLowerCase()]);
 
-  for (let i = 0; i < input.length; i++) {
-    const ch = input[i];
-    if (!CYRILLIC_RE.test(ch)) {
-      out += ch;
-      if (/\s/.test(ch) || ch === "-") wordStart = true;
-      else wordStart = false;
-      continue;
+  for (let pass = 0; pass < 2; pass++) {
+    const currentVars = [...allVariants];
+    for (const current of currentVars) {
+      for (const rule of REVERSE_MAP) {
+        const re = new RegExp(rule.p.source, rule.p.flags);
+        if (re.test(current)) {
+          for (const alt of rule.a) {
+            const nv = current.replace(
+              new RegExp(rule.p.source, rule.p.flags.replace('g', '')),
+              alt
+            );
+            allVariants.add(nv);
+            if (allVariants.size >= MAX_VARIANTS) break;
+          }
+        }
+        if (allVariants.size >= MAX_VARIANTS) break;
+      }
+      if (allVariants.size >= MAX_VARIANTS) break;
     }
-    const cl = ch.toLowerCase();
-
-    if (cl === "е") {
-      const prev = i > 0 ? input[i - 1] : "";
-      const prevCyr = CYRILLIC_RE.test(prev) ? prev.toLowerCase() : "";
-      const useYe =
-        wordStart ||
-        prev === "" ||
-        /\s/.test(prev) ||
-        prev === "-" ||
-        (prevCyr !== "" && BGN_YE_PREV.has(prevCyr));
-      out += useYe ? "ye" : "e";
-      wordStart = false;
-      continue;
-    }
-
-    const rep = m[ch] ?? m[cl] ?? fb[ch] ?? fb[cl] ?? "";
-    out += rep;
-    wordStart = false;
   }
-  return out;
+
+  return [...allVariants].slice(0, MAX_VARIANTS);
+}
+
+// ---------------------------------------------------------------------------
+// 3. INDIVIDUAL STANDARD TRANSLITERATIONS (for display / standard labels)
+// ---------------------------------------------------------------------------
+
+const ISO9_MAP: Record<string, string> = {
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Ë',
+  'Ж': 'Ž', 'З': 'Z', 'И': 'I', 'Й': 'J', 'К': 'K', 'Л': 'L', 'М': 'M',
+  'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+  'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'Č', 'Ш': 'Š', 'Щ': 'Ŝ', 'Ъ': 'ʺ',
+  'Ы': 'Y', 'Ь': 'ʹ', 'Э': 'È', 'Ю': 'Û', 'Я': 'Â',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'ë',
+  'ж': 'ž', 'з': 'z', 'и': 'i', 'й': 'j', 'к': 'k', 'л': 'l', 'м': 'm',
+  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+  'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'č', 'ш': 'š', 'щ': 'ŝ', 'ъ': 'ʺ',
+  'ы': 'y', 'ь': 'ʹ', 'э': 'è', 'ю': 'û', 'я': 'â',
+};
+
+const ICAO_MAP: Record<string, string> = {
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'E',
+  'Ж': 'ZH', 'З': 'Z', 'И': 'I', 'Й': 'I', 'К': 'K', 'Л': 'L', 'М': 'M',
+  'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+  'Ф': 'F', 'Х': 'KH', 'Ц': 'TS', 'Ч': 'CH', 'Ш': 'SH', 'Щ': 'SHCH',
+  'Ъ': 'IE', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'IU', 'Я': 'IA',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
+  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'i', 'к': 'k', 'л': 'l', 'м': 'm',
+  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+  'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+  'ъ': 'ie', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'iu', 'я': 'ia',
+};
+
+const BGN_MAP: Record<string, string> = {
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'Ye', 'Ё': 'Yo',
+  'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+  'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+  'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch',
+  'Ъ': '"', 'Ы': 'Y', 'Ь': '\'', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'ye', 'ё': 'yo',
+  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+  'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+  'ъ': '"', 'ы': 'y', 'ь': '\'', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+};
+
+const INFORMAL_MAP: Record<string, string> = {
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+  'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+  'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+  'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
+  'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+  'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+  'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+  'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+  'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+};
+
+function applyMap(input: string, map: Record<string, string>): string {
+  return input
+    .split('')
+    .map((c) => (map[c] !== undefined ? map[c] : c))
+    .join('');
 }
 
 export function transliterateISO9(input: string): string {
-  return applyCharMap(input, iso9Map, informalMap);
+  return applyMap(input, ISO9_MAP);
 }
 
 export function transliterateICAO(input: string): string {
-  return applyCharMap(input, icaoMap, informalMap);
+  return applyMap(input, ICAO_MAP);
+}
+
+export function transliterateBGN(input: string): string {
+  return applyMap(input, BGN_MAP);
 }
 
 export function transliterateInformal(input: string): string {
-  return applyCharMap(input, informalMap, informalMap);
+  return applyMap(input, INFORMAL_MAP);
 }
 
+// ---------------------------------------------------------------------------
+// 4. UTILITY
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true if the string contains any Cyrillic characters.
+ */
+export function isCyrillic(text: string): boolean {
+  return /[\u0400-\u04FF]/.test(text);
+}
+
+/**
+ * Master function: generates all screening variants for a given name.
+ *
+ * - Cyrillic input → combinatorial TM variants (up to 20)
+ * - Latin input → REVERSE_MAP variants (up to 20)
+ * - Always includes the original input.
+ *
+ * Returns { variants: string[], standards: {...} | null, direction: 'cyrillic' | 'latin' }
+ */
 export function generateAllVariants(input: string): {
-  iso9: string;
-  icao: string;
-  bgn: string;
-  informal: string;
-  unique: string[];
+  variants: string[];
+  standards: {
+    iso9: string;
+    icao: string;
+    bgn: string;
+    informal: string;
+  } | null;
+  direction: 'cyrillic' | 'latin';
 } {
-  const iso9 = transliterateISO9(input).trim();
-  const icao = transliterateICAO(input).trim();
-  const bgn = transliterateBGN(input).trim();
-  const informal = transliterateInformal(input).trim();
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const s of [iso9, icao, bgn, informal]) {
-    if (!s) continue;
-    const k = s.toLowerCase();
-    if (!seen.has(k)) {
-      seen.add(k);
-      unique.push(s);
-    }
+  const trimmed = input.trim();
+
+  if (isCyrillic(trimmed)) {
+    const combinatorial = transliterateCombinatorial(trimmed);
+    return {
+      variants: combinatorial,
+      standards: {
+        iso9: transliterateISO9(trimmed),
+        icao: transliterateICAO(trimmed),
+        bgn: transliterateBGN(trimmed),
+        informal: transliterateInformal(trimmed),
+      },
+      direction: 'cyrillic',
+    };
   }
-  return { iso9, icao, bgn, informal, unique };
+
+  // Latin input
+  const latinVariants = generateLatinVariants(trimmed);
+  return {
+    variants: latinVariants,
+    standards: null,
+    direction: 'latin',
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 5. SCREENING HELPER — expand needles for sanctions matching
+// ---------------------------------------------------------------------------
+
+/**
+ * Takes a vendor name and returns all variants to screen against sanctions lists.
+ * Used by Screening.tsx pipeline.
+ */
+export function expandScreeningNeedles(name: string): string[] {
+  const { variants } = generateAllVariants(name);
+  // Always include the original
+  const result = new Set<string>([name.trim(), ...variants]);
+  return [...result];
 }
