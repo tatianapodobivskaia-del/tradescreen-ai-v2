@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { runVisionScan, type VisionScanResult } from "@/lib/api";
 import { transliterateInformal } from "../lib/transliteration";
+import { addScreeningResult } from "@/lib/sessionStore";
 
 declare global {
   // set by pdf.worker.mjs when evaluated on the main thread
@@ -520,6 +521,7 @@ export default function DocumentScanner() {
 
   const processFile = useCallback(
     async (file: File) => {
+      const t0 = performance.now();
       lastFileRef.current = file;
       setErrorMessage(null);
       setVisionData(null);
@@ -535,6 +537,19 @@ export default function DocumentScanner() {
         clearActivateTimers();
         setVisionData(data);
         setPhase("complete");
+        const durationMs = performance.now() - t0;
+        const nowIso = new Date().toISOString();
+        for (const r of data.risk_results ?? []) {
+          addScreeningResult({
+            timestamp: nowIso,
+            vendorName: r.entity,
+            risk: (r.risk || "").toUpperCase(),
+            assessment: (r.reasoning || "").trim(),
+            action: (r.action || "").toUpperCase(),
+            source: "scanner",
+            durationMs,
+          });
+        }
       } catch (err) {
         await pMin;
         clearActivateTimers();

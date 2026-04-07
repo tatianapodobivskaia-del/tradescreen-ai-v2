@@ -119,6 +119,12 @@ export type VisionScanResult = {
   ts: string;
 };
 
+export type ApiHealthSnapshot = {
+  ts?: string | number;
+  total_entities?: number;
+  lists?: Record<string, number>;
+};
+
 function normalizeVisionScanPayload(raw: unknown): VisionScanResult {
   if (!raw || typeof raw !== "object") {
     throw new Error("Invalid response from document scan API.");
@@ -228,12 +234,32 @@ export async function runVisionScan(imageBase64: string): Promise<VisionScanResu
 }
 
 // Check if API is reachable (for offline mode detection)
-export async function checkAPIHealth(): Promise<boolean> {
+export async function checkAPIHealth(): Promise<ApiHealthSnapshot | null> {
   try {
-    const response = await fetch(`${AZURE_API}/health`, { method: "GET", mode: "cors" });
-    return response.ok;
+    const response = await fetch(`${AZURE_API}/health`, { method: "GET", mode: "cors", credentials: "omit" });
+    if (!response.ok) return null;
+    const parsed = (await response.json()) as unknown;
+    if (!parsed || typeof parsed !== "object") return {};
+    const r = parsed as Record<string, unknown>;
+    const total_entities =
+      typeof r.total_entities === "number"
+        ? r.total_entities
+        : typeof r.totalEntities === "number"
+          ? r.totalEntities
+          : undefined;
+    const ts = typeof r.ts === "string" || typeof r.ts === "number" ? r.ts : undefined;
+    const listsRaw = r.lists;
+    const lists: Record<string, number> | undefined =
+      listsRaw && typeof listsRaw === "object"
+        ? Object.fromEntries(
+            Object.entries(listsRaw as Record<string, unknown>).flatMap(([k, v]) =>
+              typeof v === "number" ? [[k, v] as const] : []
+            )
+          )
+        : undefined;
+    return { ts, total_entities, lists };
   } catch {
-    return false;
+    return null;
   }
 }
 

@@ -1,0 +1,59 @@
+export type SessionScreeningSource = "screening" | "scanner";
+
+export type SessionScreeningResult = {
+  timestamp: string;
+  vendorName: string;
+  risk: "HIGH" | "MEDIUM" | "LOW" | string;
+  score?: number;
+  assessment?: string;
+  action?: string;
+  source: SessionScreeningSource;
+  durationMs?: number;
+};
+
+const history: SessionScreeningResult[] = [];
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+export function addScreeningResult(result: SessionScreeningResult): void {
+  history.unshift(result);
+  // keep the session lightweight
+  if (history.length > 200) history.length = 200;
+  emit();
+}
+
+export function getScreeningHistory(): SessionScreeningResult[] {
+  return history;
+}
+
+export function getSessionStats(): {
+  total: number;
+  high: number;
+  avgProcessingMs: number | null;
+} {
+  const total = history.length;
+  let high = 0;
+  let sum = 0;
+  let n = 0;
+  for (const r of history) {
+    if ((r.risk || "").toUpperCase() === "HIGH") high++;
+    if (typeof r.durationMs === "number" && Number.isFinite(r.durationMs)) {
+      sum += r.durationMs;
+      n++;
+    }
+  }
+  return { total, high, avgProcessingMs: n ? sum / n : null };
+}
+
+export function subscribeSession(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function getSessionSnapshot(): SessionScreeningResult[] {
+  return history;
+}
+

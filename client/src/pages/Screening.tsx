@@ -30,6 +30,7 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { useSearch } from "wouter";
 import { cn } from "@/lib/utils";
+import { addScreeningResult } from "@/lib/sessionStore";
 import {
   Dialog,
   DialogContent,
@@ -1754,6 +1755,7 @@ export default function Screening() {
 
   const handleScreen = useCallback(
     async (vendorNameOverride?: string, fileRow?: ParsedUploadRow) => {
+      const t0 = performance.now();
       const vn = (vendorNameOverride !== undefined ? vendorNameOverride : vendorName).trim();
       if (!vn) return;
       setBatchScreeningRows(null);
@@ -1778,7 +1780,18 @@ export default function Screening() {
         const vendors = names.map((name) => buildMinimalVendorPayload(name, input));
         const data = await postSanctionsScreen(vendors);
         const apiRow = pickWorstRiskResult(data.results ?? []);
-        setScreeningResults(buildScreeningResultsFromApi(input, transliterationInfo, apiRow));
+        const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
+        setScreeningResults(sr);
+        addScreeningResult({
+          timestamp: new Date().toISOString(),
+          vendorName: input.vendorName,
+          risk: sr.risk,
+          score: sr.compositeScore,
+          assessment: sr.remote?.assessment ?? sr.bestMatch,
+          action: sr.remote?.action,
+          source: "screening",
+          durationMs: performance.now() - t0,
+        });
       } catch {
         setScreeningRemoteFallback(true);
         setScreeningResults(null);
@@ -1792,6 +1805,7 @@ export default function Screening() {
   /** Manual entry: read live form values so country / amount / doc always feed the scoring pipeline */
   const handleManualSubmit = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const t0 = performance.now();
     const form = e.currentTarget;
     const fd = new FormData(form);
     const vn = String(fd.get("vendorName") ?? "").trim();
@@ -1826,7 +1840,18 @@ export default function Screening() {
       const vendors = names.map((name) => buildMinimalVendorPayload(name, input));
       const data = await postSanctionsScreen(vendors);
       const apiRow = pickWorstRiskResult(data.results ?? []);
-      setScreeningResults(buildScreeningResultsFromApi(input, transliterationInfo, apiRow));
+      const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
+      setScreeningResults(sr);
+      addScreeningResult({
+        timestamp: new Date().toISOString(),
+        vendorName: input.vendorName,
+        risk: sr.risk,
+        score: sr.compositeScore,
+        assessment: sr.remote?.assessment ?? sr.bestMatch,
+        action: sr.remote?.action,
+        source: "screening",
+        durationMs: performance.now() - t0,
+      });
     } catch {
       setScreeningRemoteFallback(true);
       setScreeningResults(null);
@@ -1837,6 +1862,7 @@ export default function Screening() {
 
   const runUploadScreening = useCallback(async () => {
     if (!parsedUploadRows?.length) return;
+    const t0 = performance.now();
     setBatchRiskFilter("ALL");
     if (parsedUploadRows.length === 1) {
       const first = applyUploadColumnDefaults(parsedUploadRows[0], missingColumns);
@@ -1892,6 +1918,19 @@ export default function Screening() {
         ),
       }));
       setBatchScreeningRows(mergedRows);
+      const avgMs = (performance.now() - t0) / Math.max(1, mergedRows.length);
+      for (const r of mergedRows) {
+        addScreeningResult({
+          timestamp: new Date().toISOString(),
+          vendorName: r.screenInput.vendorName,
+          risk: r.screeningResults.risk,
+          score: r.screeningResults.compositeScore,
+          assessment: r.screeningResults.remote?.assessment ?? r.screeningResults.bestMatch,
+          action: r.screeningResults.remote?.action,
+          source: "screening",
+          durationMs: avgMs,
+        });
+      }
     } catch {
       setScreeningRemoteFallback(true);
       setBatchScreeningRows(null);
