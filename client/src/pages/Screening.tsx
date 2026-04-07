@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
+import { useSearch } from "wouter";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -1531,6 +1532,7 @@ function ScoreBreakdownBlock({ breakdown }: { breakdown: ScoreBreakdown }) {
 }
 
 export default function Screening() {
+  const search = useSearch();
   const [activeTab, setActiveTab] = useState<"upload" | "manual">("upload");
   const [vendorName, setVendorName] = useState("");
   const [country, setCountry] = useState("");
@@ -1567,6 +1569,15 @@ export default function Screening() {
   const [emailDraftOpen, setEmailDraftOpen] = useState(false);
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const emailCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const q = new URLSearchParams(search);
+    const raw = q.get("vendor") ?? q.get("entity") ?? "";
+    const v = raw.trim();
+    if (!v) return;
+    setVendorName(v);
+    setActiveTab("manual");
+  }, [search]);
 
   const batchRiskCounts = useMemo(() => {
     if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };

@@ -3,6 +3,8 @@
  * PDFs are rasterized to JPEG (first page): the vision API only accepts webp/jpeg/png/gif.
  */
 import { useState, useRef, useCallback, useEffect, useMemo, type ChangeEvent, type DragEvent } from "react";
+import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 import {
   Upload,
   Eye,
@@ -450,6 +452,29 @@ function docRiskBorder(risk: string): string {
   return "border-emerald-400 ring-1 ring-emerald-200";
 }
 
+function documentRiskHeroClasses(risk: string): string {
+  const u = risk.toUpperCase();
+  if (u === "HIGH")
+    return "bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] ring-1 ring-red-500/40";
+  if (u === "MEDIUM")
+    return "bg-amber-500 text-amber-950 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/50";
+  return "bg-emerald-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] ring-1 ring-emerald-500/40";
+}
+
+function entityCardLeftBorder(risk: string): string {
+  const u = risk.toUpperCase();
+  if (u === "HIGH") return "border-l-red-500";
+  if (u === "MEDIUM") return "border-l-amber-500";
+  return "border-l-emerald-500";
+}
+
+function actionBadgeClass(action: string): string {
+  const u = (action || "").toUpperCase();
+  if (u === "BLOCK") return "border-red-200 bg-red-50 text-red-900";
+  if (u === "FLAG") return "border-amber-200 bg-amber-50 text-amber-950";
+  return "border-slate-200 bg-slate-100 text-slate-800";
+}
+
 const AGENT_META = [
   { key: "vision", label: "Vision Agent", Icon: Eye },
   { key: "translit", label: "Transliteration Agent", Icon: Languages },
@@ -458,6 +483,7 @@ const AGENT_META = [
 ] as const;
 
 export default function DocumentScanner() {
+  const [, setLocation] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
   const activateTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const emailCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -650,13 +676,26 @@ export default function DocumentScanner() {
             phase === "scanning" && "pointer-events-none opacity-80"
           )}
         >
-          <div className="relative min-h-[300px]">
+          <div className="relative min-h-[300px] overflow-hidden rounded-[inherit]">
             <img
               src={DOC_SCAN_IMG}
               alt=""
               className="absolute inset-0 h-full w-full object-cover opacity-20 transition-opacity group-hover:opacity-30"
             />
-            <div className="relative flex min-h-[300px] flex-col items-center justify-center px-4 py-12">
+            {phase === "scanning" ? (
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute left-0 right-0 z-20 h-[2px] rounded-full bg-[#22d3ee]"
+                style={{
+                  boxShadow:
+                    "0 0 14px 3px rgba(34, 211, 238, 0.55), 0 0 28px 6px rgba(34, 211, 238, 0.22)",
+                }}
+                initial={{ top: "8%" }}
+                animate={{ top: ["8%", "88%", "8%"] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ) : null}
+            <div className="relative z-10 flex min-h-[300px] flex-col items-center justify-center px-4 py-12">
               {phase === "scanning" ? (
                 <Loader2 className="mb-3 h-10 w-10 animate-spin text-amber-600" strokeWidth={2} />
               ) : (
@@ -688,6 +727,9 @@ export default function DocumentScanner() {
               const isPastAnim = isScanning && activeAgentIndex > idx;
               const isFuture = isScanning && activeAgentIndex < idx;
 
+              const cyrillicEntityCount =
+                visionData?.risk_results?.filter((r) => (r.cyrillic_variants?.length ?? 0) > 0).length ?? 0;
+
               let statusText = "";
               if (isComplete && visionData) {
                 if (idx === 0) statusText = `✅ Found ${visionData.entities_found} entities`;
@@ -700,38 +742,75 @@ export default function DocumentScanner() {
                 else if (isFuture) statusText = "Waiting…";
               }
 
+              let detailLine = "";
+              if (isComplete && visionData) {
+                if (idx === 0)
+                  detailLine = `Extracted ${visionData.entities_found} entities from document`;
+                else if (idx === 1)
+                  detailLine = `Generated Cyrillic variants for ${cyrillicEntityCount} entities`;
+                else if (idx === 2)
+                  detailLine = "Screened against 45,296 entities across 4 lists";
+                else
+                  detailLine = `Assessment complete — ${visionData.summary.blocked} blocked, ${visionData.summary.flagged} flagged, ${visionData.summary.cleared} cleared`;
+              }
+
               return (
                 <div
                   key={agent.key}
                   className={cn(
-                    "flex gap-3 rounded-xl border-2 p-4 transition-all",
+                    "flex flex-col gap-2 rounded-xl border-2 p-4 transition-all",
                     isComplete && "border-emerald-400 bg-emerald-50/40",
                     isScanning && isActive && "border-cyan-500 bg-amber-50/50 shadow-sm ring-2 ring-cyan-200",
                     isScanning && isFuture && "border-slate-100 bg-slate-50/60 opacity-90",
                     isScanning && isPastAnim && "border-slate-200 bg-white"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
-                      isComplete ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
-                      isActive && "border-cyan-400 bg-amber-50"
-                    )}
-                  >
-                    {isComplete ? (
-                      <CheckCircle className="h-5 w-5 text-emerald-600" strokeWidth={2} />
-                    ) : isActive ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-amber-700" strokeWidth={2} />
-                    ) : isPastAnim ? (
-                      <CheckCircle className="h-5 w-5 text-emerald-500/90" strokeWidth={2} />
-                    ) : (
-                      <Icon className="h-5 w-5 text-slate-400" strokeWidth={2} />
-                    )}
+                  <div className="flex gap-3">
+                    <div
+                      className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
+                        isComplete ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
+                        isActive && "border-cyan-400 bg-amber-50"
+                      )}
+                    >
+                      {isComplete ? (
+                        <motion.span
+                          className="inline-flex"
+                          animate={
+                            isComplete
+                              ? { scale: [1, 1.08, 1], opacity: [1, 0.92, 1] }
+                              : { scale: 1, opacity: 1 }
+                          }
+                          transition={
+                            isComplete
+                              ? { duration: 1.8, repeat: Infinity, ease: "easeInOut" }
+                              : { duration: 0.45, ease: "easeOut" }
+                          }
+                        >
+                          <CheckCircle className="h-5 w-5 text-emerald-600" strokeWidth={2} />
+                        </motion.span>
+                      ) : isActive ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-amber-700" strokeWidth={2} />
+                      ) : isPastAnim ? (
+                        <motion.span
+                          className="inline-flex"
+                          animate={{ scale: [1, 1.12, 1] }}
+                          transition={{ duration: 0.5, ease: "easeOut" }}
+                        >
+                          <CheckCircle className="h-5 w-5 text-emerald-500/90" strokeWidth={2} />
+                        </motion.span>
+                      ) : (
+                        <Icon className="h-5 w-5 text-slate-400" strokeWidth={2} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold font-display text-slate-900">{label}</p>
+                      <p className="mt-0.5 text-xs text-slate-700 font-body leading-snug">{statusText}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold font-display text-slate-900">{label}</p>
-                    <p className="mt-0.5 text-xs text-slate-700 font-body leading-snug">{statusText}</p>
-                  </div>
+                  {detailLine ? (
+                    <p className="pl-[52px] text-[11px] leading-snug text-slate-500 font-body">{detailLine}</p>
+                  ) : null}
                 </div>
               );
             })}
@@ -762,69 +841,109 @@ export default function DocumentScanner() {
             )}
           >
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Document risk</p>
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <span
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+              <div
                 className={cn(
-                  "rounded-md border px-3 py-1 text-sm font-extrabold font-display uppercase",
-                  riskBadgeClass(visionData.document_risk)
+                  "inline-flex w-fit min-w-[200px] items-center justify-center rounded-xl px-8 py-5 font-display uppercase tracking-wide",
+                  documentRiskHeroClasses(visionData.document_risk)
                 )}
               >
-                {visionData.document_risk}
-              </span>
-              {visionData.document?.document_type ? (
-                <span className="text-xs text-slate-600 font-body">
-                  Type: {visionData.document.document_type}
-                </span>
-              ) : null}
+                <span className="text-2xl font-bold">{visionData.document_risk}</span>
+              </div>
+              <div className="min-w-0 flex-1 space-y-2 text-sm text-slate-700 font-body">
+                {visionData.document?.document_type ? (
+                  <p>
+                    <span className="font-semibold text-slate-800">Document type:</span>{" "}
+                    {visionData.document.document_type}
+                  </p>
+                ) : null}
+                <p>
+                  <span className="font-semibold text-slate-800">Entities found:</span>{" "}
+                  <span className="font-data font-bold text-slate-900">{visionData.entities_found}</span>
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">Summary:</span>{" "}
+                  <span className="text-red-800 font-semibold">{visionData.summary.blocked} blocked</span>
+                  {", "}
+                  <span className="text-amber-900 font-semibold">{visionData.summary.flagged} flagged</span>
+                  {", "}
+                  <span className="text-emerald-800 font-semibold">{visionData.summary.cleared} cleared</span>
+                </p>
+                <p className="text-xs text-slate-600">
+                  <span className="font-semibold text-slate-800">Recommended action:</span>{" "}
+                  {visionData.document_action}
+                </p>
+                <p className="font-data text-[10px] text-slate-400">Response time: {visionData.ts}</p>
+              </div>
             </div>
-            <p className="mt-3 text-sm text-slate-700 font-body">
-              <span className="font-semibold">Entities found:</span>{" "}
-              <span className="font-data font-bold text-slate-900">{visionData.entities_found}</span>
-            </p>
-            <p className="mt-2 text-sm text-slate-700 font-body">
-              <span className="font-semibold">Summary:</span>{" "}
-              <span className="text-red-800 font-semibold">{visionData.summary.blocked} blocked</span>
-              {", "}
-              <span className="text-amber-900 font-semibold">{visionData.summary.flagged} flagged</span>
-              {", "}
-              <span className="text-emerald-800 font-semibold">{visionData.summary.cleared} cleared</span>
-            </p>
-            <p className="mt-2 text-xs text-slate-500 font-body">Recommended action: {visionData.document_action}</p>
-            <p className="mt-1 font-data text-[10px] text-slate-400">Response time: {visionData.ts}</p>
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-bold font-display text-slate-900">Entity results</h3>
-            <div className="space-y-4">
+            <h3 className="mb-4 text-sm font-bold font-display text-slate-900">Entity results</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
               {(visionData.risk_results ?? []).map((row, i) => (
-                <div key={`${row.entity}-${i}`} className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="font-data text-sm font-bold text-slate-900">{row.entity}</p>
-                    <span
-                      className={cn(
-                        "rounded-md border px-2 py-0.5 text-[10px] font-bold font-display uppercase",
-                        riskBadgeClass(row.risk)
-                      )}
-                    >
-                      {row.risk}
-                    </span>
+                <div
+                  key={`${row.entity}-${i}`}
+                  className={cn(
+                    "flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm",
+                    "border-l-4",
+                    entityCardLeftBorder(row.risk)
+                  )}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3 p-4 pb-2">
+                    <h4 className="min-w-0 flex-1 font-body text-lg font-semibold leading-snug text-slate-900">
+                      {row.entity}
+                    </h4>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      <span
+                        className={cn(
+                          "rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
+                          riskBadgeClass(row.risk)
+                        )}
+                      >
+                        {row.risk}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-md border px-2.5 py-1 text-[10px] font-bold font-display uppercase",
+                          actionBadgeClass(row.action)
+                        )}
+                      >
+                        {row.action}
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-slate-800 font-body">
-                    Action: <span className="font-data uppercase">{row.action}</span>
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-700 font-body">{row.reasoning}</p>
+                  <div className="mx-4 mb-4 rounded-lg border border-slate-100 bg-slate-50/90 px-3 py-3">
+                    <p className="text-sm leading-relaxed text-slate-700 font-body">{row.reasoning}</p>
+                  </div>
                   {row.cyrillic_variants && row.cyrillic_variants.length > 0 ? (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        Cyrillic variants
-                      </p>
-                      <ul className="mt-1 list-inside list-disc text-xs text-slate-700 font-body">
-                        {row.cyrillic_variants.map((v) => (
-                          <li key={v}>{v}</li>
-                        ))}
-                      </ul>
+                    <div className="border-t border-slate-100 px-4 py-3">
+                      <details className="group rounded-lg border border-slate-200 bg-slate-50/50">
+                        <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-700 outline-none marker:content-none [&::-webkit-details-marker]:hidden">
+                          <span className="group-open:hidden">Cyrillic variants — show</span>
+                          <span className="hidden group-open:inline">Cyrillic variants — hide</span>
+                        </summary>
+                        <ul className="border-t border-slate-200 px-3 py-2 text-xs text-slate-700 font-body">
+                          {row.cyrillic_variants.map((v) => (
+                            <li key={v} className="py-0.5">
+                              {v}
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
                     </div>
                   ) : null}
+                  <div className="mt-auto border-t border-slate-100 px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLocation(`/app/screening?vendor=${encodeURIComponent(row.entity.trim())}`)
+                      }
+                      className="text-sm font-semibold text-teal-600 transition-colors hover:text-teal-700"
+                    >
+                      Screen this Entity →
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -836,15 +955,15 @@ export default function DocumentScanner() {
               onClick={handlePdfExport}
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
-              <FileText className="h-4 w-4" strokeWidth={2} />
+              <FileText className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               Generate PDF Report
             </button>
             <button
               type="button"
               onClick={handleEmailExport}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-slate-800"
             >
-              <Mail className="h-4 w-4" strokeWidth={2} />
+              <Mail className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
               Generate Email to Bank
             </button>
           </div>
