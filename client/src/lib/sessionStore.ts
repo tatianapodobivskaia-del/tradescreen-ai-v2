@@ -16,18 +16,29 @@ export type SessionScreeningResult = {
   durationMs?: number;
 };
 
+/** UI state restored when returning to Screening via SPA navigation */
+export type ScreeningSnapshotUiFields = {
+  uploadedFileName: string | null;
+  parsedVendorCount: number;
+  parsedUploadRows: unknown | null;
+  missingColumns: unknown;
+  uploadScreeningDone: boolean;
+  aiDeepAnalysisResults: unknown | null;
+  aiAnalysisComplete: boolean;
+};
+
 type LastSnap =
-  | {
+  | ({
       kind: "single";
       capturedAt: string;
       screeningResults: unknown;
       lastScreenInput: unknown;
-    }
-  | {
+    } & ScreeningSnapshotUiFields)
+  | ({
       kind: "batch";
       capturedAt: string;
       batchScreeningRows: unknown;
-    };
+    } & ScreeningSnapshotUiFields);
 
 type SessionBucket = {
   history: SessionScreeningResult[];
@@ -36,6 +47,16 @@ type SessionBucket = {
 };
 
 const SESSION_GLOBAL_KEY = "__TradeScreenAI_sessionStore_v1__";
+
+const SNAP_UI_DEFAULTS: ScreeningSnapshotUiFields = {
+  uploadedFileName: null,
+  parsedVendorCount: 0,
+  parsedUploadRows: null,
+  missingColumns: [],
+  uploadScreeningDone: false,
+  aiDeepAnalysisResults: null,
+  aiAnalysisComplete: false,
+};
 
 /** Prefer `window` in the browser so the bucket survives as long as the tab (same as globalThis, explicit for debugging). */
 function getRoot(): Record<string, SessionBucket | undefined> {
@@ -67,22 +88,61 @@ export function addScreeningResult(result: SessionScreeningResult): void {
   emit();
 }
 
-export function setLastScreeningSnapshot(
-  snapshot:
-    | { kind: "single"; screeningResults: unknown; lastScreenInput: unknown }
-    | { kind: "batch"; batchScreeningRows: unknown }
-    | null
-): void {
+export type ScreeningSnapshotInput =
+  | ({ kind: "single"; screeningResults: unknown; lastScreenInput: unknown } & Partial<ScreeningSnapshotUiFields>)
+  | ({ kind: "batch"; batchScreeningRows: unknown } & Partial<ScreeningSnapshotUiFields>);
+
+function normalizeUiFields(partial: Partial<ScreeningSnapshotUiFields> | undefined): ScreeningSnapshotUiFields {
+  return {
+    uploadedFileName: partial?.uploadedFileName ?? SNAP_UI_DEFAULTS.uploadedFileName,
+    parsedVendorCount: partial?.parsedVendorCount ?? SNAP_UI_DEFAULTS.parsedVendorCount,
+    parsedUploadRows: partial?.parsedUploadRows ?? SNAP_UI_DEFAULTS.parsedUploadRows,
+    missingColumns: partial?.missingColumns ?? SNAP_UI_DEFAULTS.missingColumns,
+    uploadScreeningDone: partial?.uploadScreeningDone ?? SNAP_UI_DEFAULTS.uploadScreeningDone,
+    aiDeepAnalysisResults: partial?.aiDeepAnalysisResults ?? SNAP_UI_DEFAULTS.aiDeepAnalysisResults,
+    aiAnalysisComplete: partial?.aiAnalysisComplete ?? SNAP_UI_DEFAULTS.aiAnalysisComplete,
+  };
+}
+
+export function setLastScreeningSnapshot(snapshot: ScreeningSnapshotInput | null): void {
   const bucket = getBucket();
   if (!snapshot) {
     bucket.lastScreeningSnapshot = null;
     emit();
     return;
   }
+  const ui = normalizeUiFields(snapshot);
+  const capturedAt = new Date().toISOString();
   bucket.lastScreeningSnapshot =
     snapshot.kind === "single"
-      ? { kind: "single", capturedAt: new Date().toISOString(), ...snapshot }
-      : { kind: "batch", capturedAt: new Date().toISOString(), ...snapshot };
+      ? {
+          kind: "single",
+          capturedAt,
+          screeningResults: snapshot.screeningResults,
+          lastScreenInput: snapshot.lastScreenInput,
+          ...ui,
+        }
+      : {
+          kind: "batch",
+          capturedAt,
+          batchScreeningRows: snapshot.batchScreeningRows,
+          ...ui,
+        };
+  emit();
+}
+
+/** Merge fields into the current snapshot (e.g. after upload completes or AI analysis finishes). */
+export function patchLastScreeningSnapshot(patch: Partial<ScreeningSnapshotUiFields>): void {
+  const bucket = getBucket();
+  const s = bucket.lastScreeningSnapshot;
+  if (!s) return;
+  if (typeof patch.uploadedFileName !== "undefined") s.uploadedFileName = patch.uploadedFileName ?? null;
+  if (typeof patch.parsedVendorCount !== "undefined") s.parsedVendorCount = patch.parsedVendorCount;
+  if (typeof patch.parsedUploadRows !== "undefined") s.parsedUploadRows = patch.parsedUploadRows;
+  if (typeof patch.missingColumns !== "undefined") s.missingColumns = patch.missingColumns;
+  if (typeof patch.uploadScreeningDone !== "undefined") s.uploadScreeningDone = patch.uploadScreeningDone;
+  if (typeof patch.aiDeepAnalysisResults !== "undefined") s.aiDeepAnalysisResults = patch.aiDeepAnalysisResults;
+  if (typeof patch.aiAnalysisComplete !== "undefined") s.aiAnalysisComplete = patch.aiAnalysisComplete;
   emit();
 }
 
@@ -123,4 +183,3 @@ export function subscribeSession(listener: () => void): () => void {
 export function getSessionSnapshot(): SessionScreeningResult[] {
   return getBucket().history;
 }
-

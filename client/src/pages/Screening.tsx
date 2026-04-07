@@ -32,7 +32,12 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { useSearch, Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { addScreeningResult, getLastScreeningSnapshot, setLastScreeningSnapshot } from "@/lib/sessionStore";
+import {
+  addScreeningResult,
+  getLastScreeningSnapshot,
+  patchLastScreeningSnapshot,
+  setLastScreeningSnapshot,
+} from "@/lib/sessionStore";
 import {
   Dialog,
   DialogContent,
@@ -1589,7 +1594,19 @@ export default function Screening() {
     if (snap) {
       if (snap.kind === "batch") {
         setBatchScreeningRows(snap.batchScreeningRows as BatchScreenRow[]);
-        setUploadScreeningDone(true);
+        setUploadedFile(snap.uploadedFileName);
+        setParsedUploadRows(
+          Array.isArray(snap.parsedUploadRows) ? (snap.parsedUploadRows as ParsedUploadRow[]) : null
+        );
+        setMissingColumns(Array.isArray(snap.missingColumns) ? (snap.missingColumns as string[]) : []);
+        setUploadScreeningDone(snap.uploadScreeningDone);
+        setAiResults(
+          snap.aiDeepAnalysisResults != null
+            ? (snap.aiDeepAnalysisResults as NormalizedAIResult[])
+            : null
+        );
+        setAiLoading(false);
+        setAiError(null);
         setScreeningResults(null);
         setLastScreenInput(null);
         setActiveTab("upload");
@@ -1609,7 +1626,22 @@ export default function Screening() {
       setAmount(input.amount);
       setDocType(input.docType);
       setCyrillicName(input.cyrillicName);
-      setActiveTab("manual");
+      setUploadedFile(snap.uploadedFileName);
+      setParsedUploadRows(
+        Array.isArray(snap.parsedUploadRows) ? (snap.parsedUploadRows as ParsedUploadRow[]) : null
+      );
+      setMissingColumns(Array.isArray(snap.missingColumns) ? (snap.missingColumns as string[]) : []);
+      setUploadScreeningDone(snap.uploadScreeningDone);
+      setAiResults(
+        snap.aiDeepAnalysisResults != null
+          ? (snap.aiDeepAnalysisResults as NormalizedAIResult[])
+          : null
+      );
+      setAiLoading(false);
+      setAiError(null);
+      const hasUploadBanner =
+        Array.isArray(snap.parsedUploadRows) && snap.parsedUploadRows.length > 0;
+      setActiveTab(hasUploadBanner ? "upload" : "manual");
       return;
     }
 
@@ -1821,7 +1853,18 @@ export default function Screening() {
         const apiRow = pickWorstRiskResult(data.results ?? []);
         const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
         setScreeningResults(sr);
-        setLastScreeningSnapshot({ kind: "single", screeningResults: sr, lastScreenInput: input });
+        setLastScreeningSnapshot({
+          kind: "single",
+          screeningResults: sr,
+          lastScreenInput: input,
+          uploadedFileName: uploadedFile,
+          parsedVendorCount: parsedUploadRows?.length ?? 0,
+          parsedUploadRows: parsedUploadRows ? parsedUploadRows.map((r) => ({ ...r })) : null,
+          missingColumns: [...missingColumns],
+          uploadScreeningDone,
+          aiDeepAnalysisResults: null,
+          aiAnalysisComplete: false,
+        });
         addScreeningResult({
           timestamp: new Date().toISOString(),
           vendorName: input.vendorName,
@@ -1839,7 +1882,17 @@ export default function Screening() {
         setScreeningRemoteLoading(false);
       }
     },
-    [vendorName, country, amount, docType, cyrillicName]
+    [
+      vendorName,
+      country,
+      amount,
+      docType,
+      cyrillicName,
+      uploadedFile,
+      parsedUploadRows,
+      missingColumns,
+      uploadScreeningDone,
+    ]
   );
 
   /** Manual entry: read live form values so country / amount / doc always feed the scoring pipeline */
@@ -1882,7 +1935,18 @@ export default function Screening() {
       const apiRow = pickWorstRiskResult(data.results ?? []);
       const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
       setScreeningResults(sr);
-      setLastScreeningSnapshot({ kind: "single", screeningResults: sr, lastScreenInput: input });
+      setLastScreeningSnapshot({
+        kind: "single",
+        screeningResults: sr,
+        lastScreenInput: input,
+        uploadedFileName: uploadedFile,
+        parsedVendorCount: parsedUploadRows?.length ?? 0,
+        parsedUploadRows: parsedUploadRows ? parsedUploadRows.map((r) => ({ ...r })) : null,
+        missingColumns: [...missingColumns],
+        uploadScreeningDone,
+        aiDeepAnalysisResults: null,
+        aiAnalysisComplete: false,
+      });
       addScreeningResult({
         timestamp: new Date().toISOString(),
         vendorName: input.vendorName,
@@ -1899,7 +1963,12 @@ export default function Screening() {
     } finally {
       setScreeningRemoteLoading(false);
     }
-  }, []);
+  }, [
+    uploadedFile,
+    parsedUploadRows,
+    missingColumns,
+    uploadScreeningDone,
+  ]);
 
   const runUploadScreening = useCallback(async () => {
     if (!parsedUploadRows?.length) return;
@@ -1911,6 +1980,13 @@ export default function Screening() {
       setBatchScreeningRows(null);
       await handleScreen(first.vendorName, first);
       setUploadScreeningDone(true);
+      patchLastScreeningSnapshot({
+        uploadScreeningDone: true,
+        uploadedFileName: uploadedFile,
+        parsedVendorCount: parsedUploadRows.length,
+        parsedUploadRows: parsedUploadRows.map((r) => ({ ...r })),
+        missingColumns: [...missingColumns],
+      });
       return;
     }
     const auditedAt = new Date().toISOString();
@@ -1959,7 +2035,17 @@ export default function Screening() {
         ),
       }));
       setBatchScreeningRows(mergedRows);
-      setLastScreeningSnapshot({ kind: "batch", batchScreeningRows: mergedRows });
+      setLastScreeningSnapshot({
+        kind: "batch",
+        batchScreeningRows: mergedRows,
+        uploadedFileName: uploadedFile,
+        parsedVendorCount: parsedUploadRows.length,
+        parsedUploadRows: parsedUploadRows.map((r) => ({ ...r })),
+        missingColumns: [...missingColumns],
+        uploadScreeningDone: true,
+        aiDeepAnalysisResults: null,
+        aiAnalysisComplete: false,
+      });
       const avgMs = (performance.now() - t0) / Math.max(1, mergedRows.length);
       for (const r of mergedRows) {
         addScreeningResult({
@@ -1985,7 +2071,7 @@ export default function Screening() {
     setAiResults(null);
     setAiError(null);
     setUploadScreeningDone(true);
-  }, [parsedUploadRows, missingColumns, handleScreen, cyrillicName]);
+  }, [parsedUploadRows, missingColumns, handleScreen, cyrillicName, uploadedFile]);
 
   const resetUpload = useCallback(() => {
     setParsedUploadRows(null);
@@ -2082,7 +2168,12 @@ export default function Screening() {
       try {
         const data = await runAIDeepAnalysis(vendors);
         const rows = data.results ?? [];
-        setAiResults(rows.map((row) => normalizeAIResult(row as unknown as RawAIResult)));
+        const normalized = rows.map((row) => normalizeAIResult(row as unknown as RawAIResult));
+        setAiResults(normalized);
+        patchLastScreeningSnapshot({
+          aiDeepAnalysisResults: normalized,
+          aiAnalysisComplete: true,
+        });
       } catch {
         setAiError(
           "AI analysis unavailable — check your internet connection. Screening results above are still valid."
@@ -2115,7 +2206,12 @@ export default function Screening() {
     try {
       const data = await runAIDeepAnalysis(vendors);
       const rows = data.results ?? [];
-      setAiResults(rows.map((row) => normalizeAIResult(row as unknown as RawAIResult)));
+      const normalized = rows.map((row) => normalizeAIResult(row as unknown as RawAIResult));
+      setAiResults(normalized);
+      patchLastScreeningSnapshot({
+        aiDeepAnalysisResults: normalized,
+        aiAnalysisComplete: true,
+      });
     } catch {
       setAiError(
         "AI analysis unavailable — check your internet connection. Screening results above are still valid."
