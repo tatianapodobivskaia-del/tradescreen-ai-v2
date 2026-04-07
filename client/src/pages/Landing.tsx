@@ -14,6 +14,7 @@ import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
   dataSources
 } from "@/lib/mockData";
+import { fetchSanctionsApiHealth } from "@/lib/api";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
@@ -766,9 +767,8 @@ function DataSourcesSection() {
 
     const syncHealthTimestamp = async () => {
       try {
-        const res = await fetch("/api/health");
-        if (!res.ok) throw new Error("health unavailable");
-        const data = await res.json();
+        const data = await fetchSanctionsApiHealth();
+        if (!data) throw new Error("health unavailable");
         const ts = data?.ts;
         if (!ts) throw new Error("timestamp missing");
         const parsed =

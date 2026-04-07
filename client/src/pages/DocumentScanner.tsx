@@ -72,12 +72,62 @@ function isPdfFile(file: File): boolean {
   return file.name?.toLowerCase().endsWith(".pdf") ?? false;
 }
 
-/** Raw base64 for /api/vision-screen (PDF → first page as JPEG; images unchanged). */
+/** Re-encode to JPEG + max edge — vision API only accepts webp/jpeg/png/gif; avoids HEIC/TIFF failures. */
+async function rasterImageFileToJpegBase64(file: File): Promise<string> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error(
+      "Could not read this image — try PNG, JPG, WebP, GIF, or export iPhone photos as “Most Compatible” (JPEG)."
+    );
+  }
+  try {
+    let w = bitmap.width;
+    let h = bitmap.height;
+    const maxDim = Math.max(w, h);
+    if (maxDim > VISION_MAX_EDGE_PX) {
+      const s = VISION_MAX_EDGE_PX / maxDim;
+      w = Math.floor(w * s);
+      h = Math.floor(h * s);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not available");
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
+    );
+    if (!blob) throw new Error("Could not encode image for upload");
+    return fileToBase64Raw(new File([blob], "scan.jpg", { type: "image/jpeg" }));
+  } finally {
+    bitmap.close();
+  }
+}
+
+/** Base64 for /api/vision-screen: PDF → page 1 as JPEG; all other files → rasterized JPEG. */
 async function fileToVisionApiBase64(file: File): Promise<string> {
   if (isPdfFile(file)) {
     return pdfFirstPageToJpegBase64(file);
   }
-  return fileToBase64Raw(file);
+  return rasterImageFileToJpegBase64(file);
+}
+
+function formatVisionClientError(err: unknown): string {
+  if (err instanceof DOMException && err.name === "AbortError") {
+    return "Scan timed out — try a smaller file or one page at a time.";
+  }
+  if (err instanceof Error) {
+    if (err.name === "AbortError" || /aborted/i.test(err.message)) {
+      return "Scan timed out — try a smaller file or one page at a time.";
+    }
+    const m = err.message.trim();
+    if (m.length <= 320) return m;
+    return `${m.slice(0, 317)}…`;
+  }
+  return "Document scan failed — check connection and use PNG, JPG, WebP, GIF, or PDF.";
 }
 
 type VisionResponse = Awaited<ReturnType<typeof runVisionScan>>;
@@ -147,12 +197,10 @@ export default function DocumentScanner() {
         clearActivateTimers();
         setVisionData(data);
         setPhase("complete");
-      } catch {
+      } catch (err) {
         await pMin;
         clearActivateTimers();
-        setErrorMessage(
-          "Document scanning unavailable — check your internet connection."
-        );
+        setErrorMessage(formatVisionClientError(err));
         setPhase("error");
       }
     },
