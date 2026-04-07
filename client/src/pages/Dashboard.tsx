@@ -24,7 +24,7 @@ const STAT_CARD_SUBTITLES = [
 const STAT_CARD_TITLES = ["Total Screened", "Detection Rate", "High Risk", "Avg. Processing Time"] as const;
 
 export default function Dashboard() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [health, setHealth] = useState<ApiHealthSnapshot | null>(null);
   const [sessionTick, setSessionTick] = useState(0);
 
@@ -35,7 +35,15 @@ export default function Dashboard() {
     })();
   }, []);
 
-  useEffect(() => subscribeSession(() => setSessionTick((t) => t + 1)), []);
+  useEffect(() => {
+    return subscribeSession(() => setSessionTick((t) => t + 1));
+  }, []);
+
+  /** Re-read session stats when landing on the dashboard (same module as Screening via @/lib/sessionStore). */
+  useEffect(() => {
+    void location;
+    setSessionTick((t) => t + 1);
+  }, [location]);
 
   const sessionHistory = useMemo(() => {
     // bump memo when store changes

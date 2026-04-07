@@ -1,3 +1,8 @@
+/**
+ * In-memory session store (resets on full page reload).
+ * Uses globalThis so all imports share one store even if Vite duplicates the module in multiple chunks / HMR.
+ * Import only from `@/lib/sessionStore` (no relative duplicates).
+ */
 export type SessionScreeningSource = "screening" | "scanner";
 
 export type SessionScreeningResult = {
@@ -11,8 +16,7 @@ export type SessionScreeningResult = {
   durationMs?: number;
 };
 
-const history: SessionScreeningResult[] = [];
-let lastScreeningSnapshot:
+type LastSnap =
   | {
       kind: "single";
       capturedAt: string;
@@ -23,17 +27,34 @@ let lastScreeningSnapshot:
       kind: "batch";
       capturedAt: string;
       batchScreeningRows: unknown;
-    }
-  | null = null;
-const listeners = new Set<() => void>();
+    };
 
-function emit() {
+type SessionBucket = {
+  history: SessionScreeningResult[];
+  lastScreeningSnapshot: LastSnap | null;
+  listeners: Set<() => void>;
+};
+
+const SESSION_GLOBAL_KEY = "__TradeScreenAI_sessionStore_v1__";
+
+function getBucket(): SessionBucket {
+  const g = globalThis as unknown as Record<string, SessionBucket | undefined>;
+  let b = g[SESSION_GLOBAL_KEY];
+  if (!b) {
+    b = { history: [], lastScreeningSnapshot: null, listeners: new Set() };
+    g[SESSION_GLOBAL_KEY] = b;
+  }
+  return b;
+}
+
+function emit(): void {
+  const { listeners } = getBucket();
   for (const l of listeners) l();
 }
 
 export function addScreeningResult(result: SessionScreeningResult): void {
+  const { history } = getBucket();
   history.unshift(result);
-  // keep the session lightweight
   if (history.length > 200) history.length = 200;
   emit();
 }
@@ -44,36 +65,25 @@ export function setLastScreeningSnapshot(
     | { kind: "batch"; batchScreeningRows: unknown }
     | null
 ): void {
+  const bucket = getBucket();
   if (!snapshot) {
-    lastScreeningSnapshot = null;
+    bucket.lastScreeningSnapshot = null;
     emit();
     return;
   }
-  lastScreeningSnapshot =
+  bucket.lastScreeningSnapshot =
     snapshot.kind === "single"
       ? { kind: "single", capturedAt: new Date().toISOString(), ...snapshot }
       : { kind: "batch", capturedAt: new Date().toISOString(), ...snapshot };
   emit();
 }
 
-export function getLastScreeningSnapshot():
-  | {
-      kind: "single";
-      capturedAt: string;
-      screeningResults: unknown;
-      lastScreenInput: unknown;
-    }
-  | {
-      kind: "batch";
-      capturedAt: string;
-      batchScreeningRows: unknown;
-    }
-  | null {
-  return lastScreeningSnapshot;
+export function getLastScreeningSnapshot(): LastSnap | null {
+  return getBucket().lastScreeningSnapshot;
 }
 
 export function getScreeningHistory(): SessionScreeningResult[] {
-  return history;
+  return getBucket().history;
 }
 
 export function getSessionStats(): {
@@ -81,6 +91,7 @@ export function getSessionStats(): {
   high: number;
   avgProcessingMs: number | null;
 } {
+  const history = getBucket().history;
   const total = history.length;
   let high = 0;
   let sum = 0;
@@ -96,11 +107,11 @@ export function getSessionStats(): {
 }
 
 export function subscribeSession(listener: () => void): () => void {
+  const { listeners } = getBucket();
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
 export function getSessionSnapshot(): SessionScreeningResult[] {
-  return history;
+  return getBucket().history;
 }
-

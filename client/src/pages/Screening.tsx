@@ -8,6 +8,7 @@ import {
   useMemo,
   Fragment,
   useEffect,
+  useLayoutEffect,
   type FormEvent,
 } from "react";
 import jsPDF from "jspdf";
@@ -1572,46 +1573,50 @@ export default function Screening() {
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const emailCopyResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  /**
+   * When there are no results: restore last snapshot from sessionStore if present;
+   * otherwise pre-fill vendor/tab from ?vendor= / ?entity= query (snapshot wins over URL).
+   * useLayoutEffect avoids a paint with empty results when returning via SPA navigation.
+   */
+  useLayoutEffect(() => {
     const q = new URLSearchParams(search);
-    const raw = q.get("vendor") ?? q.get("entity") ?? "";
-    const v = raw.trim();
-    if (!v) return;
-    setVendorName(v);
-    setActiveTab("manual");
-  }, [search]);
+    const urlVendor = (q.get("vendor") ?? q.get("entity") ?? "").trim();
+    const hasResults =
+      screeningResults != null || (batchScreeningRows != null && batchScreeningRows.length > 0);
+    if (hasResults) return;
 
-  useEffect(() => {
-    const q = new URLSearchParams(search);
-    const raw = q.get("vendor") ?? q.get("entity") ?? "";
-    if (raw.trim()) return;
-    // Restore last displayed results from in-memory session state.
-    if (screeningResults || (batchScreeningRows && batchScreeningRows.length > 0)) return;
     const snap = getLastScreeningSnapshot();
-    if (!snap) return;
-    if (snap.kind === "batch") {
-      setBatchScreeningRows(snap.batchScreeningRows as BatchScreenRow[]);
-      setUploadScreeningDone(true);
-      setScreeningResults(null);
-      setLastScreenInput(null);
-      setActiveTab("upload");
+    if (snap) {
+      if (snap.kind === "batch") {
+        setBatchScreeningRows(snap.batchScreeningRows as BatchScreenRow[]);
+        setUploadScreeningDone(true);
+        setScreeningResults(null);
+        setLastScreenInput(null);
+        setActiveTab("upload");
+        return;
+      }
+      const input = snap.lastScreenInput as {
+        vendorName: string;
+        country: string;
+        amount: string;
+        docType: string;
+        cyrillicName: string;
+      };
+      setScreeningResults(snap.screeningResults as ScreeningResultsState);
+      setLastScreenInput(input);
+      setVendorName(input.vendorName);
+      setCountry(input.country);
+      setAmount(input.amount);
+      setDocType(input.docType);
+      setCyrillicName(input.cyrillicName);
+      setActiveTab("manual");
       return;
     }
-    const input = snap.lastScreenInput as {
-      vendorName: string;
-      country: string;
-      amount: string;
-      docType: string;
-      cyrillicName: string;
-    };
-    setScreeningResults(snap.screeningResults as ScreeningResultsState);
-    setLastScreenInput(input);
-    setVendorName(input.vendorName);
-    setCountry(input.country);
-    setAmount(input.amount);
-    setDocType(input.docType);
-    setCyrillicName(input.cyrillicName);
-    setActiveTab("manual");
+
+    if (urlVendor) {
+      setVendorName(urlVendor);
+      setActiveTab("manual");
+    }
   }, [search, screeningResults, batchScreeningRows]);
 
   const batchRiskCounts = useMemo(() => {
