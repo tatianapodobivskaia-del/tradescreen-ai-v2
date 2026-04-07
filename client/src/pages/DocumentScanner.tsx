@@ -4,12 +4,32 @@
  */
 import { useState, useRef, useCallback, useEffect, type ChangeEvent, type DragEvent } from "react";
 import { Upload, Eye, Languages, ShieldAlert, Zap, CheckCircle, Loader2, FileText, Mail, RefreshCw } from "lucide-react";
-import * as pdfjs from "pdfjs-dist";
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { cn } from "@/lib/utils";
 import { runVisionScan } from "@/lib/api";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+declare global {
+  // set by pdf.worker.mjs when evaluated on the main thread
+  interface GlobalThis {
+    pdfjsWorker?: { WorkerMessageHandler?: unknown };
+  }
+}
+
+/**
+ * Load pdf.js for PDF uploads only.
+ * Pre-import the worker bundle on the **main thread** so `globalThis.pdfjsWorker` is set; then PDF.js uses a
+ * "fake worker" (LoopbackPort) instead of `new Worker()`, which avoids Safari/other browsers where the real
+ * worker thread has no `Map.prototype.getOrInsertComputed` (pdfjs 5.6+).
+ * Polyfills in main.tsx still cover the main-thread Map/Promise APIs.
+ */
+async function getPdfjs() {
+  const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+  if (!globalThis.pdfjsWorker?.WorkerMessageHandler) {
+    await import(/* @vite-ignore */ workerSrc);
+  }
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+  return pdfjs;
+}
 
 const DOC_SCAN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/document-scan-T5uLdZ2Jukfd7PKfZx9XEn.webp";
 
@@ -40,6 +60,7 @@ function fileToBase64Raw(file: File): Promise<string> {
 const VISION_MAX_EDGE_PX = 2048;
 
 async function pdfFirstPageToJpegBase64(file: File): Promise<string> {
+  const pdfjs = await getPdfjs();
   const data = await file.arrayBuffer();
   const loadingTask = pdfjs.getDocument({ data: new Uint8Array(data) });
   const pdf = await loadingTask.promise;
