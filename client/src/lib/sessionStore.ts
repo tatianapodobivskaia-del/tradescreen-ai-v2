@@ -37,8 +37,16 @@ type SessionBucket = {
 
 const SESSION_GLOBAL_KEY = "__TradeScreenAI_sessionStore_v1__";
 
+/** Prefer `window` in the browser so the bucket survives as long as the tab (same as globalThis, explicit for debugging). */
+function getRoot(): Record<string, SessionBucket | undefined> {
+  if (typeof window !== "undefined") {
+    return window as unknown as Record<string, SessionBucket | undefined>;
+  }
+  return globalThis as unknown as Record<string, SessionBucket | undefined>;
+}
+
 function getBucket(): SessionBucket {
-  const g = globalThis as unknown as Record<string, SessionBucket | undefined>;
+  const g = getRoot();
   let b = g[SESSION_GLOBAL_KEY];
   if (!b) {
     b = { history: [], lastScreeningSnapshot: null, listeners: new Set() };

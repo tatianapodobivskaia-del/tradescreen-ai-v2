@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
-import { useSearch } from "wouter";
+import { useSearch, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { addScreeningResult, getLastScreeningSnapshot, setLastScreeningSnapshot } from "@/lib/sessionStore";
 import {
@@ -2472,18 +2472,18 @@ export default function Screening() {
                 <Mail className="h-4 w-4 shrink-0" aria-hidden />
                 Email Draft
               </button>
-              <a
+              <Link
                 href="/app"
                 className="ml-2 inline-flex items-center gap-1.5 px-2 py-2 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-800"
               >
                 View Dashboard <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/app/audit"
                 className="inline-flex items-center gap-1.5 px-2 py-2 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-800"
               >
                 View Audit Log <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-              </a>
+              </Link>
             </div>
             <button
               type="button"

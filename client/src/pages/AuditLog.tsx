@@ -2,6 +2,7 @@
  * AUDIT LOG — Timestamped log with search, filters, export
  */
 import { useState, useMemo } from "react";
+import { Link } from "wouter";
 import { auditLogEntries } from "@/lib/mockData";
 import { ScrollText, Search, Download, Filter, Clock, AlertTriangle, Info, ShieldAlert, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,12 +37,12 @@ export default function AuditLog() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <a
+          <Link
             href="/app/screening"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-800"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden /> Back to Screening
-          </a>
+          </Link>
           <Button variant="outline" className="gap-2 text-sm">
             <Download className="w-4 h-4" /> Export Log
           </Button>
