@@ -12,6 +12,19 @@ export type SessionScreeningResult = {
 };
 
 const history: SessionScreeningResult[] = [];
+let lastScreeningSnapshot:
+  | {
+      kind: "single";
+      capturedAt: string;
+      screeningResults: unknown;
+      lastScreenInput: unknown;
+    }
+  | {
+      kind: "batch";
+      capturedAt: string;
+      batchScreeningRows: unknown;
+    }
+  | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -23,6 +36,40 @@ export function addScreeningResult(result: SessionScreeningResult): void {
   // keep the session lightweight
   if (history.length > 200) history.length = 200;
   emit();
+}
+
+export function setLastScreeningSnapshot(
+  snapshot:
+    | { kind: "single"; screeningResults: unknown; lastScreenInput: unknown }
+    | { kind: "batch"; batchScreeningRows: unknown }
+    | null
+): void {
+  if (!snapshot) {
+    lastScreeningSnapshot = null;
+    emit();
+    return;
+  }
+  lastScreeningSnapshot =
+    snapshot.kind === "single"
+      ? { kind: "single", capturedAt: new Date().toISOString(), ...snapshot }
+      : { kind: "batch", capturedAt: new Date().toISOString(), ...snapshot };
+  emit();
+}
+
+export function getLastScreeningSnapshot():
+  | {
+      kind: "single";
+      capturedAt: string;
+      screeningResults: unknown;
+      lastScreenInput: unknown;
+    }
+  | {
+      kind: "batch";
+      capturedAt: string;
+      batchScreeningRows: unknown;
+    }
+  | null {
+  return lastScreeningSnapshot;
 }
 
 export function getScreeningHistory(): SessionScreeningResult[] {

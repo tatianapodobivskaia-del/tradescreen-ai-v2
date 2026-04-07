@@ -3,7 +3,7 @@
  */
 import { useState, useMemo } from "react";
 import { auditLogEntries } from "@/lib/mockData";
-import { ScrollText, Search, Download, Filter, Clock, AlertTriangle, Info, ShieldAlert, FileText } from "lucide-react";
+import { ScrollText, Search, Download, Filter, Clock, AlertTriangle, Info, ShieldAlert, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const severityConfig = {
@@ -35,9 +35,17 @@ export default function AuditLog() {
             essential for regulatory compliance and internal reviews.
           </p>
         </div>
-        <Button variant="outline" className="gap-2 text-sm">
-          <Download className="w-4 h-4" /> Export Log
-        </Button>
+        <div className="flex items-center gap-4">
+          <a
+            href="/app/screening"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-800"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden /> Back to Screening
+          </a>
+          <Button variant="outline" className="gap-2 text-sm">
+            <Download className="w-4 h-4" /> Export Log
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

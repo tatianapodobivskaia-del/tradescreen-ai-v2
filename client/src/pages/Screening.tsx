@@ -31,7 +31,7 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { useSearch } from "wouter";
 import { cn } from "@/lib/utils";
-import { addScreeningResult } from "@/lib/sessionStore";
+import { addScreeningResult, getLastScreeningSnapshot, setLastScreeningSnapshot } from "@/lib/sessionStore";
 import {
   Dialog,
   DialogContent,
@@ -1581,6 +1581,39 @@ export default function Screening() {
     setActiveTab("manual");
   }, [search]);
 
+  useEffect(() => {
+    const q = new URLSearchParams(search);
+    const raw = q.get("vendor") ?? q.get("entity") ?? "";
+    if (raw.trim()) return;
+    // Restore last displayed results from in-memory session state.
+    if (screeningResults || (batchScreeningRows && batchScreeningRows.length > 0)) return;
+    const snap = getLastScreeningSnapshot();
+    if (!snap) return;
+    if (snap.kind === "batch") {
+      setBatchScreeningRows(snap.batchScreeningRows as BatchScreenRow[]);
+      setUploadScreeningDone(true);
+      setScreeningResults(null);
+      setLastScreenInput(null);
+      setActiveTab("upload");
+      return;
+    }
+    const input = snap.lastScreenInput as {
+      vendorName: string;
+      country: string;
+      amount: string;
+      docType: string;
+      cyrillicName: string;
+    };
+    setScreeningResults(snap.screeningResults as ScreeningResultsState);
+    setLastScreenInput(input);
+    setVendorName(input.vendorName);
+    setCountry(input.country);
+    setAmount(input.amount);
+    setDocType(input.docType);
+    setCyrillicName(input.cyrillicName);
+    setActiveTab("manual");
+  }, [search, screeningResults, batchScreeningRows]);
+
   const batchRiskCounts = useMemo(() => {
     if (!batchScreeningRows?.length) return { all: 0, high: 0, medium: 0, low: 0 };
     let high = 0;
@@ -1783,6 +1816,7 @@ export default function Screening() {
         const apiRow = pickWorstRiskResult(data.results ?? []);
         const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
         setScreeningResults(sr);
+        setLastScreeningSnapshot({ kind: "single", screeningResults: sr, lastScreenInput: input });
         addScreeningResult({
           timestamp: new Date().toISOString(),
           vendorName: input.vendorName,
@@ -1843,6 +1877,7 @@ export default function Screening() {
       const apiRow = pickWorstRiskResult(data.results ?? []);
       const sr = buildScreeningResultsFromApi(input, transliterationInfo, apiRow);
       setScreeningResults(sr);
+      setLastScreeningSnapshot({ kind: "single", screeningResults: sr, lastScreenInput: input });
       addScreeningResult({
         timestamp: new Date().toISOString(),
         vendorName: input.vendorName,
@@ -1919,6 +1954,7 @@ export default function Screening() {
         ),
       }));
       setBatchScreeningRows(mergedRows);
+      setLastScreeningSnapshot({ kind: "batch", batchScreeningRows: mergedRows });
       const avgMs = (performance.now() - t0) / Math.max(1, mergedRows.length);
       for (const r of mergedRows) {
         addScreeningResult({

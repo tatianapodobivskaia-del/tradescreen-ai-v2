@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { checkAPIHealth, type ApiHealthSnapshot } from "@/lib/api";
 import { getScreeningHistory, getSessionStats, subscribeSession } from "@/lib/sessionStore";
 import { useLocation } from "wouter";
-import { TrendingUp, TrendingDown, Clock, Shield, AlertTriangle, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, Shield, AlertTriangle, Activity, ArrowLeft } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const statIcons = [Activity, Shield, AlertTriangle, Clock];
@@ -167,7 +167,17 @@ export default function Dashboard() {
             Screening activity overview — aggregated metrics from all completed screenings
           </p>
         </div>
-        <div className="text-xs font-data text-slate-400 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">Last updated: {new Date().toLocaleString()}</div>
+        <div className="flex items-center gap-4">
+          <a
+            href="/app/screening"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-800"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden /> Back to Screening
+          </a>
+          <div className="text-xs font-data text-slate-400 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
+            Last updated: {new Date().toLocaleString()}
+          </div>
+        </div>
       </div>
 
       {/* Stat Cards — premium with glow on first card */}
