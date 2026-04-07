@@ -293,11 +293,9 @@ export default function Architecture() {
           </div>
           <div className="space-y-3">
             {[
-              "Uses static sanctions list snapshots (not real-time feeds)",
-              "AI analysis is simulated — not connected to live AI analysis",
-              "Document scanner uses pre-processed demo data",
-              "Fuzzy matching algorithm is simplified for demonstration",
-              "No persistent storage — all data resets on page reload",
+              "Uses periodic sanctions list snapshots — real-time feed integration planned",
+              "No persistent storage — screening data resets on page reload",
+              "Academic research prototype — not validated for production compliance use",
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0" />

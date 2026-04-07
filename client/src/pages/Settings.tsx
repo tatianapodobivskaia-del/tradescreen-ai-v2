@@ -29,10 +29,10 @@ export default function SettingsPage() {
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Sliders className="w-4 h-4 text-cyan-500" />
-          <h3 className="text-base font-bold font-display text-slate-900">Fuzzy Matching Threshold</h3>
+          <h3 className="text-base font-bold font-display text-slate-900">AI Sensitivity Threshold</h3>
         </div>
         <p className="text-sm text-slate-500 font-body mb-4">
-          Minimum similarity score required to flag a potential match. Lower values increase sensitivity but may produce more false positives.
+          Minimum AI confidence score required to flag a potential match. Lower values increase sensitivity but may produce more false positives.
         </p>
         <div className="space-y-3">
           <input
