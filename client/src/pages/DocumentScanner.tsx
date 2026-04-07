@@ -1,10 +1,15 @@
 /*
  * AI DOCUMENT SCANNER — Upload zone; Azure vision-screen API + 4-agent animation
+ * PDFs are rasterized to JPEG (first page): the vision API only accepts webp/jpeg/png/gif.
  */
 import { useState, useRef, useCallback, useEffect, type ChangeEvent, type DragEvent } from "react";
 import { Upload, Eye, Languages, ShieldAlert, Zap, CheckCircle, Loader2, FileText, Mail, RefreshCw } from "lucide-react";
+import * as pdfjs from "pdfjs-dist";
+import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { cn } from "@/lib/utils";
 import { runVisionScan } from "@/lib/api";
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 const DOC_SCAN_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/document-scan-T5uLdZ2Jukfd7PKfZx9XEn.webp";
 
@@ -30,6 +35,49 @@ function fileToBase64Raw(file: File): Promise<string> {
     reader.onerror = () => reject(new Error("Read failed"));
     reader.readAsDataURL(file);
   });
+}
+
+const VISION_MAX_EDGE_PX = 2048;
+
+async function pdfFirstPageToJpegBase64(file: File): Promise<string> {
+  const data = await file.arrayBuffer();
+  const loadingTask = pdfjs.getDocument({ data: new Uint8Array(data) });
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(1);
+  const baseVp = page.getViewport({ scale: 1 });
+  let scale = 2;
+  if (baseVp.width * scale > VISION_MAX_EDGE_PX) {
+    scale = VISION_MAX_EDGE_PX / baseVp.width;
+  }
+  if (baseVp.height * scale > VISION_MAX_EDGE_PX) {
+    scale = Math.min(scale, VISION_MAX_EDGE_PX / baseVp.height);
+  }
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not available");
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+  const blob: Blob | null = await new Promise((resolve) =>
+    canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
+  );
+  if (!blob) throw new Error("Could not encode PDF page as image");
+  return fileToBase64Raw(new File([blob], "page1.jpg", { type: "image/jpeg" }));
+}
+
+function isPdfFile(file: File): boolean {
+  const t = file.type?.toLowerCase() ?? "";
+  if (t === "application/pdf") return true;
+  return file.name?.toLowerCase().endsWith(".pdf") ?? false;
+}
+
+/** Raw base64 for /api/vision-screen (PDF → first page as JPEG; images unchanged). */
+async function fileToVisionApiBase64(file: File): Promise<string> {
+  if (isPdfFile(file)) {
+    return pdfFirstPageToJpegBase64(file);
+  }
+  return fileToBase64Raw(file);
 }
 
 type VisionResponse = Awaited<ReturnType<typeof runVisionScan>>;
@@ -93,7 +141,7 @@ export default function DocumentScanner() {
       const pMin = sleep(MIN_PIPELINE_MS);
 
       try {
-        const base64 = await fileToBase64Raw(file);
+        const base64 = await fileToVisionApiBase64(file);
         const data = await runVisionScan(base64);
         await pMin;
         clearActivateTimers();
