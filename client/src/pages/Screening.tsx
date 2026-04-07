@@ -233,32 +233,17 @@ type ListHitRow = {
   statusTier: "HIGH" | "MEDIUM" | "LOW";
 };
 
-/** Client-side score breakdown (aligned to composite total; mirrors typical compliance breakdown layout) */
+/** Client-side score breakdown (component scores 0–100 before weighting; total = weighted composite) */
 type ScoreBreakdown = {
   name: number;
   country: number;
   amount: number;
   doc: number;
+  translit: number;
   total: number;
 };
 
-function buildScoreBreakdown(
-  nameScore: number,
-  countryScore: number,
-  amountScore: number,
-  docScore: number,
-  compositeTotal: number
-): ScoreBreakdown {
-  return {
-    name: Math.round(Math.min(100, nameScore)),
-    country: Math.round(Math.min(100, countryScore)),
-    amount: Math.round(Math.min(100, amountScore)),
-    doc: Math.round(Math.min(100, docScore)),
-    total: compositeTotal,
-  };
-}
-
-/** High-risk jurisdictions (OFAC-style) — boosts composite when country matches */
+/** High-risk jurisdictions (OFAC-style) — audit trail context */
 function highRiskJurisdiction(country: string): boolean {
   const c = country.trim().toLowerCase();
   if (!c) return false;
@@ -268,25 +253,6 @@ function highRiskJurisdiction(country: string): boolean {
   if (c.includes("syria") && !c.includes("australia")) return true;
   if (c.includes("cuba") && c.length < 20) return true;
   return false;
-}
-
-function countryRiskScore(country: string): number {
-  if (!country.trim()) return 0;
-  if (highRiskJurisdiction(country)) return 92;
-  return 22;
-}
-
-function amountRiskScore(amountStr: string): number {
-  const n = parseAmountUsd(amountStr);
-  if (n <= 0) return 0;
-  if (n > 50_000) return Math.min(100, Math.round(55 + Math.log10(n / 50_000) * 25));
-  return Math.round(30 + (n / 50_000) * 35);
-}
-
-function docRiskScore(docType: string): number {
-  const d = docType.trim();
-  if (!d) return 0;
-  return Math.min(100, 68 + Math.min(12, Math.floor(d.length / 25)));
 }
 
 /** Batch / upload results: USD from parsed string (always currency-formatted for table) */
@@ -373,10 +339,131 @@ function parseApiRiskFromScreen(risk: string): "HIGH" | "MEDIUM" | "LOW" {
   return "LOW";
 }
 
-function compositeScoreFromApiRisk(risk: "HIGH" | "MEDIUM" | "LOW"): number {
-  if (risk === "HIGH") return 94;
-  if (risk === "MEDIUM") return 62;
-  return 28;
+function normalizeApiAssessmentLabel(raw: string): string {
+  return raw.trim().toUpperCase().replace(/\s+/g, "_");
+}
+
+const JURISDICTION_TIER_95 = [
+  "russia",
+  "iran",
+  "north korea",
+  "syria",
+  "cuba",
+  "belarus",
+  "myanmar",
+  "venezuela",
+] as const;
+
+const JURISDICTION_TIER_60 = [
+  "china",
+  "pakistan",
+  "iraq",
+  "libya",
+  "somalia",
+  "yemen",
+  "sudan",
+  "afghanistan",
+] as const;
+
+function jurisdictionRiskComponent(country: string): number {
+  const c = country.trim().toLowerCase();
+  if (!c || c === "unknown") return 30;
+  for (const key of JURISDICTION_TIER_95) {
+    if (c === key || c.includes(key)) return 95;
+  }
+  for (const key of JURISDICTION_TIER_60) {
+    if (c === key || c.includes(key)) return 60;
+  }
+  return 10;
+}
+
+function txnValueComponent(amountStr: string): number {
+  const n = parseAmountUsd(amountStr);
+  if (n <= 0) return 0;
+  if (n >= 500_000) return 95;
+  if (n >= 100_000) return 80;
+  if (n >= 50_000) return 60;
+  if (n >= 10_000) return 40;
+  return 20;
+}
+
+function docTypeComponent(docType: string): number {
+  const d = docType.trim();
+  if (!d) return 0;
+  const lower = d.toLowerCase();
+  if (lower === "bill of lading" || lower === "certificate of origin") return 80;
+  if (lower === "invoice" || lower === "contract" || lower === "purchase order") return 60;
+  if (lower === "document") return 40;
+  return 40;
+}
+
+function translitBonusComponent(info: TransliterationScreeningInfo | null): number {
+  if (!info) return 0;
+  if (info.direction === "cyrillic") return 90;
+  if (info.variants.length > 3) return 60;
+  return 0;
+}
+
+function resolveNameSimilarScore(
+  apiAssessment: string | null | undefined,
+  apiRiskParsed: "HIGH" | "MEDIUM" | "LOW" | undefined,
+  nameSimFallback: number | null | undefined
+): number {
+  if (nameSimFallback != null && Number.isFinite(nameSimFallback)) {
+    return Math.min(100, Math.max(0, Math.round(nameSimFallback)));
+  }
+  const a = normalizeApiAssessmentLabel(apiAssessment ?? "");
+  if (a === "FALSE_POSITIVE") return 15;
+  if (a === "TRUE_POSITIVE") {
+    const r = apiRiskParsed ?? "LOW";
+    if (r === "HIGH") return 95;
+    if (r === "MEDIUM") return 70;
+    return 55;
+  }
+  if (apiRiskParsed === "HIGH") return 85;
+  if (apiRiskParsed === "MEDIUM") return 50;
+  if (apiRiskParsed === "LOW") return 20;
+  return 15;
+}
+
+type CalculateCompositeScoreParams = {
+  apiRisk?: string | null;
+  apiAssessment?: string | null;
+  /** When set (e.g. API offline), used as NameSim 0–100 instead of API-derived name score. */
+  nameSimFallback?: number | null;
+  country: string;
+  amount: string;
+  docType: string;
+  transliterationInfo: TransliterationScreeningInfo | null;
+};
+
+function calculateCompositeScore(params: CalculateCompositeScoreParams): {
+  total: number;
+  breakdown: { name: number; country: number; amount: number; doc: number; translit: number };
+} {
+  const parsedRisk =
+    params.apiRisk != null && String(params.apiRisk).trim() !== ""
+      ? parseApiRiskFromScreen(params.apiRisk)
+      : undefined;
+  const name = resolveNameSimilarScore(params.apiAssessment, parsedRisk, params.nameSimFallback);
+  const country = jurisdictionRiskComponent(params.country);
+  const amount = txnValueComponent(params.amount);
+  const doc = docTypeComponent(params.docType);
+  const translit = translitBonusComponent(params.transliterationInfo);
+
+  const total =
+    0.75 * name + 0.1 * country + 0.05 * amount + 0.05 * doc + 0.05 * translit;
+
+  return {
+    total: Math.min(100, Math.max(0, total)),
+    breakdown: {
+      name: Math.round(Math.min(100, Math.max(0, name))),
+      country: Math.round(Math.min(100, Math.max(0, country))),
+      amount: Math.round(Math.min(100, Math.max(0, amount))),
+      doc: Math.round(Math.min(100, Math.max(0, doc))),
+      translit: Math.round(Math.min(100, Math.max(0, translit))),
+    },
+  };
 }
 
 function riskRank(r: "HIGH" | "MEDIUM" | "LOW"): number {
@@ -397,10 +484,6 @@ function pickWorstRiskResult(rows: ScreenVendorApiResult[]): ScreenVendorApiResu
     }
   }
   return pick;
-}
-
-function normalizeApiAssessmentLabel(raw: string): string {
-  return raw.trim().toUpperCase().replace(/\s+/g, "_");
 }
 
 /** Best-effort sanctioned-entity name extracted from API reasoning (TRUE_POSITIVE / HIGH). */
@@ -491,17 +574,16 @@ function buildScreeningResultsFromApi(
   apiRow: ScreenVendorApiResult | undefined
 ): ScreeningResultsState {
   const risk = apiRow ? parseApiRiskFromScreen(apiRow.risk) : "LOW";
-  const compositeScore = compositeScoreFromApiRisk(risk);
-  const countryScore = countryRiskScore(input.country);
-  const amountScore = amountRiskScore(input.amount);
-  const docScore = docRiskScore(input.docType);
-  const scoreBreakdown = buildScoreBreakdown(
-    compositeScore,
-    countryScore,
-    amountScore,
-    docScore,
-    compositeScore
-  );
+  const { total, breakdown: compBreakdown } = calculateCompositeScore({
+    apiRisk: apiRow?.risk,
+    apiAssessment: apiRow?.assessment,
+    country: input.country,
+    amount: input.amount,
+    docType: input.docType,
+    transliterationInfo,
+  });
+  const compositeScore = Math.round(total);
+  const scoreBreakdown: ScoreBreakdown = { ...compBreakdown, total: compositeScore };
   const listsChecked = apiRow?.lists_checked ?? "OFAC+EU+UN+UK";
   const bestMatch = apiRow
     ? `${apiRow.assessment.replace(/_/g, " ")} · ${listsChecked}`
@@ -801,11 +883,13 @@ function parseScoreBreakdownFromRaw(raw: RawAIResult): ScoreBreakdown | null {
     const doc = num(o.doc) ?? num(o.document) ?? num(o.doc_score);
     const total = num(o.total) ?? num(o.composite);
     if (name !== null && total !== null) {
+      const translit = num(o.translit) ?? num(o.transliteration) ?? 0;
       return {
         name,
         country: country ?? 0,
         amount: amount ?? 0,
         doc: doc ?? 0,
+        translit,
         total,
       };
     }
@@ -1434,6 +1518,8 @@ function ScoreBreakdownBlock({ breakdown }: { breakdown: ScoreBreakdown }) {
         <span className="text-right font-mono tabular-nums">{breakdown.amount}</span>
         <span className="text-slate-500">Doc:</span>
         <span className="text-right font-mono tabular-nums">{breakdown.doc}</span>
+        <span className="text-slate-500">Translit:</span>
+        <span className="text-right font-mono tabular-nums">{breakdown.translit}</span>
       </div>
       <div className="my-1.5 border-t border-slate-200" />
       <div className="grid grid-cols-[auto_1fr] gap-x-2">
