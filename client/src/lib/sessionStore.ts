@@ -115,3 +115,4 @@ export function subscribeSession(listener: () => void): () => void {
 export function getSessionSnapshot(): SessionScreeningResult[] {
   return getBucket().history;
 }
+
