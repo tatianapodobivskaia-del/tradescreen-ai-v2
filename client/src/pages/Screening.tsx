@@ -200,6 +200,34 @@ function pdfSafeText(input: unknown, fallback = "—"): string {
   return sanitizePdfText(s) ?? fallback;
 }
 
+/** Map common Unicode punctuation to ASCII so jsPDF Latin-1 path accepts audit/API copy. */
+function foldUnicodePunctuationToAscii(s: string): string {
+  return s
+    .replace(/\u2014/g, "-")
+    .replace(/\u2013/g, "-")
+    .replace(/\u2012/g, "-")
+    .replace(/\u2212/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u00A0/g, " ")
+    .replace(/\u2022/g, "*");
+}
+
+/**
+ * Audit bullets: transliterate then fold punctuation; Latin-1 only.
+ * Returns null if nothing printable remains (caller skips the line).
+ */
+function sanitizeAuditBulletTextForPdf(raw: string): string | null {
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  const latinized = transliterateInformal(t);
+  const folded = foldUnicodePunctuationToAscii(latinized);
+  const unsupported = /[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/.test(folded);
+  if (unsupported) return null;
+  return folded;
+}
+
 function buildScreeningNeedlesAndTransliteration(
   vendorName: string,
   cyrillicName: string
@@ -1394,7 +1422,9 @@ function generateSanctionsScreeningPdfBlob(
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     for (const line of auditLines) {
-      const txt = pdfSafeText(`• ${line.text}`);
+      const body = sanitizeAuditBulletTextForPdf(line.text);
+      if (!body) continue;
+      const txt = `- ${body}`;
       const wrapped = doc.splitTextToSize(txt, maxW);
       for (const wline of wrapped) {
         ensureSpace(10);

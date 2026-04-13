@@ -745,22 +745,25 @@ function PerformanceBenchmarksSection() {
   );
 }
 
-function DataSourcesSection() {
-  const [lastUpdatedLabel, setLastUpdatedLabel] = useState("checking...");
-  const [nextCheckLabel, setNextCheckLabel] = useState("checking...");
-  const [activeSource, setActiveSource] = useState<number | null>(null);
+function formatHealthTsForLanding(d: Date): string {
+  const datePart = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timePart = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${datePart} at ${timePart}`;
+}
 
-  const formatTimeAgo = (date: Date) => {
-    const diffMs = Date.now() - date.getTime();
-    if (!Number.isFinite(diffMs) || diffMs < 0) return "checking...";
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "just now";
-    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
-    const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
-    const diffDay = Math.floor(diffHr / 24);
-    return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
-  };
+function DataSourcesSection() {
+  const [trustStripLabel, setTrustStripLabel] = useState(
+    "Last updated: checking connection... • Updated every 6 hours"
+  );
+  const [activeSource, setActiveSource] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -770,21 +773,20 @@ function DataSourcesSection() {
         const data = await fetchSanctionsApiHealth();
         if (!data) throw new Error("health unavailable");
         const ts = data?.ts;
-        if (!ts) throw new Error("timestamp missing");
+        if (ts === undefined || ts === null) throw new Error("timestamp missing");
         const parsed =
           typeof ts === "number"
             ? new Date(ts > 1e12 ? ts : ts * 1000)
             : new Date(String(ts));
         if (Number.isNaN(parsed.getTime())) throw new Error("invalid timestamp");
         if (!cancelled) {
-          setLastUpdatedLabel(formatTimeAgo(parsed));
-          const next = new Date(parsed.getTime() + 6 * 60 * 60 * 1000);
-          setNextCheckLabel(next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+          setTrustStripLabel(
+            `Last updated: ${formatHealthTsForLanding(parsed)} • Updated every 6 hours`
+          );
         }
       } catch {
         if (!cancelled) {
-          setLastUpdatedLabel("checking...");
-          setNextCheckLabel("checking...");
+          setTrustStripLabel("Last updated: checking connection... • Updated every 6 hours");
         }
       }
     };
@@ -855,7 +857,7 @@ function DataSourcesSection() {
         </div>
         <div className="mx-auto mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
           <span className="h-2 w-2 rounded-full bg-emerald-400 status-dot" />
-          <span>All sources updated • Last updated: {lastUpdatedLabel} • Next check: {nextCheckLabel}</span>
+          <span>{trustStripLabel}</span>
         </div>
         <SectionScrollArrow sectionId="landing-data-sources" />
       </div>
