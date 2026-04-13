@@ -8,6 +8,13 @@ const stageIcons: Record<string, React.ElementType> = { Download, Languages, Sea
 
 const PIPELINE_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310519663475700687/iRAGVzbCvCbP6GpuZZXXiJ/pipeline-bg-8Zu7zPKHW5zG9LriKMqhok.webp";
 
+/** Current prototype constraints (live lists + session-only UI; not production compliance). */
+const PROTOTYPE_LIMITATIONS = [
+  "Uses periodic sanctions list snapshots — real-time feed integration planned",
+  "No persistent storage — screening data resets on page reload",
+  "Academic research prototype — not validated for production compliance use",
+] as const;
+
 export default function Architecture() {
   return (
     <div className="space-y-8">
@@ -292,11 +299,7 @@ export default function Architecture() {
             <h3 className="text-base font-bold font-display text-slate-900">Limitations of Current Prototype</h3>
           </div>
           <div className="space-y-3">
-            {[
-              "Uses periodic sanctions list snapshots — real-time feed integration planned",
-              "No persistent storage — screening data resets on page reload",
-              "Academic research prototype — not validated for production compliance use",
-            ].map((item, i) => (
+            {PROTOTYPE_LIMITATIONS.map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0" />
                 <span className="text-sm text-slate-600 font-body">{item}</span>

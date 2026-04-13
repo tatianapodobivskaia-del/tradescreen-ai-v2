@@ -1,5 +1,5 @@
 /*
- * SETTINGS — Fuzzy matching threshold, notifications, version, data policy
+ * SETTINGS — AI sensitivity threshold, notifications, version, data policy
  */
 import { useState } from "react";
 import { Settings, Sliders, Bell, Info, Shield, Database } from "lucide-react";
@@ -25,7 +25,7 @@ export default function SettingsPage() {
         <p className="text-sm text-slate-500 font-body mt-1">Configure screening parameters and preferences</p>
       </div>
 
-      {/* Fuzzy Matching Threshold */}
+      {/* AI Sensitivity Threshold */}
       <div className="premium-card rounded-xl p-8">
         <div className="flex items-center gap-2 mb-4">
           <Sliders className="w-4 h-4 text-cyan-500" />
@@ -50,7 +50,7 @@ export default function SettingsPage() {
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
             <p className="text-xs text-slate-500 font-body">
-              <span className="font-semibold text-slate-700">Current setting:</span> Entities with a name similarity score of {threshold}% or higher will be flagged for review.
+              <span className="font-semibold text-slate-700">Current setting:</span> Entities with an AI confidence score of {threshold}% or higher will be flagged for review.
               {threshold < 60 && " Warning: Very low threshold may generate excessive false positives."}
               {threshold > 90 && " Note: High threshold may miss transliteration variants."}
             </p>
