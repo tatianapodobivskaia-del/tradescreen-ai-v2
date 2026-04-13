@@ -132,6 +132,27 @@ export type ApiHealthSnapshot = {
   vision_status?: string;
 };
 
+/**
+ * Format health `ts` (ISO UTC string or epoch seconds/ms) in the user's local timezone
+ * with a short zone name (e.g. EDT, PST). Example: "Apr 13, 2026 at 6:45 PM EDT".
+ */
+export function formatSanctionsListHealthTimestamp(ts: string | number | undefined | null): string {
+  if (ts === undefined || ts === null) return "";
+  const d =
+    typeof ts === "number" ? new Date(ts > 1e12 ? ts : ts * 1000) : new Date(String(ts).trim());
+  if (Number.isNaN(d.getTime())) return "";
+  const raw = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+    hour12: true,
+  }).format(d);
+  return raw.replace(/^([A-Za-z]{3} \d{1,2}, \d{4}),\s+/, "$1 at ");
+}
+
 function pickHealthString(r: Record<string, unknown>, keys: string[]): string | undefined {
   for (const k of keys) {
     const v = r[k];

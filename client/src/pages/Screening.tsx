@@ -49,6 +49,8 @@ import {
 import {
   runAIDeepAnalysis,
   postSanctionsScreen,
+  checkAPIHealth,
+  formatSanctionsListHealthTimestamp,
   type ScreenVendorPayload,
   type ScreenVendorApiResult,
 } from "../lib/api";
@@ -2300,6 +2302,26 @@ export default function Screening() {
   const canRunAi = Boolean(screeningResults || (batchScreeningRows && batchScreeningRows.length > 0));
   const aiAnalysisComplete = Boolean(!aiLoading && aiResults && aiResults.length > 0 && canRunAi);
 
+  const [listsUpdatedLine, setListsUpdatedLine] = useState("Lists status: checking...");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const health = await checkAPIHealth();
+      if (cancelled) return;
+      const ts = health?.ts;
+      const formatted = formatSanctionsListHealthTimestamp(ts);
+      if (formatted) {
+        setListsUpdatedLine(`Lists updated: ${formatted} • Updated every 6 hours`);
+      } else {
+        setListsUpdatedLine("Lists status: checking...");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
@@ -2307,6 +2329,7 @@ export default function Screening() {
         <p className="mt-2 text-sm text-slate-500 font-body">
           Screen vendors against 45,296 sanctioned entities across 4 international lists
         </p>
+        <p className="mt-1.5 text-xs text-slate-400 font-body">{listsUpdatedLine}</p>
       </div>
 
       <div className="premium-card rounded-xl p-8">

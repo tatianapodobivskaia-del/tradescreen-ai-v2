@@ -14,7 +14,7 @@ import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
   dataSources
 } from "@/lib/mockData";
-import { fetchSanctionsApiHealth } from "@/lib/api";
+import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
@@ -745,20 +745,6 @@ function PerformanceBenchmarksSection() {
   );
 }
 
-function formatHealthTsForLanding(d: Date): string {
-  const datePart = d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  const timePart = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return `${datePart} at ${timePart}`;
-}
-
 function DataSourcesSection() {
   const [trustStripLabel, setTrustStripLabel] = useState(
     "Last updated: checking connection... • Updated every 6 hours"
@@ -774,15 +760,10 @@ function DataSourcesSection() {
         if (!data) throw new Error("health unavailable");
         const ts = data?.ts;
         if (ts === undefined || ts === null) throw new Error("timestamp missing");
-        const parsed =
-          typeof ts === "number"
-            ? new Date(ts > 1e12 ? ts : ts * 1000)
-            : new Date(String(ts));
-        if (Number.isNaN(parsed.getTime())) throw new Error("invalid timestamp");
+        const formatted = formatSanctionsListHealthTimestamp(ts);
+        if (!formatted) throw new Error("invalid timestamp");
         if (!cancelled) {
-          setTrustStripLabel(
-            `Last updated: ${formatHealthTsForLanding(parsed)} • Updated every 6 hours`
-          );
+          setTrustStripLabel(`Last updated: ${formatted} • Updated every 6 hours`);
         }
       } catch {
         if (!cancelled) {
