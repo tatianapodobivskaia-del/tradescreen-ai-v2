@@ -3,7 +3,6 @@
  * Premium: enlarged spacing, premium cards, stronger headings, AI glow on key metrics
  */
 import { CountUpNumber, RiskBadge, StatusDot, ScanningLine } from "@/components/shared";
-import { systemStatus } from "@/lib/mockData";
 import { useEffect, useMemo, useState } from "react";
 import { checkAPIHealth, type ApiHealthSnapshot } from "@/lib/api";
 import { getScreeningHistory, getSessionStats, subscribeSession } from "@/lib/sessionStore";
@@ -13,15 +12,66 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const statIcons = [Activity, Shield, AlertTriangle, Clock];
 
-/** Subtitles aligned to dashboardStats order from mockData */
-const STAT_CARD_SUBTITLES = [
-  "Vendors processed through sanctions screening",
-  "Known sanctioned entities correctly identified in tests",
-  "Entities with score > 70 matched against sanctions lists",
-  "Average time to complete an automated screening run",
-];
+const STAT_CARD_TITLES = [
+  "TOTAL SCREENED",
+  "ENTITIES MONITORED",
+  "HIGH RISK",
+  "AVG. PROCESSING TIME",
+] as const;
 
-const STAT_CARD_TITLES = ["Total Screened", "Detection Rate", "High Risk", "Avg. Processing Time"] as const;
+const STAT_CARD_SUBTITLES = [
+  "Screenings completed in this browser session",
+  "Total sanctioned entities reported by the live API health endpoint",
+  "Session count of HIGH risk screening outcomes",
+  "Mean screening duration for this session",
+] as const;
+
+function formatHealthTimestamp(ts: string | number | undefined): string {
+  if (ts === undefined) return "—";
+  if (typeof ts === "number") {
+    const ms = ts < 1e12 ? ts * 1000 : ts;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? String(ts) : d.toLocaleString();
+  }
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? ts : d.toLocaleString();
+}
+
+function computeTotalEntitiesFromHealth(h: ApiHealthSnapshot): number | undefined {
+  if (typeof h.total_entities === "number" && Number.isFinite(h.total_entities)) {
+    return h.total_entities;
+  }
+  const lc = h.lists ?? {};
+  const ofac = lc.OFAC_SDN ?? lc.ofac_sdn;
+  const eu = lc.EU ?? lc.eu;
+  const un = lc.UN ?? lc.un;
+  const uk = lc.UK_OFSI ?? lc.uk_ofsi;
+  if (
+    typeof ofac === "number" &&
+    typeof eu === "number" &&
+    typeof un === "number" &&
+    typeof uk === "number"
+  ) {
+    return ofac + eu + un + uk;
+  }
+  return undefined;
+}
+
+function listCountsFromHealth(h: ApiHealthSnapshot | null): {
+  ofac?: number;
+  eu?: number;
+  un?: number;
+  uk?: number;
+} {
+  if (!h?.lists) return {};
+  const lc = h.lists;
+  return {
+    ofac: lc.OFAC_SDN ?? lc.ofac_sdn,
+    eu: lc.EU ?? lc.eu,
+    un: lc.UN ?? lc.un,
+    uk: lc.UK_OFSI ?? lc.uk_ofsi,
+  };
+}
 
 export default function Dashboard() {
   const [location, setLocation] = useLocation();
@@ -46,7 +96,6 @@ export default function Dashboard() {
   }, [location]);
 
   const sessionHistory = useMemo(() => {
-    // bump memo when store changes
     void sessionTick;
     return getScreeningHistory();
   }, [sessionTick]);
@@ -56,23 +105,45 @@ export default function Dashboard() {
     return getSessionStats();
   }, [sessionTick]);
 
-  const listCounts = health?.lists ?? {};
-  const ofac = listCounts.OFAC_SDN ?? listCounts.ofac_sdn ?? 18714;
-  const eu = listCounts.EU ?? listCounts.eu ?? 5819;
-  const un = listCounts.UN ?? listCounts.un ?? 1002;
-  const uk = listCounts.UK_OFSI ?? listCounts.uk_ofsi ?? 19761;
-  const totalEntities = health?.total_entities ?? ofac + eu + un + uk;
+  const apiReachable = health !== null;
+  const { ofac, eu, un, uk } = listCountsFromHealth(health);
+  const totalEntities = health != null ? computeTotalEntitiesFromHealth(health) : undefined;
+
+  const apiOperational =
+    apiReachable &&
+    (!health?.status || String(health.status).trim().toLowerCase() === "online");
 
   const avgMs = sessionStats.avgProcessingMs;
-  const avgLabel = avgMs ? `${(avgMs / 1000).toFixed(avgMs >= 1000 ? 1 : 2)}s` : "< 2s";
+  const avgLabel = avgMs ? `${(avgMs / 1000).toFixed(avgMs >= 1000 ? 1 : 2)}s` : "—";
+
+  const statCardSubtitles = useMemo(() => {
+    const base = [...STAT_CARD_SUBTITLES];
+    if (!apiReachable) {
+      base[1] = "API unreachable — connect to load live watchlist counts";
+    } else if (ofac != null && eu != null && un != null && uk != null) {
+      base[1] = `OFAC: ${ofac.toLocaleString()}, EU: ${eu.toLocaleString()}, UN: ${un.toLocaleString()}, UK: ${uk.toLocaleString()}`;
+    } else if (typeof totalEntities === "number") {
+      base[1] = `Combined watchlist size: ${totalEntities.toLocaleString()}`;
+    } else {
+      base[1] = "Total entities not reported in this health payload";
+    }
+    return base;
+  }, [apiReachable, ofac, eu, un, uk, totalEntities]);
 
   const dashboardStats = useMemo(() => {
     const total = sessionStats.total;
     const high = sessionStats.high;
+    const entitiesValue: number | string =
+      !apiReachable ? "OFFLINE" : typeof totalEntities === "number" ? totalEntities : "—";
+    const entitiesSparkline =
+      !apiReachable || typeof totalEntities !== "number"
+        ? Array(12).fill(0)
+        : Array.from({ length: 12 }, (_, i) => Math.max(0, Math.round((totalEntities * (i + 1)) / 12)));
+
     return [
       {
-        label: "Total Screenings",
-        value: total,
+        label: "TOTAL SCREENED",
+        value: total as number | string,
         change: total > 0 ? `+${total}` : "",
         trend: "up" as const,
         sparkline: sessionHistory
@@ -82,14 +153,14 @@ export default function Dashboard() {
           .map((_, i) => i + 1),
       },
       {
-        label: "Entities Monitored",
-        value: totalEntities,
+        label: "ENTITIES MONITORED",
+        value: entitiesValue,
         change: "",
         trend: "up" as const,
-        sparkline: [ofac, ofac + 50, ofac + 120, ofac + 180, ofac + 220, ofac + 260, ofac + 300, ofac + 340, ofac + 380, ofac + 420, ofac + 460, totalEntities],
+        sparkline: entitiesSparkline,
       },
       {
-        label: "High Risk Flags",
+        label: "HIGH RISK",
         value: high,
         change: high > 0 ? `+${high}` : "",
         trend: "up" as const,
@@ -105,7 +176,7 @@ export default function Dashboard() {
           }, []),
       },
       {
-        label: "Avg. Processing Time",
+        label: "AVG. PROCESSING TIME",
         value: avgLabel,
         change: avgMs ? "" : "",
         trend: "down" as const,
@@ -113,31 +184,22 @@ export default function Dashboard() {
           .slice()
           .reverse()
           .slice(-12)
-          .map((r) => (typeof r.durationMs === "number" ? Math.max(0.2, r.durationMs / 1000) : 1.2)),
+          .map((r) => (typeof r.durationMs === "number" ? Math.max(0.2, r.durationMs / 1000) : 0)),
       },
     ];
-  }, [sessionStats.total, sessionStats.high, avgLabel, avgMs, sessionHistory, totalEntities, ofac]);
+  }, [sessionStats.total, sessionStats.high, avgLabel, avgMs, sessionHistory, apiReachable, totalEntities]);
 
-  const statCardSubtitles = useMemo(() => {
-    const base = [...STAT_CARD_SUBTITLES];
-    base[1] = `Entities monitored — OFAC: ${ofac.toLocaleString()}, EU: ${eu.toLocaleString()}, UN: ${un.toLocaleString()}, UK: ${uk.toLocaleString()}`;
-    base[2] = "Entities with risk level HIGH in this session";
-    base[3] = "Average time to complete an automated screening run (this session)";
-    return base;
-  }, [ofac, eu, un, uk]);
-
-  const listDistribution = useMemo(
-    () => [
-      { name: "OFAC SDN", value: ofac, color: "#22d3ee" },
-      { name: "UK OFSI", value: uk, color: "#06b6d4" },
-      { name: "EU Consolidated", value: eu, color: "#0ea5e9" },
-      { name: "UN Security Council", value: un, color: "#0ea5e9" },
-    ],
-    [ofac, uk, eu, un]
-  );
+  const listDistribution = useMemo(() => {
+    if (!apiReachable) return [];
+    const rows: { name: string; value: number; color: string }[] = [];
+    if (typeof ofac === "number") rows.push({ name: "OFAC SDN", value: ofac, color: "#22d3ee" });
+    if (typeof uk === "number") rows.push({ name: "UK OFSI", value: uk, color: "#06b6d4" });
+    if (typeof eu === "number") rows.push({ name: "EU Consolidated", value: eu, color: "#0ea5e9" });
+    if (typeof un === "number") rows.push({ name: "UN Security Council", value: un, color: "#0ea5e9" });
+    return rows;
+  }, [apiReachable, ofac, uk, eu, un]);
 
   const screeningActivityData = useMemo(() => {
-    // group by hour label to fit existing chart axis ("month" key)
     const buckets = new Map<string, { month: string; screenings: number; flagged: number }>();
     const now = new Date();
     for (let i = 11; i >= 0; i--) {
@@ -162,8 +224,64 @@ export default function Dashboard() {
 
   const recentRows = useMemo(() => sessionHistory.slice(0, 8), [sessionHistory]);
 
+  const systemRows = useMemo(() => {
+    if (!apiReachable) {
+      return [
+        { label: "API connectivity", value: "Unreachable", status: "down" as const },
+        { label: "Sanctions engine", value: "—", status: "down" as const },
+        { label: "AI model", value: "—", status: "down" as const },
+        { label: "Vision screening", value: "—", status: "down" as const },
+        { label: "Total entities", value: "—", status: "down" as const },
+        { label: "Health timestamp", value: "—", status: "down" as const },
+      ];
+    }
+    const rowStatus = apiOperational ? ("operational" as const) : ("degraded" as const);
+    return [
+      {
+        label: "API connectivity",
+        value: apiOperational ? "Operational" : "Check status",
+        status: apiOperational ? ("operational" as const) : ("degraded" as const),
+      },
+      {
+        label: "Sanctions engine",
+        value: health?.engine ?? "—",
+        status: rowStatus,
+      },
+      {
+        label: "AI model",
+        value: health?.ai_model ?? "—",
+        status: rowStatus,
+      },
+      {
+        label: "Vision screening",
+        value: health?.vision_status ?? "—",
+        status: rowStatus,
+      },
+      {
+        label: "Total entities",
+        value: typeof totalEntities === "number" ? totalEntities.toLocaleString() : "—",
+        status: rowStatus,
+      },
+      {
+        label: "Health timestamp",
+        value: formatHealthTimestamp(health?.ts),
+        status: rowStatus,
+      },
+    ];
+  }, [apiReachable, apiOperational, health, totalEntities]);
+
   return (
     <div className="space-y-8">
+      {!apiReachable ? (
+        <div
+          className="flex gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 font-body"
+          role="alert"
+        >
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" strokeWidth={2} aria-hidden />
+          <p>API temporarily unreachable — list metrics and system status show OFFLINE until the health endpoint responds.</p>
+        </div>
+      ) : null}
+
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -201,7 +319,9 @@ export default function Dashboard() {
               <ScanningLine className="opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
-                  <div className={`w-11 h-11 rounded-xl ${isHighlight ? "bg-amber-100" : "bg-amber-50"} flex items-center justify-center`}>
+                  <div
+                    className={`w-11 h-11 rounded-xl ${isHighlight ? "bg-amber-100" : "bg-amber-50"} flex items-center justify-center`}
+                  >
                     <Icon className="w-5 h-5 text-amber-600" />
                   </div>
                   {stat.change ? (
@@ -287,29 +407,39 @@ export default function Dashboard() {
         <div className="premium-card rounded-xl p-8">
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-1">List Distribution</h3>
           <p className="text-xs text-slate-500 font-body mb-6">Entities by sanctions list</p>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={listDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
-                  {listDistribution.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ fontSize: 12, fontFamily: "Inter", borderRadius: 8 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="space-y-3 mt-4">
-            {listDistribution.map((item, i) => (
-              <div key={i} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
-                  <span className="text-slate-600 font-body font-medium">{item.name}</span>
-                </div>
-                <span className="font-data font-bold text-slate-900">{item.value.toLocaleString()}</span>
+          {!apiReachable || listDistribution.length === 0 ? (
+            <div className="flex h-56 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 text-center">
+              <p className="text-sm font-medium text-slate-600 font-body">
+                {!apiReachable ? "—" : "No per-list counts in this health response"}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={listDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
+                      {listDistribution.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 12, fontFamily: "Inter", borderRadius: 8 }} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
+              <div className="space-y-3 mt-4">
+                {listDistribution.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
+                      <span className="text-slate-600 font-body font-medium">{item.name}</span>
+                    </div>
+                    <span className="font-data font-bold text-slate-900">{item.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -353,13 +483,17 @@ export default function Dashboard() {
                         <td className="py-4 px-6 font-data text-xs text-slate-400">{tsLabel}</td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2.5">
-                            <span className={`w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center ${type === "Individual" ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"}`}>
+                            <span
+                              className={`w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center ${type === "Individual" ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"}`}
+                            >
                               {type === "Individual" ? "I" : "O"}
                             </span>
                             <span className="text-slate-800 font-semibold font-body">{row.vendorName}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-6"><RiskBadge risk={displayRisk as "High" | "Medium" | "Low"} /></td>
+                        <td className="py-4 px-6">
+                          <RiskBadge risk={displayRisk as "High" | "Medium" | "Low"} />
+                        </td>
                         <td className="py-4 px-6 font-data text-sm font-bold text-slate-700">{score}</td>
                         <td className="py-4 px-6 text-xs text-slate-500 font-body">{row.action ?? "—"}</td>
                       </tr>
@@ -375,23 +509,17 @@ export default function Dashboard() {
         <div className="premium-card rounded-xl p-6">
           <h3 className="text-lg font-extrabold font-display text-slate-900 mb-6">System Status</h3>
           <div className="space-y-5">
-            {systemStatus.map((service, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <StatusDot status={service.status as "operational"} />
-                  <span className="text-sm text-slate-700 font-body font-medium">{service.service}</span>
+            {systemRows.map((row, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-3">
+                  <StatusDot status={row.status} />
+                  <span className="truncate text-sm text-slate-700 font-body font-medium">{row.label}</span>
                 </div>
-                <span className="text-xs font-data font-bold text-slate-400">{service.uptime}</span>
+                <span className="shrink-0 text-right text-xs font-data font-bold text-slate-600 max-w-[55%] break-words">
+                  {row.value}
+                </span>
               </div>
             ))}
-          </div>
-          <div className="mt-8 pt-5 border-t border-slate-100">
-            <div className="text-xs text-slate-400 font-body">
-              <span className="font-bold text-slate-600">Version:</span> 1.0.0-beta
-            </div>
-            <div className="text-xs text-slate-400 font-body mt-1.5">
-              <span className="font-bold text-slate-600">Database:</span> Updated 2h ago
-            </div>
           </div>
         </div>
       </div>

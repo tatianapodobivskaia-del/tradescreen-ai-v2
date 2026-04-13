@@ -57,6 +57,7 @@ import {
   generateAllVariants,
   expandScreeningNeedles,
   generateLatinVariants,
+  transliterateInformal,
 } from "../lib/transliteration";
 
 /** Full alphabetical country list (50+) */
@@ -182,6 +183,21 @@ type TransliterationScreeningInfo = {
 
 if (typeof generateLatinVariants !== "function") {
   throw new Error("transliteration: generateLatinVariants unavailable");
+}
+
+/** jsPDF standard fonts: transliterate then keep Latin-1 only (same pattern as DocumentScanner). */
+function sanitizePdfText(input: string): string | null {
+  const normalized = input.replace(/\s+/g, " ").trim();
+  if (!normalized) return null;
+  const latinized = transliterateInformal(normalized);
+  const unsupported = /[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/.test(latinized);
+  if (unsupported) return null;
+  return latinized;
+}
+
+function pdfSafeText(input: unknown, fallback = "—"): string {
+  const s = typeof input === "string" ? input : input == null ? "" : String(input);
+  return sanitizePdfText(s) ?? fallback;
 }
 
 function buildScreeningNeedlesAndTransliteration(
@@ -1182,10 +1198,13 @@ Compliance Officer`;
 }
 
 function formatTransliterationBlockForPdf(ti: TransliterationScreeningInfo): string {
-  const parts = [`Variants: ${ti.variants.join(", ")}`];
+  const variantLabels = ti.variants.map((v) => pdfSafeText(v, "—"));
+  const parts = [`Latin-safe variants: ${variantLabels.join(", ")}`];
   if (ti.standards) {
     parts.push(
-      `ISO 9: ${ti.standards.iso9}; ICAO: ${ti.standards.icao}; BGN: ${ti.standards.bgn}; Informal: ${ti.standards.informal}`
+      `ISO 9: ${pdfSafeText(ti.standards.iso9)}; ICAO: ${pdfSafeText(ti.standards.icao)}; BGN: ${pdfSafeText(
+        ti.standards.bgn
+      )}; Informal: ${pdfSafeText(ti.standards.informal)}`
     );
   }
   return parts.join(" | ");
@@ -1211,18 +1230,18 @@ function generateSanctionsScreeningPdfBlob(
   }
 
   const risks = rows.map((r) => r.screeningResults.risk);
-  const bodyRows = rows.map((batchRow, i) => {
+  const bodyRows = rows.map((batchRow) => {
     const sr = batchRow.screeningResults;
     const { label: actionLabel } = complianceActionFromRisk(sr.risk);
     return [
-      batchRow.screenInput.vendorName,
-      batchRow.screenInput.country || "—",
-      formatUsdCurrencyAmount(batchRow.screenInput.amount),
-      displayDocumentType(batchRow.screenInput.docType),
-      sr.bestMatch,
-      `${sr.compositeScore}%`,
-      sr.risk,
-      actionLabel,
+      pdfSafeText(batchRow.screenInput.vendorName),
+      pdfSafeText(batchRow.screenInput.country || "—"),
+      pdfSafeText(formatUsdCurrencyAmount(batchRow.screenInput.amount)),
+      pdfSafeText(displayDocumentType(batchRow.screenInput.docType)),
+      pdfSafeText(sr.bestMatch),
+      pdfSafeText(`${sr.compositeScore}%`),
+      pdfSafeText(sr.risk),
+      pdfSafeText(actionLabel),
     ];
   });
 
@@ -1230,7 +1249,7 @@ function generateSanctionsScreeningPdfBlob(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
-  doc.text("TradeScreen AI — Sanctions Screening Report", margin, yPos);
+  doc.text("TradeScreen AI - Sanctions Screening Report", margin, yPos);
   yPos += 28;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -1239,12 +1258,12 @@ function generateSanctionsScreeningPdfBlob(
   yPos += 20;
   doc.setFontSize(8);
   doc.setTextColor(110, 110, 110);
-  doc.text("Academic Research Prototype — Not for production compliance use", margin, yPos);
+  doc.text("Academic Research Prototype - Not for production compliance use", margin, yPos);
   yPos += 28;
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   doc.text(
-    `Summary: ${rows.length} vendors screened — HIGH RISK: ${high}, MEDIUM: ${medium}, LOW/CLEAR: ${low}`,
+    `Summary: ${rows.length} vendors screened - HIGH RISK: ${high}, MEDIUM: ${medium}, LOW/CLEAR: ${low}`,
     margin,
     yPos
   );
@@ -1321,7 +1340,7 @@ function generateSanctionsScreeningPdfBlob(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  doc.text("Screening / transliteration variants", margin, y);
+    doc.text("Screening / transliteration variants", margin, y);
   y += 18;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
@@ -1329,8 +1348,11 @@ function generateSanctionsScreeningPdfBlob(
   for (const batchRow of rows) {
     const ti = batchRow.screeningResults.transliterationInfo;
     if (!ti) continue;
-    const header = `${batchRow.screenInput.vendorName} (${ti.direction}${
-      isCyrillic(batchRow.screenInput.vendorName) ? ", Cyrillic vendor field" : ", Latin vendor field"
+    const vendorRaw = batchRow.screenInput.vendorName.trim();
+    const latinLine = pdfSafeText(vendorRaw);
+    const cyrillicNote = ti.direction === "cyrillic" ? " (Cyrillic original)" : "";
+    const header = `${latinLine}${cyrillicNote} — ${ti.direction} pipeline (${
+      isCyrillic(vendorRaw) ? "vendor field contained Cyrillic" : "vendor field Latin"
     }):`;
     for (const wline of doc.splitTextToSize(header, maxW)) {
       ensureSpace(10);
@@ -1367,12 +1389,12 @@ function generateSanctionsScreeningPdfBlob(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(0, 0, 0);
-    doc.text(batchRow.screenInput.vendorName, margin, y);
+    doc.text(pdfSafeText(batchRow.screenInput.vendorName), margin, y);
     y += 14;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     for (const line of auditLines) {
-      const txt = `• ${line.text}`;
+      const txt = pdfSafeText(`• ${line.text}`);
       const wrapped = doc.splitTextToSize(txt, maxW);
       for (const wline of wrapped) {
         ensureSpace(10);
@@ -1384,7 +1406,7 @@ function generateSanctionsScreeningPdfBlob(
     doc.setFont("courier", "normal");
     doc.setFontSize(8);
     doc.setTextColor(45, 45, 45);
-    const scrLine = `SCR ID: ${formatScrFooterCell(batchRow.auditId, batchRow.auditedAt)}`;
+    const scrLine = pdfSafeText(`SCR ID: ${formatScrFooterCell(batchRow.auditId, batchRow.auditedAt)}`);
     const scrWrapped = doc.splitTextToSize(scrLine, maxW);
     for (const wline of scrWrapped) {
       ensureSpace(10);
@@ -1413,19 +1435,19 @@ function generateSanctionsScreeningPdfBlob(
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.setTextColor(0, 0, 0);
-      doc.text(aiRow.vendor_name, margin, y);
+      doc.text(pdfSafeText(aiRow.vendor_name), margin, y);
       y += 12;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(45, 45, 45);
-      for (const wline of doc.splitTextToSize(`Assessment: ${assess}`, maxW)) {
+      for (const wline of doc.splitTextToSize(pdfSafeText(`Assessment: ${assess}`), maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
         y += 10;
       }
       doc.setFont("courier", "normal");
       doc.setFontSize(8);
-      for (const wline of doc.splitTextToSize(`Confidence: ${aiRow.confidence}%`, maxW)) {
+      for (const wline of doc.splitTextToSize(pdfSafeText(`Confidence: ${aiRow.confidence}%`), maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
         y += 10;
@@ -1435,7 +1457,7 @@ function generateSanctionsScreeningPdfBlob(
       doc.text("Reasoning:", margin, y);
       y += 9;
       doc.setFont("helvetica", "normal");
-      for (const wline of doc.splitTextToSize(aiRow.reasoning, maxW)) {
+      for (const wline of doc.splitTextToSize(pdfSafeText(aiRow.reasoning), maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
         y += 10;
@@ -1443,8 +1465,8 @@ function generateSanctionsScreeningPdfBlob(
       const screeningBatchRow = rows[i];
       const ti = screeningBatchRow.screeningResults.transliterationInfo;
       const transBlock = ti
-        ? `${formatTransliterationBlockForPdf(ti)} — screened across 4 lists`
-        : "No transliteration metadata.";
+        ? pdfSafeText(`${formatTransliterationBlockForPdf(ti)} — screened across 4 lists`)
+        : pdfSafeText("No transliteration metadata.");
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(45, 45, 45);
@@ -1467,7 +1489,7 @@ function generateSanctionsScreeningPdfBlob(
     doc.text(`Page ${p} of ${totalPages}`, pageW / 2, pageH - 36, {
       align: "center",
     });
-    doc.text("Generated by TradeScreen AI | © 2026 Tatiana Podobivskaia", pageW / 2, pageH - 22, {
+    doc.text("Generated by TradeScreen AI | (c) 2026 Tatiana Podobivskaia", pageW / 2, pageH - 22, {
       align: "center",
     });
   }
@@ -1581,11 +1603,32 @@ export default function Screening() {
   /**
    * When there are no results: restore last snapshot from sessionStore if present;
    * otherwise pre-fill vendor/tab from ?vendor= / ?entity= query (snapshot wins over URL).
+   * ?force=true skips snapshot (e.g. Document Scanner deep-link with fresh entity context).
    * useLayoutEffect avoids a paint with empty results when returning via SPA navigation.
    */
   useLayoutEffect(() => {
     const q = new URLSearchParams(search);
+    const force = q.get("force") === "true";
     const urlVendor = (q.get("vendor") ?? q.get("entity") ?? "").trim();
+    const urlCountry = (q.get("country") ?? "").trim();
+
+    if (force) {
+      setBatchScreeningRows(null);
+      setScreeningResults(null);
+      setLastScreenInput(null);
+      setUploadScreeningDone(false);
+      setUploadedFile(null);
+      setParsedUploadRows(null);
+      setMissingColumns([]);
+      setAiResults(null);
+      setAiLoading(false);
+      setAiError(null);
+      if (urlVendor) setVendorName(urlVendor);
+      if (urlCountry) setCountry(urlCountry);
+      setActiveTab("manual");
+      return;
+    }
+
     const hasResults =
       screeningResults != null || (batchScreeningRows != null && batchScreeningRows.length > 0);
     if (hasResults) return;
@@ -1648,6 +1691,9 @@ export default function Screening() {
     if (urlVendor) {
       setVendorName(urlVendor);
       setActiveTab("manual");
+    }
+    if (urlCountry) {
+      setCountry(urlCountry);
     }
   }, [search, screeningResults, batchScreeningRows]);
 

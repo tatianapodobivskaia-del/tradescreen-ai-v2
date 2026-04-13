@@ -951,9 +951,14 @@ export default function DocumentScanner() {
                   <div className="mt-auto border-t border-slate-100 px-4 py-3">
                     <button
                       type="button"
-                      onClick={() =>
-                        setLocation(`/app/screening?vendor=${encodeURIComponent(row.entity.trim())}`)
-                      }
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        params.set("vendor", row.entity.trim());
+                        const c = row.country?.trim();
+                        if (c) params.set("country", c);
+                        params.set("force", "true");
+                        setLocation(`/app/screening?${params.toString()}`);
+                      }}
                       className="text-sm font-semibold text-teal-600 transition-colors hover:text-teal-700"
                     >
                       Screen this Entity →

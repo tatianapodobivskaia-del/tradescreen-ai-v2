@@ -115,6 +115,8 @@ export type VisionScanResult = {
     action: string;
     reasoning: string;
     cyrillic_variants: string[];
+    /** Present when vision API returns a jurisdiction for the entity */
+    country?: string;
   }>;
   ts: string;
 };
@@ -123,7 +125,20 @@ export type ApiHealthSnapshot = {
   ts?: string | number;
   total_entities?: number;
   lists?: Record<string, number>;
+  /** e.g. "online" when API reports healthy */
+  status?: string;
+  engine?: string;
+  ai_model?: string;
+  vision_status?: string;
 };
+
+function pickHealthString(r: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const k of keys) {
+    const v = r[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return undefined;
+}
 
 function normalizeVisionScanPayload(raw: unknown): VisionScanResult {
   if (!raw || typeof raw !== "object") {
@@ -161,12 +176,16 @@ function normalizeVisionScanPayload(raw: unknown): VisionScanResult {
     const variants = Array.isArray(x.cyrillic_variants)
       ? x.cyrillic_variants.map((v) => String(v))
       : [];
+    const countryRaw = x.country ?? x.jurisdiction ?? x.entity_country;
+    const country =
+      typeof countryRaw === "string" && countryRaw.trim() ? countryRaw.trim() : undefined;
     return {
       entity: String(x.entity ?? "—"),
       risk: String(x.risk ?? "LOW"),
       action: String(x.action ?? "—"),
       reasoning: String(x.reasoning ?? ""),
       cyrillic_variants: variants,
+      country,
     };
   });
 
@@ -257,7 +276,12 @@ export async function checkAPIHealth(): Promise<ApiHealthSnapshot | null> {
             )
           )
         : undefined;
-    return { ts, total_entities, lists };
+    const status = pickHealthString(r, ["status", "api_status"]);
+    const engine = pickHealthString(r, ["engine", "engine_name", "service_name"]);
+    const ai_model = pickHealthString(r, ["ai_model", "model", "openai_model", "gpt_model"]);
+    const vision_status = pickHealthString(r, ["vision_status", "vision", "vision_screen"]);
+
+    return { ts, total_entities, lists, status, engine, ai_model, vision_status };
   } catch {
     return null;
   }
