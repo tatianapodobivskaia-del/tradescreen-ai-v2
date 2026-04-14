@@ -69,15 +69,14 @@ export async function postSanctionsScreen(vendors: ScreenVendorPayload[]): Promi
 }
 
 export const DeepAnalysisResultSchema = z.object({
-  vendor_name: z.string(),
-  risk_level: z.string().default("LOW"),
-  true_positive: z.boolean().default(false),
-  confidence: z.number().default(0),
-  reasoning: z.string().default(""),
-  action: z.string().default("—"),
-  compliance_note: z.string().default(""),
-  evasion_indicators: z.array(z.string()).default([]),
-});
+  vendor: z.string().default("—").catch("—"),
+  vendor_name: z.string().optional(),
+  risk: z.string().default("LOW").catch("LOW"),
+  risk_level: z.string().optional(),
+  action: z.string().default("—").catch("—"),
+  reasoning: z.string().default("").catch(""),
+  assessment: z.string().optional(),
+}).passthrough();
 
 export const RunAIDeepAnalysisResponseSchema = z.object({
   results: z.array(DeepAnalysisResultSchema).default([]),
