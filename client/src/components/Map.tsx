@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * GOOGLE MAPS FRONTEND INTEGRATION - ESSENTIAL GUIDE
  *

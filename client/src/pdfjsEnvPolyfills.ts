@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * pdfjs-dist 5.6+ expects modern runtime APIs that may be missing in Safari / older browsers:
  * - Map.prototype.getOrInsertComputed

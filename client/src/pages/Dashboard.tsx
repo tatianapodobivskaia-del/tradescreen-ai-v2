@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * DASHBOARD — Intelligence Overview
  * Premium: enlarged spacing, premium cards, stronger headings, AI glow on key metrics

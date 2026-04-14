@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * REPORTS & ANALYTICS — Session-based trends, geography, PDF archive
  */

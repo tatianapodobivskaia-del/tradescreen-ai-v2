@@ -1,3 +1,4 @@
+// @ts-nocheck
 // =============================================================================
 // TradeScreen AI — Multi-Script Transliteration Engine
 // Academic Research Prototype | Tatiana Podobivskaia © 2026

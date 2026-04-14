@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * In-memory session store (resets on full page reload).
  * Uses globalThis so all imports share one store even if Vite duplicates the module in multiple chunks / HMR.

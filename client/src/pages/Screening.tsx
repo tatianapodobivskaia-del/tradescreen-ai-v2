@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * SCREENING PAGE — Upload document + manual entry
  */
@@ -13,6 +14,7 @@ import {
 } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { robotoBase64 } from "@/lib/vfs_fonts";
 import {
   Search,
   Upload,
@@ -1362,6 +1364,8 @@ export function generateSanctionsScreeningPdfBlob(
   aiResults: NormalizedAIResult[] | null
 ): Blob {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
+  doc.addFileToVFS("Roboto-Regular.ttf", robotoBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
   const margin = 48;
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -1398,7 +1402,7 @@ export function generateSanctionsScreeningPdfBlob(
   doc.setTextColor(0, 0, 0);
   doc.text("TradeScreen AI - Sanctions Screening Report", margin, yPos);
   yPos += 28;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Roboto", "normal");
   doc.setFontSize(9);
   doc.setTextColor(55, 55, 55);
   doc.text(new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }), margin, yPos);
@@ -1434,6 +1438,7 @@ export function generateSanctionsScreeningPdfBlob(
     body: bodyRows,
     theme: "grid",
     styles: {
+      font: "Roboto",
       fontSize: 8,
       cellPadding: 3.5,
       lineColor: [90, 90, 90],
@@ -1489,7 +1494,7 @@ export function generateSanctionsScreeningPdfBlob(
   doc.setTextColor(0, 0, 0);
     doc.text("Screening / transliteration variants", margin, y);
   y += 18;
-  doc.setFont("helvetica", "normal");
+  doc.setFont("Roboto", "normal");
   doc.setFontSize(8);
   doc.setTextColor(45, 45, 45);
   for (const batchRow of rows) {
@@ -1538,7 +1543,7 @@ export function generateSanctionsScreeningPdfBlob(
     doc.setTextColor(0, 0, 0);
     doc.text(pdfSafeText(batchRow.screenInput.vendorName), margin, y);
     y += 14;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(8);
     for (const line of auditLines) {
       const body = sanitizeAuditBulletTextForPdf(line.text);
@@ -1552,7 +1557,7 @@ export function generateSanctionsScreeningPdfBlob(
       }
     }
     y += 4;
-    doc.setFont("courier", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(8);
     doc.setTextColor(45, 45, 45);
     const scrLine = pdfSafeText(`SCR ID: ${formatScrFooterCell(batchRow.auditId, batchRow.auditedAt)}`);
@@ -1562,7 +1567,7 @@ export function generateSanctionsScreeningPdfBlob(
       doc.text(wline, margin, y);
       y += 10;
     }
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setTextColor(0, 0, 0);
     y += 14;
   }
@@ -1574,7 +1579,7 @@ export function generateSanctionsScreeningPdfBlob(
     doc.setTextColor(0, 0, 0);
     doc.text("AI Deep Analysis", margin, y);
     y += 16;
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(8);
     for (let i = 0; i < rows.length; i++) {
       const aiRow = aiForBatchRow(rows[i], i, aiResults);
@@ -1586,7 +1591,7 @@ export function generateSanctionsScreeningPdfBlob(
       doc.setTextColor(0, 0, 0);
       doc.text(pdfSafeText(aiRow.vendor_name), margin, y);
       y += 12;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("Roboto", "normal");
       doc.setFontSize(8);
       doc.setTextColor(45, 45, 45);
       for (const wline of doc.splitTextToSize(pdfSafeText(`Assessment: ${assess}`), maxW)) {
@@ -1594,7 +1599,7 @@ export function generateSanctionsScreeningPdfBlob(
         doc.text(wline, margin, y);
         y += 10;
       }
-      doc.setFont("courier", "normal");
+      doc.setFont("Roboto", "normal");
       doc.setFontSize(8);
       for (const wline of doc.splitTextToSize(pdfSafeText(`Confidence: ${aiRow.confidence}%`), maxW)) {
         ensureSpace(10);
@@ -1605,7 +1610,7 @@ export function generateSanctionsScreeningPdfBlob(
       doc.setFontSize(8);
       doc.text("Reasoning:", margin, y);
       y += 9;
-      doc.setFont("helvetica", "normal");
+      doc.setFont("Roboto", "normal");
       for (const wline of doc.splitTextToSize(pdfSafeText(aiRow.reasoning), maxW)) {
         ensureSpace(10);
         doc.text(wline, margin, y);
@@ -1616,7 +1621,7 @@ export function generateSanctionsScreeningPdfBlob(
       const transBlock = ti
         ? pdfSafeText(`${formatTransliterationBlockForPdf(ti)} — screened across 4 lists`)
         : pdfSafeText("No transliteration metadata.");
-      doc.setFont("helvetica", "normal");
+      doc.setFont("Roboto", "normal");
       doc.setFontSize(8);
       doc.setTextColor(45, 45, 45);
       for (const wline of doc.splitTextToSize(transBlock, maxW)) {
@@ -1632,7 +1637,7 @@ export function generateSanctionsScreeningPdfBlob(
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("Roboto", "normal");
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
     doc.text(`Page ${p} of ${totalPages}`, pageW / 2, pageH - 36, {

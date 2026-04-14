@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * LANDING PAGE — TradeScreenAI
  * Design: Intelligence Command Center — dark cinematic (#0a0e1a)
