@@ -37,6 +37,7 @@ import {
   getLastScreeningSnapshot,
   patchLastScreeningSnapshot,
   setLastScreeningSnapshot,
+  type SessionScreeningResult,
 } from "@/lib/sessionStore";
 import {
   Dialog,
@@ -320,7 +321,7 @@ function formatUsdCurrencyAmount(raw: string): string {
   }).format(n);
 }
 
-type ScreeningResultsState = {
+export type ScreeningResultsState = {
   listHits: ListHitRow[];
   compositeScore: number;
   risk: "HIGH" | "MEDIUM" | "LOW";
@@ -661,6 +662,48 @@ function buildScreeningResultsFromApi(
   };
 }
 
+function buildScreeningSessionHistoryRecord(
+  input: ScreenPipelineInput,
+  sr: ScreeningResultsState,
+  durationMs: number,
+  scrId: string,
+  auditedAt: string
+): SessionScreeningResult {
+  const tli = sr.transliterationInfo;
+  return {
+    timestamp: auditedAt,
+    vendorName: input.vendorName,
+    risk: sr.risk,
+    score: sr.compositeScore,
+    compositeScore: sr.compositeScore,
+    assessment: sr.remote?.assessment ?? "",
+    action: sr.remote?.action,
+    source: "screening",
+    durationMs,
+    country: input.country,
+    amount: input.amount,
+    docType: input.docType,
+    scoreBreakdown: { ...sr.scoreBreakdown },
+    reasoning: sr.remote?.reasoning ?? "",
+    transliterationInfo: tli
+      ? {
+          variants: [...tli.variants],
+          direction: tli.direction,
+          standards: tli.standards
+            ? {
+                iso9: tli.standards.iso9,
+                icao: tli.standards.icao,
+                bgn: tli.standards.bgn,
+                informal: tli.standards.informal,
+              }
+            : null,
+        }
+      : null,
+    listsChecked: "OFAC + EU + UN + UK — 45,296 entities",
+    scrId,
+  };
+}
+
 /** One row from an uploaded file (vendor + optional metadata columns) */
 type ParsedUploadRow = {
   vendorName: string;
@@ -986,7 +1029,7 @@ function riskBadgeClasses(level: string): string {
   return "border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
-type BatchScreenRow = {
+export type BatchScreenRow = {
   auditId: string;
   auditedAt: string;
   screenInput: {
@@ -998,6 +1041,69 @@ type BatchScreenRow = {
   };
   screeningResults: ScreeningResultsState;
 };
+
+function parseSessionRisk(risk: string | undefined): "HIGH" | "MEDIUM" | "LOW" {
+  const u = (risk || "LOW").toUpperCase();
+  if (u === "HIGH" || u === "BLOCK") return "HIGH";
+  if (u === "MEDIUM" || u === "REVIEW" || u === "FLAG") return "MEDIUM";
+  return "LOW";
+}
+
+/** Reconstruct a batch PDF row from a persisted session history entry (audit log replay). */
+export function buildBatchScreenRowFromSessionRecord(r: SessionScreeningResult): BatchScreenRow {
+  const scrId = r.scrId ?? `SCR-SESSION-${r.timestamp}`;
+  const auditedAt = r.timestamp;
+  const screenInput = {
+    vendorName: r.vendorName,
+    country: r.country ?? "",
+    amount: r.amount ?? "",
+    docType: r.docType ?? "",
+    cyrillicName: "",
+  };
+  const composite =
+    typeof r.score === "number" ? r.score : typeof r.compositeScore === "number" ? r.compositeScore : 0;
+  const risk = parseSessionRisk(r.risk);
+  const breakdown: ScoreBreakdown = r.scoreBreakdown
+    ? { ...r.scoreBreakdown }
+    : { name: 0, country: 0, amount: 0, doc: 0, translit: 0, total: composite };
+  const ti: TransliterationScreeningInfo | null = r.transliterationInfo
+    ? {
+        variants: [...r.transliterationInfo.variants],
+        direction: r.transliterationInfo.direction,
+        standards: r.transliterationInfo.standards
+          ? { ...r.transliterationInfo.standards }
+          : null,
+      }
+    : null;
+  const remote = {
+    assessment: (r.assessment ?? "UNKNOWN").trim() || "UNKNOWN",
+    action: (r.action ?? "APPROVE").trim() || "APPROVE",
+    reasoning: r.reasoning ?? "",
+    listsChecked: r.listsChecked ?? "OFAC + EU + UN + UK — 45,296 entities",
+  };
+  const listHits: ListHitRow[] = LIST_LABELS.map((list) => ({
+    list,
+    matchedEntity: "No match",
+    similarity: 0,
+    tier: risk,
+    statusLabel: "Session log",
+    statusTier: risk,
+  }));
+  const bestMatch =
+    remote.assessment && remote.assessment !== "UNKNOWN"
+      ? `${remote.assessment.replace(/_/g, " ")} · ${remote.listsChecked}`
+      : "—";
+  const screeningResults: ScreeningResultsState = {
+    listHits,
+    compositeScore: Math.round(composite),
+    risk,
+    bestMatch,
+    scoreBreakdown: { ...breakdown, total: Math.round(composite) },
+    transliterationInfo: ti,
+    remote,
+  };
+  return { auditId: scrId, auditedAt, screenInput, screeningResults };
+}
 
 function generateAuditId(): string {
   const part = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -1240,7 +1346,7 @@ function formatTransliterationBlockForPdf(ti: TransliterationScreeningInfo): str
   return parts.join(" | ");
 }
 
-function generateSanctionsScreeningPdfBlob(
+export function generateSanctionsScreeningPdfBlob(
   rows: BatchScreenRow[],
   aiResults: NormalizedAIResult[] | null
 ): Blob {
@@ -1943,16 +2049,10 @@ export default function Screening() {
           aiDeepAnalysisResults: null,
           aiAnalysisComplete: false,
         });
-        addScreeningResult({
-          timestamp: new Date().toISOString(),
-          vendorName: input.vendorName,
-          risk: sr.risk,
-          score: sr.compositeScore,
-          assessment: sr.remote?.assessment ?? sr.bestMatch,
-          action: sr.remote?.action,
-          source: "screening",
-          durationMs: performance.now() - t0,
-        });
+        const auditedAt = new Date().toISOString();
+        addScreeningResult(
+          buildScreeningSessionHistoryRecord(input, sr, performance.now() - t0, generateAuditId(), auditedAt)
+        );
       } catch {
         setScreeningRemoteFallback(true);
         setScreeningResults(null);
@@ -2025,16 +2125,16 @@ export default function Screening() {
         aiDeepAnalysisResults: null,
         aiAnalysisComplete: false,
       });
-      addScreeningResult({
-        timestamp: new Date().toISOString(),
-        vendorName: input.vendorName,
-        risk: sr.risk,
-        score: sr.compositeScore,
-        assessment: sr.remote?.assessment ?? sr.bestMatch,
-        action: sr.remote?.action,
-        source: "screening",
-        durationMs: performance.now() - t0,
-      });
+      const auditedAtManual = new Date().toISOString();
+      addScreeningResult(
+        buildScreeningSessionHistoryRecord(
+          input,
+          sr,
+          performance.now() - t0,
+          generateAuditId(),
+          auditedAtManual
+        )
+      );
     } catch {
       setScreeningRemoteFallback(true);
       setScreeningResults(null);
@@ -2126,16 +2226,9 @@ export default function Screening() {
       });
       const avgMs = (performance.now() - t0) / Math.max(1, mergedRows.length);
       for (const r of mergedRows) {
-        addScreeningResult({
-          timestamp: new Date().toISOString(),
-          vendorName: r.screenInput.vendorName,
-          risk: r.screeningResults.risk,
-          score: r.screeningResults.compositeScore,
-          assessment: r.screeningResults.remote?.assessment ?? r.screeningResults.bestMatch,
-          action: r.screeningResults.remote?.action,
-          source: "screening",
-          durationMs: avgMs,
-        });
+        addScreeningResult(
+          buildScreeningSessionHistoryRecord(r.screenInput, r.screeningResults, avgMs, r.auditId, r.auditedAt)
+        );
       }
     } catch {
       setScreeningRemoteFallback(true);

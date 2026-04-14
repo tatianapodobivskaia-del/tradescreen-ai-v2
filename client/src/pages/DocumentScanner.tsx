@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { runVisionScan, type VisionScanResult } from "@/lib/api";
 import { transliterateInformal } from "../lib/transliteration";
-import { addScreeningResult } from "@/lib/sessionStore";
+import { addScreeningResult, createScrId } from "@/lib/sessionStore";
 
 declare global {
   // set by pdf.worker.mjs when evaluated on the main thread
@@ -543,11 +543,27 @@ export default function DocumentScanner() {
           addScreeningResult({
             timestamp: nowIso,
             vendorName: r.entity,
-            risk: (r.risk || "").toUpperCase(),
-            assessment: (r.reasoning || "").trim(),
+            risk: (r.risk || "LOW").toUpperCase(),
+            score: undefined,
+            compositeScore: undefined,
+            assessment: "",
             action: (r.action || "").toUpperCase(),
             source: "scanner",
             durationMs,
+            country: r.country?.trim() ?? "",
+            amount: "",
+            docType: "",
+            reasoning: (r.reasoning || "").trim(),
+            transliterationInfo:
+              r.cyrillic_variants?.length
+                ? {
+                    variants: [...r.cyrillic_variants],
+                    direction: "latin",
+                    standards: null,
+                  }
+                : null,
+            listsChecked: "OFAC + EU + UN + UK — 45,296 entities",
+            scrId: createScrId(),
           });
         }
       } catch (err) {

@@ -5,15 +5,48 @@
  */
 export type SessionScreeningSource = "screening" | "scanner";
 
+/** Serializable score breakdown (matches Screening scoreBreakdown). */
+export type SessionScoreBreakdown = {
+  name: number;
+  country: number;
+  amount: number;
+  doc: number;
+  translit: number;
+  total: number;
+};
+
+/** Serializable transliteration snapshot for audit / PDF replay. */
+export type SessionTransliterationInfo = {
+  variants: string[];
+  direction: "cyrillic" | "latin";
+  standards: {
+    iso9: string;
+    icao: string;
+    bgn: string;
+    informal: string;
+  } | null;
+};
+
 export type SessionScreeningResult = {
   timestamp: string;
   vendorName: string;
   risk: "HIGH" | "MEDIUM" | "LOW" | string;
+  /** Composite screening score (0–100). */
   score?: number;
+  /** Same as score when recorded from Screening; optional for clarity in audit UI. */
+  compositeScore?: number;
   assessment?: string;
   action?: string;
   source: SessionScreeningSource;
   durationMs?: number;
+  country?: string;
+  amount?: string;
+  docType?: string;
+  scoreBreakdown?: SessionScoreBreakdown;
+  reasoning?: string;
+  transliterationInfo?: SessionTransliterationInfo | null;
+  listsChecked?: string;
+  scrId?: string;
 };
 
 /** UI state restored when returning to Screening via SPA navigation */
@@ -79,6 +112,12 @@ function getBucket(): SessionBucket {
 function emit(): void {
   const { listeners } = getBucket();
   for (const l of listeners) l();
+}
+
+/** Unique screening reference for audit trail / PDF (in-tab only). */
+export function createScrId(): string {
+  const part = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `SCR-2026-${part}`;
 }
 
 export function addScreeningResult(result: SessionScreeningResult): void {
