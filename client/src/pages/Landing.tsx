@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { CountUpNumber, AcademicBadge, ScanningLine } from "@/components/shared";
 import TopNavbar from "@/components/TopNavbar";
 import HeroNetworkAnimation from '../components/HeroNetworkAnimation';
+import AnimatedScreeningDemo from '../components/AnimatedScreeningDemo';
 import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
   dataSources
@@ -563,23 +564,9 @@ function SeeItInAction() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
           variants={fadeUpInView}
-          role="img"
-          aria-label="Demo video placeholder. Demo video coming soon."
-          className="relative mx-auto flex aspect-video max-w-4xl flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-b from-slate-900/90 to-[#050810] px-6 shadow-2xl shadow-black/40"
+          className="relative mx-auto max-w-4xl"
         >
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(34,211,238,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.15) 1px, transparent 1px)`,
-              backgroundSize: "32px 32px",
-            }}
-          />
-          <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-full border border-cyan-400/35 bg-cyan-400/10 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
-              <Play className="h-14 w-14 translate-x-1 text-cyan-300" strokeWidth={1.25} fill="currentColor" aria-hidden />
-            </div>
-            <p className="text-center font-display text-sm font-semibold tracking-wide text-slate-400">See the full screening cycle — from upload to compliance report</p>
-          </div>
+          <AnimatedScreeningDemo />
         </motion.div>
         <div className="mt-8 flex justify-center">
           <Link
