@@ -4,7 +4,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { getScreeningHistory, subscribeSession, type SessionScreeningResult } from "@/lib/sessionStore";
+import { addPdfReportRecord, getScreeningHistory, subscribeSession, type SessionScreeningResult } from "@/lib/sessionStore";
 import {
   buildBatchScreenRowFromSessionRecord,
   generateSanctionsScreeningPdfBlob,
@@ -92,6 +92,12 @@ function actionBadgeClass(action: string): string {
 function openSingleScreeningPdfPreview(session: SessionScreeningResult): void {
   const row = buildBatchScreenRowFromSessionRecord(session);
   const blob = generateSanctionsScreeningPdfBlob([row], null);
+  addPdfReportRecord({
+    title: `Sanctions screening — ${session.vendorName}`,
+    kind: "sanctions_screening_single",
+    recordCount: 1,
+    flaggedCount: (session.risk || "").toUpperCase() !== "LOW" ? 1 : 0,
+  });
   const pdfBlobUrl = URL.createObjectURL(blob);
   const dateStr = new Date().toISOString().split("T")[0];
   const safeName = session.vendorName.replace(/[^\w.-]+/g, "_").slice(0, 48) || "entity";

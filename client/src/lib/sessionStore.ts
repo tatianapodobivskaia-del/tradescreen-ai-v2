@@ -73,9 +73,23 @@ type LastSnap =
       batchScreeningRows: unknown;
     } & ScreeningSnapshotUiFields);
 
+export type SessionPdfReportKind = "sanctions_screening_batch" | "sanctions_screening_single" | "document_scan";
+
+export type SessionPdfReportEntry = {
+  id: string;
+  generatedAt: string;
+  title: string;
+  kind: SessionPdfReportKind;
+  recordCount?: number;
+  flaggedCount?: number;
+};
+
 type SessionBucket = {
   history: SessionScreeningResult[];
   lastScreeningSnapshot: LastSnap | null;
+  pdfReports: SessionPdfReportEntry[];
+  /** AI sensitivity threshold (30–100 scale, same as Settings slider); drives composite → risk tier. */
+  sensitivityThreshold: number;
   listeners: Set<() => void>;
 };
 
@@ -99,13 +113,32 @@ function getRoot(): Record<string, SessionBucket | undefined> {
   return globalThis as unknown as Record<string, SessionBucket | undefined>;
 }
 
+const THRESHOLD_MIN = 30;
+const THRESHOLD_MAX = 99;
+const DEFAULT_SENSITIVITY_THRESHOLD = 75;
+
+function normalizeSensitivityThreshold(raw: unknown): number {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (!Number.isFinite(n)) return DEFAULT_SENSITIVITY_THRESHOLD;
+  return Math.min(THRESHOLD_MAX, Math.max(THRESHOLD_MIN, Math.round(n)));
+}
+
 function getBucket(): SessionBucket {
   const g = getRoot();
-  let b = g[SESSION_GLOBAL_KEY];
+  let b = g[SESSION_GLOBAL_KEY] as SessionBucket | undefined;
   if (!b) {
-    b = { history: [], lastScreeningSnapshot: null, listeners: new Set() };
+    b = {
+      history: [],
+      lastScreeningSnapshot: null,
+      pdfReports: [],
+      sensitivityThreshold: DEFAULT_SENSITIVITY_THRESHOLD,
+      listeners: new Set(),
+    };
     g[SESSION_GLOBAL_KEY] = b;
+    return b;
   }
+  if (!Array.isArray(b.pdfReports)) b.pdfReports = [];
+  b.sensitivityThreshold = normalizeSensitivityThreshold(b.sensitivityThreshold);
   return b;
 }
 
@@ -221,4 +254,38 @@ export function subscribeSession(listener: () => void): () => void {
 
 export function getSessionSnapshot(): SessionScreeningResult[] {
   return getBucket().history;
+}
+
+export function getThreshold(): number {
+  return getBucket().sensitivityThreshold;
+}
+
+export function setThreshold(value: number): void {
+  getBucket().sensitivityThreshold = normalizeSensitivityThreshold(value);
+  emit();
+}
+
+export function getPdfReports(): SessionPdfReportEntry[] {
+  return [...getBucket().pdfReports];
+}
+
+export function addPdfReportRecord(entry: {
+  title: string;
+  kind: SessionPdfReportKind;
+  recordCount?: number;
+  flaggedCount?: number;
+}): string {
+  const bucket = getBucket();
+  const id = `RPT-${Date.now().toString(36).toUpperCase()}`;
+  bucket.pdfReports.unshift({
+    id,
+    generatedAt: new Date().toISOString(),
+    title: entry.title,
+    kind: entry.kind,
+    recordCount: entry.recordCount,
+    flaggedCount: entry.flaggedCount,
+  });
+  if (bucket.pdfReports.length > 100) bucket.pdfReports.length = 100;
+  emit();
+  return id;
 }

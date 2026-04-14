@@ -225,49 +225,65 @@ export default function Dashboard() {
   const recentRows = useMemo(() => sessionHistory.slice(0, 8), [sessionHistory]);
 
   const systemRows = useMemo(() => {
-    if (!apiReachable) {
+    type Row = { label: string; value: string; status: "operational" | "degraded" | "down" };
+    if (!apiReachable || !health) {
       return [
-        { label: "API connectivity", value: "Unreachable", status: "down" as const },
-        { label: "Sanctions engine", value: "—", status: "down" as const },
-        { label: "AI model", value: "—", status: "down" as const },
-        { label: "Vision screening", value: "—", status: "down" as const },
-        { label: "Total entities", value: "—", status: "down" as const },
-        { label: "Health timestamp", value: "—", status: "down" as const },
-      ];
+        { label: "Screening Engine", value: "Offline", status: "down" as const },
+        { label: "Sanctions Database", value: "—", status: "down" as const },
+        { label: "Cyrillic Engine", value: "Operational", status: "operational" as const },
+        { label: "AI Analysis", value: "—", status: "down" as const },
+        { label: "Document Scanner", value: "—", status: "down" as const },
+        { label: "Health response", value: "—", status: "down" as const },
+      ] satisfies Row[];
     }
-    const rowStatus = apiOperational ? ("operational" as const) : ("degraded" as const);
-    return [
+    const engineUp = Boolean(health.engine && String(health.engine).trim());
+    const dbCount =
+      typeof totalEntities === "number" && Number.isFinite(totalEntities)
+        ? `${totalEntities.toLocaleString()} entities`
+        : "—";
+    const aiUp = health.ai != null && health.ai !== false && health.ai !== "";
+    const aiLabel = [typeof health.ai_model === "string" && health.ai_model.trim() ? health.ai_model.trim() : null]
+      .filter(Boolean)
+      .join("") || (aiUp ? "Connected" : "");
+    const visionNorm = String(health.vision ?? health.vision_status ?? "")
+      .trim()
+      .toLowerCase();
+    const docScannerUp = visionNorm === "enabled";
+    const tsLabel = formatHealthTimestamp(health.ts);
+
+    const rows: Row[] = [
       {
-        label: "API connectivity",
-        value: apiOperational ? "Operational" : "Check status",
-        status: apiOperational ? ("operational" as const) : ("degraded" as const),
+        label: "Screening Engine",
+        value: engineUp ? "Operational" : "Offline",
+        status: engineUp ? "operational" : "down",
       },
       {
-        label: "Sanctions engine",
-        value: health?.engine ?? "—",
-        status: rowStatus,
+        label: "Sanctions Database",
+        value: dbCount,
+        status: "operational",
       },
       {
-        label: "AI model",
-        value: health?.ai_model ?? "—",
-        status: rowStatus,
+        label: "Cyrillic Engine",
+        value: "Operational",
+        status: "operational",
       },
       {
-        label: "Vision screening",
-        value: health?.vision_status ?? "—",
-        status: rowStatus,
+        label: "AI Analysis",
+        value: aiUp ? (aiLabel || "Operational") : "Offline",
+        status: aiUp ? "operational" : "down",
       },
       {
-        label: "Total entities",
-        value: typeof totalEntities === "number" ? totalEntities.toLocaleString() : "—",
-        status: rowStatus,
+        label: "Document Scanner",
+        value: docScannerUp ? "Operational" : "Offline",
+        status: docScannerUp ? "operational" : "down",
       },
       {
-        label: "Health timestamp",
-        value: formatHealthTimestamp(health?.ts),
-        status: rowStatus,
+        label: "Health response",
+        value: tsLabel,
+        status: apiOperational ? "operational" : "degraded",
       },
     ];
+    return rows;
   }, [apiReachable, apiOperational, health, totalEntities]);
 
   return (
@@ -301,7 +317,7 @@ export default function Dashboard() {
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden /> Back to Screening
           </Link>
           <div className="text-xs font-data text-slate-400 bg-slate-50 px-3 py-1.5 rounded-md border border-slate-100">
-            Last updated: {new Date().toLocaleString()}
+            API health as of: {health != null ? formatHealthTimestamp(health.ts) : "—"}
           </div>
         </div>
       </div>

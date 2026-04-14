@@ -33,8 +33,10 @@ import mammoth from "mammoth";
 import { useSearch, Link } from "wouter";
 import { cn } from "@/lib/utils";
 import {
+  addPdfReportRecord,
   addScreeningResult,
   getLastScreeningSnapshot,
+  getThreshold,
   patchLastScreeningSnapshot,
   setLastScreeningSnapshot,
   type SessionScreeningResult,
@@ -496,6 +498,7 @@ type CalculateCompositeScoreParams = {
 function calculateCompositeScore(params: CalculateCompositeScoreParams): {
   total: number;
   breakdown: { name: number; country: number; amount: number; doc: number; translit: number };
+  sensitivityRisk: "HIGH" | "MEDIUM" | "LOW";
 } {
   const parsedRisk =
     params.apiRisk != null && String(params.apiRisk).trim() !== ""
@@ -510,8 +513,16 @@ function calculateCompositeScore(params: CalculateCompositeScoreParams): {
   const total =
     0.75 * name + 0.1 * country + 0.05 * amount + 0.05 * doc + 0.05 * translit;
 
+  const bounded = Math.min(100, Math.max(0, total));
+  const compositeRounded = Math.round(bounded);
+  const threshold = getThreshold();
+  let sensitivityRisk: "HIGH" | "MEDIUM" | "LOW" = "LOW";
+  if (compositeRounded >= threshold) sensitivityRisk = "HIGH";
+  else if (compositeRounded >= threshold * 0.7) sensitivityRisk = "MEDIUM";
+
   return {
-    total: Math.min(100, Math.max(0, total)),
+    total: bounded,
+    sensitivityRisk,
     breakdown: {
       name: Math.round(Math.min(100, Math.max(0, name))),
       country: Math.round(Math.min(100, Math.max(0, country))),
@@ -629,8 +640,7 @@ function buildScreeningResultsFromApi(
   transliterationInfo: TransliterationScreeningInfo | null,
   apiRow: ScreenVendorApiResult | undefined
 ): ScreeningResultsState {
-  const risk = apiRow ? parseApiRiskFromScreen(apiRow.risk) : "LOW";
-  const { total, breakdown: compBreakdown } = calculateCompositeScore({
+  const { total, breakdown: compBreakdown, sensitivityRisk } = calculateCompositeScore({
     apiRisk: apiRow?.risk,
     apiAssessment: apiRow?.assessment,
     country: input.country,
@@ -638,6 +648,7 @@ function buildScreeningResultsFromApi(
     docType: input.docType,
     transliterationInfo,
   });
+  const risk = sensitivityRisk;
   const compositeScore = Math.round(total);
   const scoreBreakdown: ScoreBreakdown = { ...compBreakdown, total: compositeScore };
   const listsChecked = apiRow?.lists_checked ?? "OFAC+EU+UN+UK";
@@ -1944,6 +1955,15 @@ export default function Screening() {
   const handleBatchPdfReport = useCallback(() => {
     if (!batchScreeningRows?.length) return;
     const blob = generateSanctionsScreeningPdfBlob(batchScreeningRows, aiResults);
+    const flaggedCount = batchScreeningRows.filter(
+      (row) => (row.screeningResults.risk || "").toUpperCase() !== "LOW"
+    ).length;
+    addPdfReportRecord({
+      title: `Sanctions screening report (${batchScreeningRows.length} vendors)`,
+      kind: "sanctions_screening_batch",
+      recordCount: batchScreeningRows.length,
+      flaggedCount,
+    });
     const pdfBlobUrl = URL.createObjectURL(blob);
     const dateStr = new Date().toISOString().split("T")[0];
     const downloadName = `Sanctions_Report_${dateStr}.pdf`;

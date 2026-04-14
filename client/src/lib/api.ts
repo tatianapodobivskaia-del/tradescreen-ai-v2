@@ -130,6 +130,10 @@ export type ApiHealthSnapshot = {
   engine?: string;
   ai_model?: string;
   vision_status?: string;
+  /** Raw or structured AI health from `/health` when present */
+  ai?: unknown;
+  /** Normalized vision feature flag, e.g. `"enabled"` */
+  vision?: string;
 };
 
 /**
@@ -299,10 +303,35 @@ export async function checkAPIHealth(): Promise<ApiHealthSnapshot | null> {
         : undefined;
     const status = pickHealthString(r, ["status", "api_status"]);
     const engine = pickHealthString(r, ["engine", "engine_name", "service_name"]);
-    const ai_model = pickHealthString(r, ["ai_model", "model", "openai_model", "gpt_model"]);
-    const vision_status = pickHealthString(r, ["vision_status", "vision", "vision_screen"]);
+    let ai_model = pickHealthString(r, ["ai_model", "model", "openai_model", "gpt_model"]);
+    const aiRaw = r.ai;
+    const ai =
+      aiRaw !== undefined && aiRaw !== null && aiRaw !== false && aiRaw !== ""
+        ? aiRaw
+        : pickHealthString(r, ["ai_status", "ai_enabled"]) === "enabled" ||
+            r.ai_enabled === true ||
+            r.aiEnabled === true
+          ? true
+          : undefined;
+    if (ai && typeof ai === "object" && !Array.isArray(ai)) {
+      const o = ai as Record<string, unknown>;
+      const nested = typeof o.model === "string" ? o.model.trim() : typeof o.name === "string" ? o.name.trim() : "";
+      if (nested) ai_model = ai_model ?? nested;
+    } else if (typeof ai === "string" && ai.trim()) {
+      ai_model = ai_model ?? ai.trim();
+    }
 
-    return { ts, total_entities, lists, status, engine, ai_model, vision_status };
+    const visionFromField =
+      typeof r.vision === "string"
+        ? r.vision.trim()
+        : r.vision && typeof r.vision === "object"
+          ? pickHealthString(r.vision as Record<string, unknown>, ["status", "state", "mode"])
+          : undefined;
+    const vision_screen = pickHealthString(r, ["vision_screen"]);
+    const vision_status = pickHealthString(r, ["vision_status", "vision", "vision_screen"]);
+    const vision = (visionFromField ?? vision_screen ?? vision_status)?.trim();
+
+    return { ts, total_entities, lists, status, engine, ai_model, vision_status, ai, vision };
   } catch {
     return null;
   }

@@ -33,7 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { runVisionScan, type VisionScanResult } from "@/lib/api";
 import { transliterateInformal } from "../lib/transliteration";
-import { addScreeningResult, createScrId } from "@/lib/sessionStore";
+import { addPdfReportRecord, addScreeningResult, createScrId } from "@/lib/sessionStore";
 
 declare global {
   // set by pdf.worker.mjs when evaluated on the main thread
@@ -598,6 +598,15 @@ export default function DocumentScanner() {
 
   const handlePdfExport = useCallback(() => {
     if (!visionData) return;
+    const flagged =
+      (typeof visionData.summary?.blocked === "number" ? visionData.summary.blocked : 0) +
+      (typeof visionData.summary?.flagged === "number" ? visionData.summary.flagged : 0);
+    addPdfReportRecord({
+      title: `Document scan — ${visionData.document?.document_type?.trim() || "Trade document"}`,
+      kind: "document_scan",
+      recordCount: visionData.entities_found,
+      flaggedCount: flagged,
+    });
     const blob = generateDocumentScanPdfBlob(visionData);
     const pdfBlobUrl = URL.createObjectURL(blob);
     const scanDate = new Date(visionData.ts);
