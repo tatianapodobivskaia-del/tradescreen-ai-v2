@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 const AZURE_API = "https://trade-compliance-screening-hscyeycsckc3avay.eastus-01.azurewebsites.net/api";
 
 const SCREEN_REQUEST_TIMEOUT_MS = 90_000;
@@ -18,14 +20,22 @@ export type ScreenVendorPayload = {
 };
 
 /** One vendor row returned from live sanctions screening. */
-export type ScreenVendorApiResult = {
-  vendor: string;
-  assessment: string;
-  risk: string;
-  action: string;
-  reasoning: string;
-  lists_checked?: string;
-};
+export const ScreenVendorApiResultSchema = z.object({
+  vendor: z.string(),
+  assessment: z.string().default("—"),
+  risk: z.string().default("LOW"),
+  action: z.string().default("—"),
+  reasoning: z.string().default(""),
+  lists_checked: z.string().optional(),
+});
+export type ScreenVendorApiResult = z.infer<typeof ScreenVendorApiResultSchema>;
+
+export const PostSanctionsScreenResponseSchema = z.object({
+  status: z.string().default("success"),
+  results: z.array(ScreenVendorApiResultSchema).default([]),
+  lists_screened: z.array(z.string()).optional(),
+  total_entities: z.number().optional(),
+});
 
 /** Live Azure sanctions screening against full list (~45K entities). */
 export async function postSanctionsScreen(vendors: ScreenVendorPayload[]): Promise<{
@@ -51,16 +61,28 @@ export async function postSanctionsScreen(vendors: ScreenVendorPayload[]): Promi
       throw new Error(`API error ${response.status}: ${text}`);
     }
 
-    return response.json() as Promise<{
-      status: string;
-      results: ScreenVendorApiResult[];
-      lists_screened?: string[];
-      total_entities?: number;
-    }>;
+    const json = await response.json();
+    return PostSanctionsScreenResponseSchema.parse(json);
   } finally {
     window.clearTimeout(timeoutId);
   }
 }
+
+export const DeepAnalysisResultSchema = z.object({
+  vendor_name: z.string(),
+  risk_level: z.string().default("LOW"),
+  true_positive: z.boolean().default(false),
+  confidence: z.number().default(0),
+  reasoning: z.string().default(""),
+  action: z.string().default("—"),
+  compliance_note: z.string().default(""),
+  evasion_indicators: z.array(z.string()).default([]),
+});
+
+export const RunAIDeepAnalysisResponseSchema = z.object({
+  results: z.array(DeepAnalysisResultSchema).default([]),
+  usage: z.object({ input_tokens: z.number(), output_tokens: z.number() }).optional(),
+});
 
 // AI Deep Analysis — sends flagged vendors for GPT-4o analysis
 export async function runAIDeepAnalysis(
@@ -100,41 +122,47 @@ export async function runAIDeepAnalysis(
     throw new Error(`API error ${response.status}: ${text}`);
   }
 
-  return response.json();
+  const json = await response.json();
+  return RunAIDeepAnalysisResponseSchema.parse(json);
 }
 
-export type VisionScanResult = {
-  document_risk: string;
-  entities_found: number;
-  summary: { blocked: number; flagged: number; cleared: number };
-  document_action: string;
-  document?: { document_type: string };
-  risk_results: Array<{
-    entity: string;
-    risk: string;
-    action: string;
-    reasoning: string;
-    cyrillic_variants: string[];
-    /** Present when vision API returns a jurisdiction for the entity */
-    country?: string;
-  }>;
-  ts: string;
-};
+export const VisionRiskResultSchema = z.object({
+  entity: z.string().default("—"),
+  risk: z.string().default("LOW"),
+  action: z.string().default("—"),
+  reasoning: z.string().default(""),
+  cyrillic_variants: z.array(z.string()).default([]),
+  country: z.string().optional(),
+});
 
-export type ApiHealthSnapshot = {
-  ts?: string | number;
-  total_entities?: number;
-  lists?: Record<string, number>;
-  /** e.g. "online" when API reports healthy */
-  status?: string;
-  engine?: string;
-  ai_model?: string;
-  vision_status?: string;
-  /** Raw or structured AI health from `/health` when present */
-  ai?: unknown;
-  /** Normalized vision feature flag, e.g. `"enabled"` */
-  vision?: string;
-};
+export const VisionScanResultSchema = z.object({
+  document_risk: z.string().default("UNKNOWN"),
+  entities_found: z.number().default(0),
+  summary: z.object({
+    blocked: z.number().default(0),
+    flagged: z.number().default(0),
+    cleared: z.number().default(0),
+  }).default({ blocked: 0, flagged: 0, cleared: 0 }),
+  document_action: z.string().default("—"),
+  document: z.object({ document_type: z.string() }).optional(),
+  risk_results: z.array(VisionRiskResultSchema).default([]),
+  ts: z.string().default(() => new Date().toISOString()),
+});
+
+export type VisionScanResult = z.infer<typeof VisionScanResultSchema>;
+
+export const ApiHealthSnapshotSchema = z.object({
+  ts: z.union([z.string(), z.number()]).optional(),
+  total_entities: z.number().optional(),
+  lists: z.record(z.number()).optional(),
+  status: z.string().optional(),
+  engine: z.string().optional(),
+  ai_model: z.string().optional(),
+  vision_status: z.string().optional(),
+  ai: z.unknown().optional(),
+  vision: z.string().optional(),
+});
+export type ApiHealthSnapshot = z.infer<typeof ApiHealthSnapshotSchema>;
 
 /**
  * Format health `ts` (ISO UTC string or epoch seconds/ms) in the user's local timezone
@@ -185,53 +213,21 @@ function normalizeVisionScanPayload(raw: unknown): VisionScanResult {
     );
   }
 
-  const doc = r.document;
-  let document: { document_type: string } | undefined;
-  if (doc && typeof doc === "object") {
-    const d = doc as Record<string, unknown>;
-    const dt = d.document_type;
-    if (typeof dt === "string" && dt.trim()) {
-      document = { document_type: dt.replace(/_/g, " ") };
-    }
+  // Use Zod to completely validate and assign defaults
+  // We can pass  directly, but we map simple nested fallbacks first (like country alias)
+  const normalizedRaw = { ...r };
+  
+  if (Array.isArray(normalizedRaw.risk_results)) {
+    normalizedRaw.risk_results = normalizedRaw.risk_results.map((row: any) => {
+      if (row && typeof row === 'object') {
+        const countryAlias = row.country ?? row.jurisdiction ?? row.entity_country;
+        if (countryAlias) row.country = countryAlias;
+      }
+      return row;
+    });
   }
 
-  const rawRows = Array.isArray(r.risk_results) ? r.risk_results : [];
-  const risk_results = rawRows.map((row) => {
-    const x = row && typeof row === "object" ? (row as Record<string, unknown>) : {};
-    const variants = Array.isArray(x.cyrillic_variants)
-      ? x.cyrillic_variants.map((v) => String(v))
-      : [];
-    const countryRaw = x.country ?? x.jurisdiction ?? x.entity_country;
-    const country =
-      typeof countryRaw === "string" && countryRaw.trim() ? countryRaw.trim() : undefined;
-    return {
-      entity: String(x.entity ?? "—"),
-      risk: String(x.risk ?? "LOW"),
-      action: String(x.action ?? "—"),
-      reasoning: String(x.reasoning ?? ""),
-      cyrillic_variants: variants,
-      country,
-    };
-  });
-
-  const sum =
-    r.summary && typeof r.summary === "object" && r.summary !== null
-      ? (r.summary as Record<string, unknown>)
-      : {};
-
-  return {
-    document_risk: String(r.document_risk ?? "UNKNOWN"),
-    entities_found: Number(r.entities_found ?? 0),
-    summary: {
-      blocked: Number(sum.blocked ?? 0),
-      flagged: Number(sum.flagged ?? 0),
-      cleared: Number(sum.cleared ?? 0),
-    },
-    document_action: String(r.document_action ?? "—"),
-    document,
-    risk_results,
-    ts: String(r.ts ?? new Date().toISOString()),
-  };
+  return VisionScanResultSchema.parse(normalizedRaw);
 }
 
 /** Vision Document Scanner — POST base64 still image (JPEG/PNG after client prep). */
@@ -331,7 +327,7 @@ export async function checkAPIHealth(): Promise<ApiHealthSnapshot | null> {
     const vision_status = pickHealthString(r, ["vision_status", "vision", "vision_screen"]);
     const vision = (visionFromField ?? vision_screen ?? vision_status)?.trim();
 
-    return { ts, total_entities, lists, status, engine, ai_model, vision_status, ai, vision };
+    return ApiHealthSnapshotSchema.parse({ ts, total_entities, lists, status, engine, ai_model, vision_status, ai, vision });
   } catch {
     return null;
   }
