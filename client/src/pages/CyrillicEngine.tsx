@@ -3,12 +3,87 @@
  * Two tabs, animated flow, matched entities, reference table
  */
 import { useState } from "react";
-import { cyrillicTransliterations, cyrillicVariantsReference, tradeDocumentComparison } from "@/lib/mockData";
 import { Languages, ArrowRight, Search, BookOpen, FileText } from "lucide-react";
+import {
+  generateAllVariants,
+  generateLatinVariants,
+  transliterateISO9,
+  transliterateICAO,
+  transliterateBGN,
+  transliterateInformal,
+} from "../lib/transliteration";
+
+const cyrillicVariantsReference = [
+  { letter: "Щ", name: "Shcha", iso9: "Ŝ / ŝ", icao: "Shch", bgn: "Shch", informal: "Sch / Shch" },
+  { letter: "Ж", name: "Zhe", iso9: "Ž / ž", icao: "Zh", bgn: "Zh", informal: "Zh / J" },
+  { letter: "Ц", name: "Tse", iso9: "C / c", icao: "Ts", bgn: "Ts", informal: "Ts / Tz" },
+  { letter: "Ю", name: "Yu", iso9: "Û / û", icao: "Iu", bgn: "Yu", informal: "Yu / Ju" },
+  { letter: "Я", name: "Ya", iso9: "Â / â", icao: "Ia", bgn: "Ya", informal: "Ya / Ja" },
+  { letter: "Ё", name: "Yo", iso9: "Ë / ë", icao: "E", bgn: "Ë", informal: "Yo / E" },
+  { letter: "Х", name: "Kha", iso9: "H / h", icao: "Kh", bgn: "Kh", informal: "Kh / H" },
+  { letter: "Ч", name: "Che", iso9: "Č / č", icao: "Ch", bgn: "Ch", informal: "Ch / Tch" },
+  { letter: "Ш", name: "Sha", iso9: "Š / š", icao: "Sh", bgn: "Sh", informal: "Sh" },
+  { letter: "Ы", name: "Yeru", iso9: "Y / y", icao: "Y", bgn: "Y", informal: "Y / I" },
+] as const;
+
+const tradeDocumentComparison = [
+  {
+    russianOriginal: "Щербаков Юрий Яковлевич",
+    passport: "SHCHERBAKOV IURII IAKOVLEVICH",
+    bankRecord: "Scherbakov, Yuri Y.",
+    tradeDoc: "SHERBAKOV YURIY",
+  },
+  {
+    russianOriginal: "Жукова Наталья Цветкова",
+    passport: "ZHUKOVA NATALIA TSVETKOVA",
+    bankRecord: "Zhukova, Natalia T.",
+    tradeDoc: "JUKOVA NATALYA",
+  },
+  {
+    russianOriginal: "Хрущёв Дмитрий Чернов",
+    passport: "KHRUSHCHEV DMITRII CHERNOV",
+    bankRecord: "Khrushchev, Dmitry C.",
+    tradeDoc: "KHRUSCHEV DMITRIY",
+  },
+] as const;
 
 export default function CyrillicEngine() {
   const [activeTab, setActiveTab] = useState<"cyr2lat" | "lat2all">("cyr2lat");
   const [input, setInput] = useState("");
+  const [lastInput, setLastInput] = useState<string>("");
+  const [variants, setVariants] = useState<string[]>([]);
+  const [standards, setStandards] = useState<{
+    iso9: string;
+    icao: string;
+    bgn: string;
+    informal: string;
+  } | null>(null);
+
+  const handleTransliterate = () => {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      setLastInput("");
+      setVariants([]);
+      setStandards(null);
+      return;
+    }
+    setLastInput(trimmed);
+
+    if (activeTab === "cyr2lat") {
+      const all = generateAllVariants(trimmed);
+      setVariants(all.variants.slice(0, 20));
+      setStandards({
+        iso9: transliterateISO9(trimmed),
+        icao: transliterateICAO(trimmed),
+        bgn: transliterateBGN(trimmed),
+        informal: transliterateInformal(trimmed),
+      });
+      return;
+    }
+
+    setVariants(generateLatinVariants(trimmed).slice(0, 20));
+    setStandards(null);
+  };
 
   return (
     <div className="space-y-8">
@@ -43,7 +118,11 @@ export default function CyrillicEngine() {
               className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white text-sm font-body focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500"
             />
           </div>
-          <button className="px-6 py-3 bg-[#06b6d4] hover:bg-[#0ea5e9] text-white font-semibold rounded-lg text-sm transition-colors">
+          <button
+            type="button"
+            onClick={handleTransliterate}
+            className="px-6 py-3 bg-[#06b6d4] hover:bg-[#0ea5e9] text-white font-semibold rounded-lg text-sm transition-colors"
+          >
             Transliterate
           </button>
         </div>
@@ -61,7 +140,9 @@ export default function CyrillicEngine() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 font-display">Cyrillic</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 font-display">
+                  {activeTab === "cyr2lat" ? "Cyrillic" : "Latin"}
+                </th>
                 <th className="text-center py-3 px-1 text-xs text-slate-300">→</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-amber-600 font-display">ISO 9</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-amber-600 font-display">ICAO</th>
@@ -70,21 +151,53 @@ export default function CyrillicEngine() {
               </tr>
             </thead>
             <tbody>
-              {cyrillicTransliterations.map((row, i) => (
-                <tr
-                  key={i}
-                  className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors"
-                >
-                  <td className="py-3 px-4 font-semibold text-slate-900 font-body">{row.cyrillic}</td>
-                  <td className="py-3 px-1 text-center"><ArrowRight className="w-3 h-3 text-cyan-400 mx-auto" /></td>
-                  <td className="py-3 px-4 font-data text-slate-700">{row.iso9}</td>
-                  <td className="py-3 px-4 font-data text-slate-700">{row.icao}</td>
-                  <td className="py-3 px-4 font-data text-slate-700">{row.bgn}</td>
-                  <td className="py-3 px-4 font-data text-slate-700">{row.informal}</td>
+              {lastInput ? (
+                <tr className="border-t border-slate-100 hover:bg-amber-50/20 transition-colors">
+                  <td className="py-3 px-4 font-semibold text-slate-900 font-body">{lastInput}</td>
+                  <td className="py-3 px-1 text-center">
+                    <ArrowRight className="w-3 h-3 text-cyan-400 mx-auto" />
+                  </td>
+                  <td className="py-3 px-4 font-data text-slate-700">{standards?.iso9 ?? "—"}</td>
+                  <td className="py-3 px-4 font-data text-slate-700">{standards?.icao ?? "—"}</td>
+                  <td className="py-3 px-4 font-data text-slate-700">{standards?.bgn ?? "—"}</td>
+                  <td className="py-3 px-4 font-data text-slate-700">{standards?.informal ?? "—"}</td>
                 </tr>
-              ))}
+              ) : (
+                <tr className="border-t border-slate-100">
+                  <td colSpan={6} className="py-8 px-4 text-sm text-slate-500 font-body">
+                    Enter a name above and click Transliterate to see real engine output.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-bold font-display uppercase tracking-wider text-slate-700">
+              {activeTab === "cyr2lat" ? "All combinatorial variants (max 20)" : "All reverse-map variants (max 20)"}
+            </h4>
+            <span className="text-[11px] font-data text-slate-400">{variants.length ? `${variants.length} shown` : "—"}</span>
+          </div>
+          {variants.length ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {variants.map((v) => (
+                <span
+                  key={v}
+                  className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-data text-slate-700"
+                >
+                  {v}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500 font-body">
+              {activeTab === "cyr2lat"
+                ? "Runs generateAllVariants(input) and displays its variant set."
+                : "Runs generateLatinVariants(input) and displays its variant set."}
+            </p>
+          )}
         </div>
       </div>
 
