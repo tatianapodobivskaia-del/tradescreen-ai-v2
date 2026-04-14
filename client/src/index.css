@@ -196,8 +196,8 @@
 
   /* Count up ticker effect */
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0;  }
+    to { opacity: 1;  }
   }
   .animate-fade-up {
     animation: fade-up 0.6s ease-out forwards;
@@ -234,7 +234,7 @@
       0 2px 6px oklch(0 0 0 / 0.06),
       0 8px 20px oklch(0 0 0 / 0.08),
       0 16px 40px oklch(0 0 0 / 0.06);
-    transform: translateY(-2px);
+    
     border-color: oklch(0.88 0.01 250);
   }
 
@@ -254,7 +254,7 @@
       0 2px 6px oklch(0 0 0 / 0.3),
       0 8px 20px oklch(0 0 0 / 0.3),
       0 16px 40px oklch(0.82 0.15 195 / 0.08);
-    transform: translateY(-2px);
+    
     border-color: oklch(0.82 0.15 195 / 0.25);
   }
 
@@ -314,7 +314,7 @@
   }
   .btn-premium-primary:hover {
     box-shadow: 0 4px 16px oklch(0.82 0.15 195 / 0.45);
-    transform: translateY(-1px);
+    
   }
   .btn-premium-outline {
     background: transparent;
@@ -325,7 +325,7 @@
     background: oklch(0.82 0.15 195 / 0.1);
     border-color: oklch(0.82 0.15 195 / 0.8);
     box-shadow: 0 2px 12px oklch(0.82 0.15 195 / 0.2);
-    transform: translateY(-1px);
+    
   }
 
   /* ===== PREMIUM SECTION HEADING ===== */

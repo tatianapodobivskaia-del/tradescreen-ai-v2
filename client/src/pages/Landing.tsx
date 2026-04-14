@@ -359,14 +359,14 @@ export default function Landing() {
           >
             <Link
               href="/app/screening"
-              className="group inline-flex items-center gap-2.5 rounded-lg border border-cyan-300/30 bg-cyan-300 px-6 py-3 text-base font-semibold text-[#071020] shadow-[0_10px_26px_rgba(56,189,248,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-cyan-200"
+              className="group inline-flex items-center gap-2.5 rounded-lg border border-cyan-300/30 bg-cyan-300 px-6 py-3 text-base font-semibold text-[#071020] shadow-[0_10px_26px_rgba(56,189,248,0.22)] transition-all duration-300  hover:bg-cyan-200"
             >
               Start Screening
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/app/live-demo"
-              className="inline-flex items-center gap-2.5 rounded-lg border border-cyan-300/35 bg-[#0B162A]/72 px-6 py-3 text-base font-semibold text-cyan-200 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/60 hover:bg-[#0E1B31]"
+              className="inline-flex items-center gap-2.5 rounded-lg border border-cyan-300/35 bg-[#0B162A]/72 px-6 py-3 text-base font-semibold text-cyan-200 transition-all duration-300  hover:border-cyan-200/60 hover:bg-[#0E1B31]"
             >
               <Play className="h-5 w-5 shrink-0 fill-current" strokeWidth={2} />
               Watch Demo
@@ -584,7 +584,7 @@ function SeeItInAction() {
         <div className="mt-8 flex justify-center">
           <Link
             href="/app/live-demo"
-            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-[#0B162A]/72 px-6 py-3 text-sm font-bold text-cyan-200 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200/60 hover:bg-[#0E1B31]"
+            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-[#0B162A]/72 px-6 py-3 text-sm font-bold text-cyan-200 transition-all duration-300  hover:border-cyan-200/60 hover:bg-[#0E1B31]"
           >
             <Play className="h-4 w-4 fill-current" />
             Watch Full Demo
@@ -795,7 +795,7 @@ function DataSourcesSection() {
   }, []);
 
   const sourceHighlight = (name: string, idx: number) => {
-    const base = "transition-all duration-300 hover:scale-[1.02]";
+    const base = "transition-all duration-300 -[1.02]";
     if (/OFAC|US/i.test(name) || idx === 0) {
       return `${base} border-blue-400/20 bg-red-400/[0.02] hover:border-red-300/45 hover:bg-gradient-to-br hover:from-red-500/18 hover:to-blue-500/20 hover:shadow-[0_0_40px_rgba(239,68,68,0.24),0_0_30px_rgba(59,130,246,0.18)]`;
     }
