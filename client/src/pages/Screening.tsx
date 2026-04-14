@@ -33,7 +33,9 @@ import {
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { useSearch, Link } from "wouter";
+import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import {
   addPdfReportRecord,
   addScreeningResult,
@@ -1963,6 +1965,8 @@ export default function Screening() {
 
   const handleBatchPdfReport = useCallback(async () => {
     if (!batchScreeningRows?.length) return;
+    const newWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (newWindow) newWindow.document.write("<html style='background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-family:sans-serif;'><p>Fetching DB Snapshot and generating PDF... please wait.</p></html>");
     const health = await fetchSanctionsApiHealth();
     const stamp = formatSanctionsListHealthTimestamp(health?.ts);
     const blob = generateSanctionsScreeningPdfBlob(batchScreeningRows, aiResults, stamp);
@@ -2011,7 +2015,7 @@ export default function Screening() {
 </body></html>`;
     const htmlBlob = new Blob([htmlContent], { type: "text/html" });
     const htmlUrl = URL.createObjectURL(htmlBlob);
-    window.open(htmlUrl, "_blank", "noopener,noreferrer");
+    if (newWindow) { newWindow.location.href = htmlUrl; } else { window.open(htmlUrl, "_blank", "noopener,noreferrer"); }
     setTimeout(() => {
       URL.revokeObjectURL(htmlUrl);
       URL.revokeObjectURL(pdfBlobUrl);

@@ -2,6 +2,7 @@
  * LIVE DEMO — Pre-configured scenarios, professional compliance-style results (light panels on dark shell)
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   Eye,

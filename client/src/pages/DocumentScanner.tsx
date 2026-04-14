@@ -32,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { runVisionScan, type VisionScanResult } from "@/lib/api";
 import { transliterateInformal } from "../lib/transliteration";
@@ -603,6 +604,8 @@ export default function DocumentScanner() {
 
   const handlePdfExport = useCallback(async () => {
     if (!visionData) return;
+    const newWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (newWindow) newWindow.document.write("<html style='background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-family:sans-serif;'><p>Fetching DB Snapshot and generating PDF... please wait.</p></html>");
     const flagged =
       (typeof visionData.summary?.blocked === "number" ? visionData.summary.blocked : 0) +
       (typeof visionData.summary?.flagged === "number" ? visionData.summary.flagged : 0);
@@ -654,7 +657,7 @@ export default function DocumentScanner() {
 </body></html>`;
     const htmlBlob = new Blob([htmlContent], { type: "text/html" });
     const htmlUrl = URL.createObjectURL(htmlBlob);
-    window.open(htmlUrl, "_blank", "noopener,noreferrer");
+    if (newWindow) { newWindow.location.href = htmlUrl; } else { window.open(htmlUrl, "_blank", "noopener,noreferrer"); }
     setTimeout(() => {
       URL.revokeObjectURL(htmlUrl);
       URL.revokeObjectURL(pdfBlobUrl);
