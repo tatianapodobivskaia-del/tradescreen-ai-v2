@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { Languages, ArrowRight, Search, BookOpen, FileText } from "lucide-react";
+import { Link } from "wouter";
 import {
   generateAllVariants,
   generateLatinVariants,
@@ -198,6 +199,17 @@ export default function CyrillicEngine() {
                 : "Runs generateLatinVariants(input) and displays its variant set."}
             </p>
           )}
+
+          {lastInput ? (
+            <div className="mt-4 border-t border-slate-200 pt-3">
+              <Link
+                href={`/app/screening?vendor=${encodeURIComponent(lastInput.trim())}&force=true`}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-teal-600 transition-colors hover:text-teal-700"
+              >
+                Screen this Entity <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+          ) : null}
         </div>
       </div>
 
