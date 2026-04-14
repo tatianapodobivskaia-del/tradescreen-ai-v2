@@ -2015,7 +2015,13 @@ export default function Screening() {
 </body></html>`;
     const htmlBlob = new Blob([htmlContent], { type: "text/html" });
     const htmlUrl = URL.createObjectURL(htmlBlob);
-    if (newWindow) { newWindow.location.href = htmlUrl; } else { window.open(htmlUrl, "_blank", "noopener,noreferrer"); }
+    if (newWindow) {
+      newWindow.document.open();
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    } else {
+      window.open(htmlUrl, "_blank", "noopener,noreferrer");
+    }
     setTimeout(() => {
       URL.revokeObjectURL(htmlUrl);
       URL.revokeObjectURL(pdfBlobUrl);
