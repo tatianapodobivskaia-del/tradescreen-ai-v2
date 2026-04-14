@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Activity, ShieldAlert, CheckCircle2, Play, Languages, FileSearch } from "lucide-react";
+import { Search, Activity, ShieldAlert, CheckCircle2, Play, Languages, FileSearch, Cpu } from "lucide-react";
 
 const variants = [
   "Shcherbakov", "Scherbakov", "Chtcherbakov", "Schtscherbakow", 
@@ -148,36 +148,61 @@ function Phase2Screening({ timeMs }: { timeMs: number }) {
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="flex flex-col h-full gap-8 justify-center">
       {scanning ? (
         <div className="flex flex-col items-center justify-center gap-6 py-12">
-           <Activity className="w-16 h-16 text-cyan-500 animate-pulse" />
+           <ShieldAlert className="w-16 h-16 text-cyan-500 animate-bounce" />
            <div className="text-center font-display font-semibold text-slate-700 text-2xl">
               Screening 45,296 entities...
            </div>
            <div className="w-full max-w-md h-3 bg-slate-200 rounded-full overflow-hidden">
-             <div className="h-full bg-cyan-500 transition-all duration-[100ms] ease-linear" style={{ width: `${Math.min((timeMs / 1500) * 100, 100)}%` }} />
+             <div className="h-full bg-cyan-500 transition-all duration-[100ms] ease-linear" style={{ width: `${Math.min((timeMs / 1800) * 100, 100)}%` }} />
+           </div>
+           <div className="text-sm font-data font-semibold text-slate-500 text-center h-5 tracking-wide">
+              {timeMs > 200 && <span>OFAC SDN... </span>}
+              {timeMs > 600 && <span>EU Consolidated... </span>}
+              {timeMs > 1000 && <span>UN Security Council... </span>}
+              {timeMs > 1400 && <span>UK OFSI...</span>}
            </div>
         </div>
       ) : (
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="rounded-2xl border border-slate-300 bg-white shadow-xl p-6 md:p-8 flex flex-col gap-6 relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-bl-[100px] -z-0" />
-             <div className="grid grid-cols-[1fr_auto] gap-4 relative z-10">
-                <div>
-                  <div className="text-sm font-data font-bold tracking-widest text-slate-400 uppercase mb-1">Direct Match Found</div>
-                  <div className="text-3xl font-display font-extrabold text-slate-900">SBERBANK OF RUSSIA</div>
-                  <div className="flex gap-2 mt-3 text-sm">
-                    <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded font-mono">OFAC SDN</span>
-                    <span className="bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1 rounded font-mono">EU Consolidated</span>
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex flex-col gap-4 w-full justify-center">
+          <div className="rounded-2xl border border-slate-300 bg-white shadow-xl p-6 md:p-8 flex flex-col gap-6 relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-bl-[100px] -z-0" />
+               <div className="grid grid-cols-[1fr_auto] gap-4 relative z-10">
+                  <div>
+                    <div className="text-sm font-data font-bold tracking-widest text-slate-400 uppercase mb-1">Direct Match Found</div>
+                    <div className="text-3xl font-display font-extrabold text-slate-900 mb-1">SBERBANK OF RUSSIA</div>
+                    <div className="flex gap-2 mt-3 text-sm flex-wrap">
+                      <span className="bg-red-50 border border-red-100 text-red-700 px-3 py-1 rounded-md font-mono font-bold shadow-sm">OFAC SDN</span>
+                      <span className="bg-red-50 border border-red-100 text-red-700 px-3 py-1 rounded-md font-mono font-bold shadow-sm">EU Consolidated</span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-5xl font-data font-black text-red-600 drop-shadow-sm flex items-start gap-1">
-                     94<span className="text-xl text-red-400 mt-1">/100</span>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="text-6xl font-data font-black text-red-600 drop-shadow-sm flex items-start gap-1">
+                       94<span className="text-2xl text-red-400 mt-1.5">/100</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded border border-red-200 uppercase text-xs tracking-wider animate-pulse">High Risk</span>
+                      <span className="bg-red-600 text-white font-bold px-3 py-1 rounded uppercase text-xs tracking-wider shadow-md">BLOCK</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-red-100 text-red-700 font-bold px-3 py-1 rounded border border-red-200 uppercase text-xs tracking-wider animate-pulse">High Risk</span>
-                    <span className="bg-red-600 text-white font-bold px-3 py-1 rounded uppercase text-xs tracking-wider">BLOCK</span>
-                  </div>
-                </div>
-             </div>
+               </div>
+          </div>
+          
+          {timeMs > 2400 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="rounded-xl border border-indigo-200 bg-indigo-50/50 px-5 py-5 overflow-hidden relative shadow-sm"
+            >
+              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+              <div className="flex items-center gap-2 mb-3">
+                <Cpu className="w-4 h-4 text-indigo-600" />
+                <span className="text-xs font-bold font-data text-indigo-700 uppercase tracking-widest">AI Deep Analysis</span>
+              </div>
+              <div className="text-sm text-slate-800 leading-relaxed font-mono">
+                <TypewriterText text="Sberbank is explicitly listed on OFAC SDN and EU Consolidated lists. Recommendation: BLOCK transaction." />
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       )}
     </motion.div>
@@ -229,4 +254,21 @@ function Phase3Agents({ timeMs }: { timeMs: number }) {
        </div>
     </motion.div>
   );
+}
+
+function TypewriterText({ text }: { text: string }) {
+  const [displayed, setDisplayed] = useState("");
+  
+  useEffect(() => {
+    let i = 0;
+    setDisplayed("");
+    const t = window.setInterval(() => {
+      setDisplayed(text.slice(0, i));
+      i++;
+      if (i > text.length) clearInterval(t);
+    }, 25);
+    return () => clearInterval(t);
+  }, [text]);
+
+  return <span>{displayed}<span className="inline-block w-1.5 h-4 ml-1 align-middle bg-indigo-500 animate-pulse" /></span>;
 }
