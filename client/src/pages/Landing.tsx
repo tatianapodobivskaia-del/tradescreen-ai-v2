@@ -15,7 +15,7 @@ import {
   heroStats, whyItMattersStats, howItWorksSteps, coreCapabilities,
   dataSources
 } from "@/lib/mockData";
-import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
+import { checkAPIHealth, fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
@@ -258,6 +258,19 @@ function PremiumHeading({
 
 export default function Landing() {
   const [showBackTop, setShowBackTop] = useState(false);
+  const [liveEntities, setLiveEntities] = useState(heroStats.totalEntities);
+  const [liveUpdateStr, setLiveUpdateStr] = useState("Updated every 6 hours");
+
+  useEffect(() => {
+    checkAPIHealth().then((h) => {
+      if (h?.total_entities) setLiveEntities(h.total_entities);
+    }).catch(() => {});
+    fetchSanctionsApiHealth().then((data) => {
+      if (data?.ts) {
+         setLiveUpdateStr("Last updated: " + formatSanctionsListHealthTimestamp(data.ts));
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowBackTop(window.scrollY > window.innerHeight * 0.45);
@@ -330,9 +343,9 @@ export default function Landing() {
             <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-full border border-cyan-400/25 bg-[#0B162A]/85 px-6 py-3.5 shadow-[0_0_34px_rgba(56,189,248,0.16)] backdrop-blur-sm sm:px-8 sm:py-4.5">
               <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-cyan-300" />
               <span className="text-center font-body text-sm font-semibold text-cyan-100 sm:text-left">
-                Screening <span className="font-data text-cyan-300">{heroStats.totalEntities.toLocaleString()}</span> entities across OFAC, EU, UN & UK OFSI
+                Screening <span className="font-data text-cyan-300">{liveEntities.toLocaleString()}</span> entities across OFAC, EU, UN & UK OFSI
                 <span className="mx-2 text-slate-500">•</span>
-                Updated every 6 hours
+                {liveUpdateStr}
               </span>
             </div>
           </motion.div>
