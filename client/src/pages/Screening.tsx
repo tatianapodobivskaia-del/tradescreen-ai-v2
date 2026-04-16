@@ -3075,73 +3075,6 @@ export default function Screening() {
                   </div>
                 </div>
               )}
-
-            <Dialog
-              open={emailDraftOpen}
-              onOpenChange={(open) => {
-                setEmailDraftOpen(open);
-                if (!open) setEmailDraftCopied(false);
-              }}
-            >
-              <DialogContent
-                showCloseButton={false}
-                className="max-h-[90vh] max-w-2xl gap-0 overflow-y-auto p-0 sm:max-w-2xl"
-              >
-                {complianceEmailDraft ? (
-                  <>
-                    <div className="border-b border-slate-200 px-6 py-4">
-                      <DialogHeader className="gap-1 text-left">
-                        <DialogTitle className="font-display text-lg text-slate-900">Email draft</DialogTitle>
-                        <DialogDescription className="text-sm text-slate-600">
-                          Pre-formatted compliance email from the current batch screening results.
-                        </DialogDescription>
-                      </DialogHeader>
-                    </div>
-                    <div className="space-y-4 px-6 py-4">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Subject</p>
-                        <p className="mt-2 font-mono text-sm leading-snug text-slate-900">{complianceEmailDraft.subject}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Body</p>
-                        <pre className="mt-2 max-h-[min(42vh,360px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 font-body text-sm leading-relaxed text-slate-800">
-                          {complianceEmailDraft.body}
-                        </pre>
-                      </div>
-                    </div>
-                    <DialogFooter className="flex-col gap-2 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end sm:gap-2">
-                      <button
-                        type="button"
-                        onClick={handleCopyEmailDraft}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
-                      >
-                        {emailDraftCopied ? (
-                          <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                        ) : (
-                          <Copy className="h-4 w-4 shrink-0" aria-hidden />
-                        )}
-                        {emailDraftCopied ? "Copied!" : "Copy to Clipboard"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleOpenEmailDraftMailto}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
-                      >
-                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
-                        Open in Mail
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEmailDraftOpen(false)}
-                        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-                      >
-                        Close
-                      </button>
-                    </DialogFooter>
-                  </>
-                ) : null}
-              </DialogContent>
-            </Dialog>
           </div>
         ) : screeningResults ? (
           <div className="mt-4 space-y-4">
@@ -3279,7 +3212,7 @@ export default function Screening() {
                 Email Draft
               </button>
               <Link
-                to="/reports"
+                href="/reports"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition-colors"
               >
                 Go to Reports
@@ -3288,6 +3221,74 @@ export default function Screening() {
             </div>
           </div>
         ) : null}
+
+
+            <Dialog
+              open={emailDraftOpen}
+              onOpenChange={(open) => {
+                setEmailDraftOpen(open);
+                if (!open) setEmailDraftCopied(false);
+              }}
+            >
+              <DialogContent
+                showCloseButton={false}
+                className="max-h-[90vh] max-w-2xl gap-0 overflow-y-auto p-0 sm:max-w-2xl"
+              >
+                {complianceEmailDraft ? (
+                  <>
+                    <div className="border-b border-slate-200 px-6 py-4">
+                      <DialogHeader className="gap-1 text-left">
+                        <DialogTitle className="font-display text-lg text-slate-900">Email draft</DialogTitle>
+                        <DialogDescription className="text-sm text-slate-600">
+                          Pre-formatted compliance email from the current batch screening results.
+                        </DialogDescription>
+                      </DialogHeader>
+                    </div>
+                    <div className="space-y-4 px-6 py-4">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Subject</p>
+                        <p className="mt-2 font-mono text-sm leading-snug text-slate-900">{complianceEmailDraft.subject}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Body</p>
+                        <pre className="mt-2 max-h-[min(42vh,360px)] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 font-body text-sm leading-relaxed text-slate-800">
+                          {complianceEmailDraft.body}
+                        </pre>
+                      </div>
+                    </div>
+                    <DialogFooter className="flex-col gap-2 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-end sm:gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyEmailDraft}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        {emailDraftCopied ? (
+                          <Check className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                        ) : (
+                          <Copy className="h-4 w-4 shrink-0" aria-hidden />
+                        )}
+                        {emailDraftCopied ? "Copied!" : "Copy to Clipboard"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenEmailDraftMailto}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+                        Open in Mail
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEmailDraftOpen(false)}
+                        className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+                      >
+                        Close
+                      </button>
+                    </DialogFooter>
+                  </>
+                ) : null}
+              </DialogContent>
+            </Dialog>
 
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-sm font-bold font-display text-slate-900">AI Deep Analysis</h3>
