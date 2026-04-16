@@ -1926,7 +1926,7 @@ export default function Screening() {
   const escapeCsvCell = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
 
   const handleBatchExportCsv = useCallback(() => {
-    if (!batchScreeningRows?.length) return;
+    if (!activeRows?.length) return;
     const header = [
       "Vendor",
       "Country",
@@ -1944,7 +1944,7 @@ export default function Screening() {
       "AI_Confidence",
       "AI_Reasoning",
     ];
-    const lines = batchScreeningRows.map((row, i) => {
+    const lines = activeRows.map((row, i) => {
       const sr = row.screeningResults;
       const action = complianceActionFromRisk(sr.risk).label;
       const ai = aiForBatchRow(row, i, aiResults);
@@ -3212,7 +3212,7 @@ export default function Screening() {
                 Email Draft
               </button>
               <Link
-                href="/reports"
+                href="/app/reports"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition-colors"
               >
                 Go to Reports
