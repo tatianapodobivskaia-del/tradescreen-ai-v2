@@ -1898,10 +1898,23 @@ export default function Screening() {
     return filteredBatchRows.filter((r) => r.screenInput.vendorName.toLowerCase().includes(q));
   }, [filteredBatchRows, batchTableSearch]);
 
+  const activeRows = useMemo(() => {
+    if (batchScreeningRows && batchScreeningRows.length > 0) return batchScreeningRows;
+    if (screeningResults && lastScreenInput) {
+      return [{
+        screenInput: lastScreenInput,
+        screeningResults: screeningResults,
+        auditId: `MANUAL-${new Date().toISOString()}`,
+        auditedAt: new Date().toISOString()
+      }] as BatchScreenRow[];
+    }
+    return null;
+  }, [batchScreeningRows, screeningResults, lastScreenInput]);
+
   const complianceEmailDraft = useMemo(
     () =>
-      batchScreeningRows?.length ? buildComplianceEmailDraftContent(batchScreeningRows, aiResults) : null,
-    [batchScreeningRows, aiResults]
+      activeRows?.length ? buildComplianceEmailDraftContent(activeRows, aiResults) : null,
+    [activeRows, aiResults]
   );
 
   useEffect(() => {
@@ -1961,22 +1974,22 @@ export default function Screening() {
     a.download = `batch-screening-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [batchScreeningRows, aiResults]);
+  }, [activeRows, aiResults]);
 
   const handleBatchPdfReport = useCallback(async () => {
-    if (!batchScreeningRows?.length) return;
+    if (!activeRows?.length) return;
     const newWindow = window.open("", "_blank", "noopener,noreferrer");
     if (newWindow) newWindow.document.write("<html style='background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-family:sans-serif;'><p>Fetching DB Snapshot and generating PDF... please wait.</p></html>");
     const health = await fetchSanctionsApiHealth();
     const stamp = formatSanctionsListHealthTimestamp(health?.ts);
-    const blob = generateSanctionsScreeningPdfBlob(batchScreeningRows, aiResults, stamp);
-    const flaggedCount = batchScreeningRows.filter(
+    const blob = generateSanctionsScreeningPdfBlob(activeRows, aiResults, stamp);
+    const flaggedCount = activeRows.filter(
       (row) => (row.screeningResults.risk || "").toUpperCase() !== "LOW"
     ).length;
     addPdfReportRecord({
-      title: `Sanctions screening report (${batchScreeningRows.length} vendors)`,
-      kind: "sanctions_screening_batch",
-      recordCount: batchScreeningRows.length,
+      title: activeRows.length === 1 ? `Sanctions screening report (${activeRows[0].screenInput.vendorName})` : `Sanctions screening report (${activeRows.length} vendors)`,
+      kind: activeRows.length === 1 ? "sanctions_screening_manual" : "sanctions_screening_batch",
+      recordCount: activeRows.length,
       flaggedCount,
     });
     const pdfBlobUrl = URL.createObjectURL(blob);
@@ -2026,7 +2039,7 @@ export default function Screening() {
       URL.revokeObjectURL(htmlUrl);
       URL.revokeObjectURL(pdfBlobUrl);
     }, 120_000);
-  }, [batchScreeningRows, aiResults]);
+  }, [activeRows, aiResults]);
 
   const handleCopyEmailDraft = useCallback(async () => {
     if (!complianceEmailDraft) return;
@@ -3156,21 +3169,32 @@ export default function Screening() {
                   {lastScreenInput?.docType || "—"}
                 </span>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Composite match score</span>
-                <span className="font-data text-lg font-extrabold text-amber-700">
-                  {screeningResults.compositeScore}%
-                </span>
-                <span
-                  className={cn(
-                    "rounded-md border px-2 py-0.5 text-[10px] font-bold font-display uppercase",
-                    screeningResults.risk === "HIGH" && "border-red-200 bg-red-100 text-red-800",
-                    screeningResults.risk === "MEDIUM" && "border-cyan-200 bg-amber-100 text-amber-950",
-                    screeningResults.risk === "LOW" && "border-emerald-200 bg-emerald-100 text-emerald-900"
-                  )}
-                >
-                  {screeningResults.risk} risk
-                </span>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Score breakdown</h4>
+                  <div className="rounded border border-slate-200 bg-white p-3">
+                    <ScoreBreakdownBlock breakdown={screeningResults.scoreBreakdown} />
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Final Risk</h4>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-500">Composite match score:</span>
+                    <span className="font-data text-lg font-extrabold text-amber-700">
+                      {screeningResults.compositeScore}%
+                    </span>
+                    <span
+                      className={cn(
+                        "rounded-md border px-2 py-0.5 text-[10px] font-bold font-display uppercase",
+                        screeningResults.risk === "HIGH" && "border-red-200 bg-red-100 text-red-800",
+                        screeningResults.risk === "MEDIUM" && "border-cyan-200 bg-amber-100 text-amber-950",
+                        screeningResults.risk === "LOW" && "border-emerald-200 bg-emerald-100 text-emerald-900"
+                      )}
+                    >
+                      {screeningResults.risk} risk
+                    </span>
+                  </div>
+                </div>
               </div>
               <p className="mt-2 text-xs text-slate-600 font-body">
                 Assessment / lists checked:{" "}
@@ -3229,6 +3253,38 @@ export default function Screening() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="mb-4 mt-2 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleBatchPdfReport}
+                className="rounded-lg border-2 border-red-600 bg-white px-3 py-2 text-xs font-bold font-display uppercase tracking-wide text-red-700 shadow-sm transition-colors hover:bg-red-50"
+              >
+                PDF Report
+              </button>
+              <button
+                type="button"
+                onClick={handleBatchExportCsv}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold font-display uppercase tracking-wide text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              >
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmailDraftOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              >
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                Email Draft
+              </button>
+              <Link
+                to="/reports"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow hover:bg-slate-800 transition-colors"
+              >
+                Go to Reports
+                <ArrowRight className="h-3 w-3 shrink-0" aria-hidden />
+              </Link>
             </div>
           </div>
         ) : null}
