@@ -555,7 +555,7 @@ export default function DocumentScanner() {
       } catch (err) {
         setAgentStates(prev => { const n = [...prev]; n[0] = "failed"; return n; });
         setAgentLogs(prev => { const n = [...prev]; n[0] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
-        upstreamFailed = true;
+        upstreamFailed = true; setErrorMessage(err instanceof Error ? err.message : "API Call failed");
       }
 
       if (upstreamFailed) {
@@ -575,7 +575,7 @@ export default function DocumentScanner() {
         } catch (err) {
           setAgentStates(prev => { const n = [...prev]; n[1] = "failed"; return n; });
           setAgentLogs(prev => { const n = [...prev]; n[1] = `❌ Error: Local transliteration failed`; return n; });
-          upstreamFailed = true;
+          upstreamFailed = true; setErrorMessage(err instanceof Error ? err.message : "API Call failed");
         }
       }
 
@@ -596,7 +596,7 @@ export default function DocumentScanner() {
         } catch (err) {
           setAgentStates(prev => { const n = [...prev]; n[2] = "failed"; return n; });
           setAgentLogs(prev => { const n = [...prev]; n[2] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
-          upstreamFailed = true;
+          upstreamFailed = true; setErrorMessage(err instanceof Error ? err.message : "API Call failed");
         }
       }
 
@@ -630,7 +630,7 @@ export default function DocumentScanner() {
         } catch (err) {
           setAgentStates(prev => { const n = [...prev]; n[3] = "failed"; return n; });
           setAgentLogs(prev => { const n = [...prev]; n[3] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
-          upstreamFailed = true;
+          upstreamFailed = true; setErrorMessage(err instanceof Error ? err.message : "API Call failed");
         }
       }
 
