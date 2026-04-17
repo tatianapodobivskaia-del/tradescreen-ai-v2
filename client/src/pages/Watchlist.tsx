@@ -69,7 +69,7 @@ export default function Watchlist() {
 
   const { ofac, eu, un, uk } = listCountsFromHealth(health);
   const totalListed = computeTotalFromLists(health);
-  const barDenominator = totalListed ?? 45296;
+  const barDenominator = totalListed ?? (parseInt(getCachedSanctionsCount().replace(/\D/g, "")) || 45000);
 
   const listDistribution = useMemo(() => {
     const rows: { name: string; value: number; color: string; flag: string }[] = [];
@@ -173,7 +173,7 @@ export default function Watchlist() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search 45,296 entities across OFAC, EU, UN, UK OFSI"
+                placeholder={`Search ${getCachedSanctionsCount()} entities across OFAC, EU, UN, UK OFSI`}
                 className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm font-body focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
               />
             </div>

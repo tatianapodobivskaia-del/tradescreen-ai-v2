@@ -4,6 +4,7 @@
  * PDFs are rasterized to JPEG (first page): the vision API only accepts webp/jpeg/png/gif.
  */
 import { useState, useRef, useCallback, useEffect, useMemo, type ChangeEvent, type DragEvent } from "react";
+import { getCachedSanctionsCount } from "@/lib/hooks/useSanctionsListCounts";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import {
@@ -586,7 +587,7 @@ export default function DocumentScanner() {
       } else {
         setActiveAgentIndex(2);
         setAgentStates(prev => { const n = [...prev]; n[2] = "running"; return n; });
-        setAgentLogs(prev => { const n = [...prev]; n[2] = "Screening against 45,296 entities..."; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[2] = `Screening against ${getCachedSanctionsCount()} entities...`; return n; });
 
         try {
           const riskOut = await runRiskAgent({ entities: mappedEntities, documentContext: docContext });
@@ -684,7 +685,7 @@ export default function DocumentScanner() {
                     standards: null,
                   }
                 : null,
-            listsChecked: "OFAC + EU + UN + UK — 45,296 entities",
+            listsChecked: `OFAC + EU + UN + UK — ${getCachedSanctionsCount()} entities`,
             scrId: createScrId(),
           });
         }

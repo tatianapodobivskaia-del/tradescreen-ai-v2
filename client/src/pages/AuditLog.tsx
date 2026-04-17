@@ -3,6 +3,7 @@
  */
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
+import { getCachedSanctionsCount } from "@/lib/hooks/useSanctionsListCounts";
 import { AnimatePresence, motion } from "framer-motion";
 import { addPdfReportRecord, getScreeningHistory, subscribeSession, type SessionScreeningResult } from "@/lib/sessionStore";
 import {
@@ -152,7 +153,7 @@ function AuditExpandedPanel({ session }: { session: SessionScreeningResult }) {
   const breakdown = session.scoreBreakdown;
   const assessmentDisplay = (session.assessment || "—").trim().replace(/_/g, " ") || "—";
   const actionRaw = (session.action || "APPROVE").trim().toUpperCase();
-  const listsLine = session.listsChecked ?? "OFAC + EU + UN + UK — 45,296 entities";
+  const listsLine = session.listsChecked ?? `OFAC + EU + UN + UK — ${getCachedSanctionsCount()} entities`;
   const variants = session.transliterationInfo?.variants ?? [];
   const isScanner = session.source === "scanner";
 

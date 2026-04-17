@@ -77,7 +77,7 @@ export default function Architecture() {
             {
               title: "Risk Agent",
               icon: Shield,
-              desc: "Screens extracted names against 45,296 entities across 4 sanctions lists",
+              desc: `Screens extracted names against ${getCachedSanctionsCount()} entities across 4 sanctions lists`,
             },
             {
               title: "Action Agent",
@@ -153,7 +153,7 @@ export default function Architecture() {
             <ul className="space-y-2 text-sm text-slate-600 font-body">
               <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Fuzzy string matching using Levenshtein distance</li>
               <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Cyrillic transliteration variant generation</li>
-              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Multi-list parallel search across all 45,296 entities</li>
+              <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Multi-list parallel search across all {getCachedSanctionsCount()} entities</li>
               <li className="flex items-start gap-2"><ArrowRight className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />Composite risk score calculation</li>
             </ul>
           </div>

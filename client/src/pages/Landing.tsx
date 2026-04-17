@@ -17,6 +17,7 @@ import {
   dataSources
 } from "@/lib/mockData";
 import { checkAPIHealth, fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
+import { useSanctionsListCounts } from "@/lib/hooks/useSanctionsListCounts";
 import {
   DollarSign, Users, AlertTriangle, TrendingUp, Upload, Search, FileText,
   Shield, Languages, ScanLine, Brain, BarChart3, Database,
@@ -259,19 +260,9 @@ function PremiumHeading({
 
 export default function Landing() {
   const [showBackTop, setShowBackTop] = useState(false);
-  const [liveEntities, setLiveEntities] = useState(heroStats.totalEntities);
-  const [liveUpdateStr, setLiveUpdateStr] = useState("Updated every 6 hours");
-
-  useEffect(() => {
-    checkAPIHealth().then((h) => {
-      if (h?.total_entities) setLiveEntities(h.total_entities);
-    }).catch(() => {});
-    fetchSanctionsApiHealth().then((data) => {
-      if (data?.ts) {
-         setLiveUpdateStr("Last updated: " + formatSanctionsListHealthTimestamp(data.ts));
-      }
-    }).catch(() => {});
-  }, []);
+  const counts = useSanctionsListCounts();
+  const liveEntities = counts.total;
+  const liveUpdateStr = counts.lastUpdated ? `Last updated: ${formatSanctionsListHealthTimestamp(counts.lastUpdated)}` : "Updated every 6 hours";
 
   useEffect(() => {
     const onScroll = () => setShowBackTop(window.scrollY > window.innerHeight * 0.45);
@@ -342,11 +333,16 @@ export default function Landing() {
             className="mb-10 flex flex-col items-center gap-2"
           >
             <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-full border border-cyan-400/25 bg-[#0B162A]/85 px-6 py-3.5 shadow-[0_0_34px_rgba(56,189,248,0.16)] backdrop-blur-sm sm:px-8 sm:py-4.5">
-              <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-cyan-300" />
-              <span className="text-center font-body text-sm font-semibold text-cyan-100 sm:text-left">
-                Screening <span className="font-data text-cyan-300">{liveEntities.toLocaleString()}</span> entities across OFAC, EU, UN & UK OFSI
-                <span className="mx-2 text-slate-500">•</span>
-                {liveUpdateStr}
+              <span className="text-center font-body text-sm font-semibold text-cyan-100 sm:text-left flex items-center gap-2 flex-wrap justify-center">
+                <span>
+                  Screening <span className="font-data text-cyan-300">{liveEntities > 0 ? liveEntities.toLocaleString() : "~45K"}</span> entities across OFAC, EU, UN & UK OFSI
+                </span>
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${counts.isLive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'}`}>
+                  <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${counts.isLive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`}></span>
+                  {counts.isLive ? 'Live' : 'Cached.'}
+                </span>
+                <span className="hidden sm:inline mx-1 text-slate-500">•</span>
+                <span>{liveUpdateStr}</span>
               </span>
             </div>
           </motion.div>
@@ -404,6 +400,7 @@ export default function Landing() {
 }
 
 function WhyItMatters() {
+  const counts = useSanctionsListCounts();
   return (
     <section
       id="landing-why-it-matters"
@@ -435,7 +432,7 @@ function WhyItMatters() {
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-cyan-400/10 transition-colors group-hover:bg-cyan-400/20">
                   <Icon className="w-7 h-7 text-cyan-300" />
                 </div>
-                <WhyItMattersStatCount value={stat.value} />
+                <WhyItMattersStatCount value={stat.label === "Sanctioned Entities" ? (counts.total > 0 ? counts.total.toLocaleString() : "~45K") : stat.value} />
                 <div className="mb-2 text-base font-extrabold tracking-wide text-slate-100 uppercase">{stat.label}</div>
                 <div className="text-sm font-medium text-slate-300 font-body">{stat.sublabel}</div>
               </motion.div>

@@ -2,6 +2,7 @@
  * LIVE DEMO — Pre-configured scenarios, professional compliance-style results (light panels on dark shell)
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { getCachedSanctionsCount } from "@/lib/hooks/useSanctionsListCounts";
 import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
@@ -91,7 +92,7 @@ const SCENARIOS: Array<{
       visionResult: "Found: Rosoboronexport Trading, Russia, $750K, Invoice",
       translitProc: "Generating Cyrillic variants...",
       translitResult: "Рособоронэкспорт → Rosoboroneksport, Rosoboronexport",
-      riskProc: "Screening against 45,296 sanctions entities...",
+      riskProc: `Screening against ${getCachedSanctionsCount()} sanctions entities...`,
       riskResult: "Match: ROSOBORONEXPORT (OFAC SDN) — 97% similarity",
       actionProc: "Preparing compliance assessment...",
       actionResult: "Action: BLOCK — Immediate review required",
@@ -122,7 +123,7 @@ const SCENARIOS: Array<{
       visionResult: "Found: Shcherbakov Import Export, Turkey, $180K, Bill of Lading",
       translitProc: "Generating Cyrillic variants...",
       translitResult: "Variants: Ščerbakov, Shcherbakov, Scherbakov, Щербаков",
-      riskProc: "Screening against 45,296 sanctions entities...",
+      riskProc: `Screening against ${getCachedSanctionsCount()} sanctions entities...`,
       riskResult: "Possible link: SHCHERBAKOV DEFENSE SYSTEMS (OFAC SDN) — ambiguous / partial similarity",
       actionProc: "Preparing compliance assessment...",
       actionResult: "REVIEW — Possible false positive; manual adjudication required",
@@ -151,7 +152,7 @@ const SCENARIOS: Array<{
       visionResult: "Found: Sunny Day Flowers Co, Colombia, $12K, Invoice",
       translitProc: "Generating Cyrillic variants...",
       translitResult: "No Cyrillic detected — skipping",
-      riskProc: "Screening against 45,296 sanctions entities...",
+      riskProc: `Screening against ${getCachedSanctionsCount()} sanctions entities...`,
       riskResult: "No matches found across 4 lists",
       actionProc: "Preparing compliance assessment...",
       actionResult: "APPROVE — Standard due diligence sufficient",
@@ -175,7 +176,7 @@ const NAME_VARIANT_META: Record<
 > = {
   ros: {
     summaryCount: 7,
-    summary: "variants generated — now screening all against 45,296 entities across 4 lists…",
+    summary: `variants generated — now screening all against ${getCachedSanctionsCount()} entities across 4 lists…`,
     rows: [
       { text: "Рособоронэкспорт", label: "Original Cyrillic" },
       { text: "Rosoboronexport", label: "ISO 9" },
@@ -188,7 +189,7 @@ const NAME_VARIANT_META: Record<
   },
   sch: {
     summaryCount: 8,
-    summary: "variants generated — now screening all against 45,296 entities across 4 lists…",
+    summary: `variants generated — now screening all against ${getCachedSanctionsCount()} entities across 4 lists…`,
     rows: [
       { text: "Щербаков Импорт Экспорт", label: "Original Cyrillic" },
       { text: "Shcherbakov", label: "ISO 9" },
@@ -202,7 +203,7 @@ const NAME_VARIANT_META: Record<
   },
   sun: {
     summaryCount: null,
-    summary: "No Cyrillic detected — screening Latin name only against 45,296 entities…",
+    summary: `No Cyrillic detected — screening Latin name only against ${getCachedSanctionsCount()} entities…`,
     rows: [{ text: "Sunny Day Flowers Co", label: "Original Latin" }],
   },
 };

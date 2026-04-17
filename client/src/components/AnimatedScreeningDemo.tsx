@@ -150,7 +150,7 @@ function Phase2Screening({ timeMs }: { timeMs: number }) {
         <div className="flex flex-col items-center justify-center gap-6 py-12">
            <ShieldAlert className="w-16 h-16 text-cyan-500 animate-bounce" />
            <div className="text-center font-display font-semibold text-slate-700 text-2xl">
-              Screening 45,296 entities...
+              Screening {getCachedSanctionsCount()} entities...
            </div>
            <div className="w-full max-w-md h-3 bg-slate-200 rounded-full overflow-hidden">
              <div className="h-full bg-cyan-500 transition-all duration-[100ms] ease-linear" style={{ width: `${Math.min((timeMs / 1800) * 100, 100)}%` }} />
@@ -212,7 +212,7 @@ function Phase2Screening({ timeMs }: { timeMs: number }) {
 const agents = [
   { icon: ScanLine, name: "Vision Agent", msg: "Extracted 3 entities from document", color: "text-blue-500", bg: "bg-blue-50", border: "border-blue-200" },
   { icon: Languages, name: "Transliteration Agent", msg: "Generated Cyrillic cross-variants", color: "text-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200" },
-  { icon: Search, name: "Risk Agent", msg: "Screened against 45,296 entities", color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200" },
+  { icon: Search, name: "Risk Agent", msg: `Screened against ${getCachedSanctionsCount()} entities`, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200" },
   { icon: ShieldAlert, name: "Action Agent", msg: "1 blocked, 1 flagged, 1 cleared", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
 ];
 import { ScanLine } from "lucide-react";

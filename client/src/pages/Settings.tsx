@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Sliders, Bell, Info, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { getCachedSanctionsCount } from "@/lib/hooks/useSanctionsListCounts";
 import { getThreshold, setThreshold as persistSensitivityThreshold, subscribeSession } from "@/lib/sessionStore";
 
 function sensitivityBandExplanation(threshold: number): string {
@@ -142,7 +143,7 @@ export default function SettingsPage() {
           </div>
           <div className="p-3 rounded-lg bg-slate-50">
             <div className="text-xs text-slate-500 font-body mb-1">Entities Database</div>
-            <div className="text-sm font-data text-slate-900">45,296</div>
+            <div className="text-sm font-data text-slate-900">{getCachedSanctionsCount()}</div>
           </div>
           <div className="p-3 rounded-lg bg-slate-50">
             <div className="text-xs text-slate-500 font-body mb-1">Lists Monitored</div>

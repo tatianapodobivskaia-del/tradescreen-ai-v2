@@ -14,6 +14,7 @@ import {
 } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { getCachedSanctionsCount } from "@/lib/hooks/useSanctionsListCounts";
 import { robotoBase64 } from "@/lib/vfs_fonts";
 import {
   Search,
@@ -714,7 +715,7 @@ function buildScreeningSessionHistoryRecord(
             : null,
         }
       : null,
-    listsChecked: "OFAC + EU + UN + UK — 45,296 entities",
+    listsChecked: `OFAC + EU + UN + UK — ${getCachedSanctionsCount()} entities`,
     scrId,
   };
 }
@@ -1094,7 +1095,7 @@ export function buildBatchScreenRowFromSessionRecord(r: SessionScreeningResult):
     assessment: (r.assessment ?? "UNKNOWN").trim() || "UNKNOWN",
     action: (r.action ?? "APPROVE").trim() || "APPROVE",
     reasoning: r.reasoning ?? "",
-    listsChecked: r.listsChecked ?? "OFAC + EU + UN + UK — 45,296 entities",
+    listsChecked: r.listsChecked ?? `OFAC + EU + UN + UK — ${getCachedSanctionsCount()} entities`,
   };
   const listHits: ListHitRow[] = LIST_LABELS.map((list) => ({
     list,
@@ -2474,7 +2475,7 @@ export default function Screening() {
       <div>
         <h1 className="text-3xl font-extrabold font-display tracking-tight text-slate-900">Sanctions Screening</h1>
         <p className="mt-2 text-sm text-slate-500 font-body">
-          Screen vendors against 45,296 sanctioned entities across 4 international lists
+          Screen vendors against ${getCachedSanctionsCount()} sanctioned entities across 4 international lists
         </p>
         <p className="mt-1.5 text-xs text-slate-400 font-body">{listsUpdatedLine}</p>
       </div>

@@ -5,14 +5,14 @@
 
 // ---- LANDING PAGE DATA ----
 export const heroStats = {
-  totalEntities: 45296,
+  totalEntities: 0,
   title: "AI-Powered Sanctions Screening",
   subtitle: "Multi-list compliance intelligence with Cyrillic transliteration and AI deep analysis",
 };
 
 export const whyItMattersStats = [
   { value: "4", label: "Sanctions Lists", sublabel: "OFAC, EU, UN & UK OFSI coverage", icon: "Shield" },
-  { value: "45,296", label: "Sanctioned Entities", sublabel: "Across all four international lists", icon: "Users" },
+  { value: "0", label: "Sanctioned Entities", sublabel: "Across all four international lists", icon: "Users" },
   { value: "97%", label: "Detection Rate", sublabel: "On controlled test dataset", icon: "AlertTriangle" },
   { value: "4", label: "Transliteration Systems", sublabel: "ISO 9, ICAO, BGN/PCGN, Informal", icon: "Languages" },
 ];
@@ -66,7 +66,7 @@ export const researcherInfo = {
 // ---- DASHBOARD DATA ----
 export const dashboardStats = [
   { label: "Total Screenings", value: 12847, change: "+12.3%", trend: "up", sparkline: [65, 72, 68, 80, 75, 90, 85, 95, 88, 102, 98, 110] },
-  { label: "Entities Monitored", value: 45296, change: "+2.1%", trend: "up", sparkline: [42100, 42800, 43200, 43900, 44100, 44500, 44800, 45000, 45100, 45200, 45250, 45296] },
+  { label: "Entities Monitored", value: 0, change: "+2.1%", trend: "up", sparkline: [42100, 42800, 43200, 43900, 44100, 44500, 44800, 45000, 45100, 45200, 45250, 45296] },
   { label: "High Risk Flags", value: 342, change: "-5.2%", trend: "down", sparkline: [38, 42, 35, 40, 36, 32, 34, 30, 28, 31, 29, 27] },
   { label: "Avg. Processing Time", value: "1.2s", change: "-18%", trend: "down", sparkline: [2.1, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.3, 1.2, 1.2, 1.2] },
 ];
@@ -303,7 +303,7 @@ export const reportsArchive = [
   { id: "RPT-2026-047", title: "Monthly Compliance Report", date: "2026-03-01", type: "Monthly", records: 1597, flagged: 142 },
   { id: "RPT-2026-046", title: "Quarterly Risk Assessment", date: "2026-01-15", type: "Quarterly", records: 4821, flagged: 389 },
   { id: "RPT-2026-045", title: "Weekly Screening Summary", date: "2026-03-08", type: "Weekly", records: 389, flagged: 28 },
-  { id: "RPT-2026-044", title: "Entity Watchlist Update", date: "2026-03-05", type: "Ad-hoc", records: 45296, flagged: 1204 },
+  { id: "RPT-2026-044", title: "Entity Watchlist Update", date: "2026-03-05", type: "Ad-hoc", records: 0, flagged: 1204 },
 ];
 
 // ---- AUDIT LOG DATA ----
