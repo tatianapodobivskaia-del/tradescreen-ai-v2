@@ -636,12 +636,12 @@ export default function DocumentScanner() {
 
       if (!upstreamFailed && baseData) {
         baseData.risk_results = riskResults.map(r => ({
-           entity: r.entity,
-           country: r.country,
-           risk: r.risk,
-           action: r.action,
-           reasoning: r.reasoning,
-           cyrillic_variants: r.variants,
+           entity: String(r.entity || ""),
+           country: String(r.country || ""),
+           risk: String(r.risk || "LOW"),
+           action: String(r.action || ""),
+           reasoning: String(r.reasoning || ""),
+           cyrillic_variants: Array.isArray(r.variants) ? r.variants.map(String) : [],
         }));
         setVisionData(baseData);
         setPhase("complete");
