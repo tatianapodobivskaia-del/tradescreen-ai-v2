@@ -1,5 +1,5 @@
 export const DEEP_ANALYSIS_RISK_THRESHOLDS = ["HIGH", "MEDIUM"] as const;
-export const AGENT_TIMEOUT_MS = 10000;
+export const AGENT_TIMEOUT_MS = 120000;
 
 export interface VisionOutput {
   entities: Array<{ name: string; country: string; cyrillic_variants?: string[] }>;
