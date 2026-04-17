@@ -643,6 +643,19 @@ export default function DocumentScanner() {
            reasoning: String(r.reasoning || ""),
            cyrillic_variants: Array.isArray(r.variants) ? r.variants.map(String) : [],
         }));
+
+        const hasHigh = baseData.risk_results.some(r => r.risk.toUpperCase() === "HIGH");
+        const hasMedium = baseData.risk_results.some(r => r.risk.toUpperCase() === "MEDIUM");
+        baseData.document_risk = hasHigh ? "HIGH" : (hasMedium ? "MEDIUM" : "LOW");
+
+        const sortedActions = baseData.risk_results.map(r => r.action.toUpperCase());
+        baseData.document_action = sortedActions.includes("BLOCK") ? "ESCALATE TO COMPLIANCE" : (sortedActions.includes("FLAG") ? "REVIEW REQUIRED" : "APPROVE");
+
+        baseData.summary = {
+          blocked: sortedActions.filter(a => a === "BLOCK").length,
+          flagged: sortedActions.filter(a => a === "FLAG").length,
+          cleared: sortedActions.filter(a => ["APPROVE", "PASS", "CLEARED", "—", ""].includes(a)).length
+        };
         setVisionData(baseData);
         setPhase("complete");
         const durationMs = performance.now() - t0;
