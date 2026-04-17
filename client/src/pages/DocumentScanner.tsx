@@ -34,9 +34,13 @@ import {
 } from "@/components/ui/dialog";
 import { fetchSanctionsApiHealth, formatSanctionsListHealthTimestamp } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { runVisionScan, type VisionScanResult } from "@/lib/api";
-import { transliterateInformal } from "../lib/transliteration";
+import { type VisionScanResult } from "@/lib/api";
 import { addPdfReportRecord, addScreeningResult, createScrId } from "@/lib/sessionStore";
+import type { AgentState } from "../lib/agents/types";
+import { runVisionAgent } from "../lib/agents/visionAgent";
+import { runTransliterationAgent } from "../lib/agents/transliterationAgent";
+import { runRiskAgent } from "../lib/agents/riskAgent";
+import { runActionAgent } from "../lib/agents/actionAgent";
 
 declare global {
   // set by pdf.worker.mjs when evaluated on the main thread
@@ -509,21 +513,8 @@ export default function DocumentScanner() {
     [visionData]
   );
 
-  const clearActivateTimers = useCallback(() => {
-    activateTimersRef.current.forEach((id) => clearTimeout(id));
-    activateTimersRef.current = [];
-  }, []);
-
-  useEffect(() => () => clearActivateTimers(), [clearActivateTimers]);
-
-  const startAgentSequence = useCallback(() => {
-    clearActivateTimers();
-    setActiveAgentIndex(0);
-    AGENT_ACTIVATE_MS.forEach((ms, idx) => {
-      const id = setTimeout(() => setActiveAgentIndex(idx), ms);
-      activateTimersRef.current.push(id);
-    });
-  }, [clearActivateTimers]);
+  const [agentStates, setAgentStates] = useState<AgentState[]>(["pending", "pending", "pending", "pending"]);
+  const [agentLogs, setAgentLogs] = useState<string[]>(["", "", "", ""]);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -532,20 +523,132 @@ export default function DocumentScanner() {
       setErrorMessage(null);
       setVisionData(null);
       setPhase("scanning");
-      startAgentSequence();
+      setActiveAgentIndex(0);
+      setAgentStates(["running", "pending", "pending", "pending"]);
+      setAgentLogs(["Extracting entities...", "Waiting...", "Waiting...", "Waiting..."]);
 
-      const pMin = sleep(MIN_PIPELINE_MS);
+      let upstreamFailed = false;
+      let baseData: VisionResponse | null = null;
+      let mappedEntities: { original: string, variants: string[], country: string }[] = [];
+      let docContext = "OCR Doc";
 
       try {
         const base64 = await fileToVisionApiBase64(file);
-        const data = await runVisionScan(base64);
-        await pMin;
-        clearActivateTimers();
-        setVisionData(data);
+        const visionOut = await runVisionAgent(base64);
+        
+        baseData = {
+           document: { document_type: visionOut.documentContext },
+           entities_found: visionOut.entitiesFoundCount,
+           risk_results: visionOut.originalRiskResults,
+           summary: { blocked: 0, flagged: 0, cleared: 0 }
+        } as VisionResponse;
+
+        mappedEntities = visionOut.entities.map(e => ({
+          original: e.name,
+          variants: e.cyrillic_variants || [],
+          country: e.country,
+        }));
+        docContext = visionOut.documentContext;
+
+        setAgentStates(prev => { const n = [...prev]; n[0] = "success"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[0] = `✅ Found ${visionOut.entitiesFoundCount} entities`; return n; });
+      } catch (err) {
+        setAgentStates(prev => { const n = [...prev]; n[0] = "failed"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[0] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
+        upstreamFailed = true;
+      }
+
+      if (upstreamFailed) {
+        setAgentStates(prev => { const n = [...prev]; n[1] = "skipped"; n[2] = "skipped"; n[3] = "skipped"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[1] = "Skipped: upstream failure"; n[2] = "Skipped: upstream failure"; n[3] = "Skipped: upstream failure"; return n; });
+      } else {
+        setActiveAgentIndex(1);
+        setAgentStates(prev => { const n = [...prev]; n[1] = "running"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[1] = "Generating local variants..."; return n; });
+        await sleep(300);
+
+        try {
+          const translitOut = await runTransliterationAgent({ entities: mappedEntities.map(e => ({ name: e.original, country: e.country })) });
+          mappedEntities = translitOut.entities;
+          setAgentStates(prev => { const n = [...prev]; n[1] = "success"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[1] = `✅ Generated variants for ${mappedEntities.length} entities`; return n; });
+        } catch (err) {
+          setAgentStates(prev => { const n = [...prev]; n[1] = "failed"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[1] = `❌ Error: Local transliteration failed`; return n; });
+          upstreamFailed = true;
+        }
+      }
+
+      let riskResults: any[] = [];
+      if (upstreamFailed) {
+        setAgentStates(prev => { const n = [...prev]; n[2] = "skipped"; n[3] = "skipped"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[2] = "Skipped: upstream failure"; n[3] = "Skipped: upstream failure"; return n; });
+      } else {
+        setActiveAgentIndex(2);
+        setAgentStates(prev => { const n = [...prev]; n[2] = "running"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[2] = "Screening against 45,296 entities..."; return n; });
+
+        try {
+          const riskOut = await runRiskAgent({ entities: mappedEntities, documentContext: docContext });
+          riskResults = riskOut.results;
+          setAgentStates(prev => { const n = [...prev]; n[2] = "success"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[2] = `✅ Screened on Azure`; return n; });
+        } catch (err) {
+          setAgentStates(prev => { const n = [...prev]; n[2] = "failed"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[2] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
+          upstreamFailed = true;
+        }
+      }
+
+      if (upstreamFailed) {
+        setAgentStates(prev => { const n = [...prev]; n[3] = "skipped"; return n; });
+        setAgentLogs(prev => { const n = [...prev]; n[3] = "Skipped: upstream failure"; return n; });
+      } else {
+        setActiveAgentIndex(3);
+        
+        try {
+          setAgentStates(prev => { const n = [...prev]; n[3] = "running"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[3] = "Action Agent generating response..."; return n; });
+          
+          const actionOut = await runActionAgent({ flaggedEntities: riskResults, documentContext: docContext });
+          
+          if (!actionOut) {
+            setAgentStates(prev => { const n = [...prev]; n[3] = "not_triggered"; return n; });
+            setAgentLogs(prev => { const n = [...prev]; n[3] = `⊘ Not triggered — no high-risk matches require analysis`; return n; });
+            await sleep(300);
+          } else {
+            for (let i = 0; i < riskResults.length; i++) {
+               const foundAction = actionOut.assessments.find(a => a.entity === riskResults[i].entity);
+               if (foundAction) {
+                  riskResults[i].action = foundAction.aiAction;
+                  riskResults[i].reasoning = foundAction.aiReasoning;
+               }
+            }
+            setAgentStates(prev => { const n = [...prev]; n[3] = "success"; return n; });
+            setAgentLogs(prev => { const n = [...prev]; n[3] = `✅ Assessment complete`; return n; });
+          }
+        } catch (err) {
+          setAgentStates(prev => { const n = [...prev]; n[3] = "failed"; return n; });
+          setAgentLogs(prev => { const n = [...prev]; n[3] = `❌ Error: ${err instanceof Error ? err.message : "Failure"}`; return n; });
+          upstreamFailed = true;
+        }
+      }
+
+      if (!upstreamFailed && baseData) {
+        baseData.risk_results = riskResults.map(r => ({
+           entity: r.entity,
+           country: r.country,
+           risk: r.risk,
+           action: r.action,
+           reasoning: r.reasoning,
+           cyrillic_variants: r.variants,
+        }));
+        setVisionData(baseData);
         setPhase("complete");
         const durationMs = performance.now() - t0;
         const nowIso = new Date().toISOString();
-        for (const r of data.risk_results ?? []) {
+        
+        for (const r of baseData.risk_results) {
           addScreeningResult({
             timestamp: nowIso,
             vendorName: r.entity,
@@ -572,15 +675,10 @@ export default function DocumentScanner() {
             scrId: createScrId(),
           });
         }
-      } catch (err) {
-        await pMin;
-        clearActivateTimers();
-        setErrorMessage(formatVisionClientError(err));
+      } else {
         setPhase("error");
       }
-    },
-    [startAgentSequence, clearActivateTimers]
-  );
+    }, []);
 
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -777,38 +875,16 @@ export default function DocumentScanner() {
           <div className="grid gap-3 sm:grid-cols-2">
             {AGENT_META.map((agent, idx) => {
               const { Icon, label } = agent;
-              const isComplete = phase === "complete" && visionData;
-              const isScanning = phase === "scanning";
-              const isActive = isScanning && activeAgentIndex === idx;
-              const isPastAnim = isScanning && activeAgentIndex > idx;
-              const isFuture = isScanning && activeAgentIndex < idx;
+              
+              const state = agentStates[idx];
+              const statusText = agentLogs[idx] || (state === "pending" ? "Waiting..." : "Done");
 
-              const cyrillicEntityCount =
-                visionData?.risk_results?.filter((r) => (r.cyrillic_variants?.length ?? 0) > 0).length ?? 0;
-
-              let statusText = "";
-              if (isComplete && visionData) {
-                if (idx === 0) statusText = `✅ Found ${visionData.entities_found} entities`;
-                else if (idx === 1) statusText = "✅ Generated Cyrillic variants";
-                else if (idx === 2) statusText = "✅ Screened against 45,296 entities";
-                else statusText = "✅ Assessment complete";
-              } else if (isScanning) {
-                if (isPastAnim) statusText = "Done";
-                else if (isActive) statusText = idx === 0 ? "Extracting entities from document…" : "Waiting…";
-                else if (isFuture) statusText = "Waiting…";
-              }
-
-              let detailLine = "";
-              if (isComplete && visionData) {
-                if (idx === 0)
-                  detailLine = `Extracted ${visionData.entities_found} entities from document`;
-                else if (idx === 1)
-                  detailLine = `Generated Cyrillic variants for ${cyrillicEntityCount} entities`;
-                else if (idx === 2)
-                  detailLine = "Screened against 45,296 entities across 4 lists";
-                else
-                  detailLine = `Assessment complete — ${visionData.summary.blocked} blocked, ${visionData.summary.flagged} flagged, ${visionData.summary.cleared} cleared`;
-              }
+              const isComplete = state === "success";
+              const isFailed = state === "failed";
+              const isSkipped = state === "skipped";
+              const isNotTriggered = state === "not_triggered";
+              const isActive = state === "running";
+              const isLocal = idx === 1;
 
               return (
                 <div
@@ -816,20 +892,23 @@ export default function DocumentScanner() {
                   className={cn(
                     "flex flex-col gap-2 rounded-xl border-2 p-4 transition-all",
                     isComplete && "border-emerald-400 bg-emerald-50/40",
-                    isScanning && isActive && "border-cyan-500 bg-amber-50/50 shadow-sm ring-2 ring-cyan-200",
-                    isScanning && isFuture && "border-slate-100 bg-slate-50/60 opacity-90",
-                    isScanning && isPastAnim && "border-slate-200 bg-white"
+                    isFailed && "border-red-400 bg-red-50/40",
+                    (isSkipped || isNotTriggered) && "border-slate-300 bg-slate-50/60 opacity-80",
+                    isActive && "border-cyan-500 bg-amber-50/50 shadow-sm ring-2 ring-cyan-200",
+                    state === "pending" && "border-slate-100 bg-slate-50/60 opacity-90"
                   )}
                 >
                   <div className="flex gap-3">
                     <div
                       className={cn(
                         "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
-                        isComplete ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
+                        isComplete || isNotTriggered ? "border-emerald-300 bg-emerald-100" : "border-slate-200 bg-white",
+                        isFailed ? "border-red-300 bg-red-100" : "",
+                        isSkipped ? "border-slate-200 bg-slate-100" : "",
                         isActive && "border-cyan-400 bg-amber-50"
                       )}
                     >
-                      {isComplete ? (
+                      {isComplete || isNotTriggered ? (
                         <motion.span
                           className="inline-flex"
                           animate={
@@ -843,30 +922,55 @@ export default function DocumentScanner() {
                               : { duration: 0.45, ease: "easeOut" }
                           }
                         >
-                          <CheckCircle className="h-5 w-5 text-emerald-600" strokeWidth={2} />
+                          <CheckCircle className={cn("h-5 w-5", isNotTriggered ? "text-slate-500" : "text-emerald-600")} strokeWidth={2} />
                         </motion.span>
+                      ) : isFailed ? (
+                         <ShieldAlert className="h-5 w-5 text-red-600" strokeWidth={2} />
                       ) : isActive ? (
                         <Loader2 className="h-5 w-5 animate-spin text-amber-700" strokeWidth={2} />
-                      ) : isPastAnim ? (
-                        <motion.span
-                          className="inline-flex"
-                          animate={{ scale: [1, 1.12, 1] }}
-                          transition={{ duration: 0.5, ease: "easeOut" }}
-                        >
-                          <CheckCircle className="h-5 w-5 text-emerald-500/90" strokeWidth={2} />
-                        </motion.span>
+                      ) : state === "skipped" ? (
+                        <Copy className="h-5 w-5 text-slate-400" strokeWidth={2} />
                       ) : (
                         <Icon className="h-5 w-5 text-slate-400" strokeWidth={2} />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold font-display text-slate-900">{label}</p>
-                      <p className="mt-0.5 text-xs text-slate-700 font-body leading-snug">{statusText}</p>
+                      <div className="flex items-center gap-2">
+                         <p className="text-sm font-bold font-display text-slate-900">{label}</p>
+                         {isLocal && (
+                           <span className="rounded-md border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-cyan-800">
+                             ⚡ Local
+                           </span>
+                         )}
+                      </div>
+                      <p
+                        className={cn(
+                          "mt-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                          isComplete ? "text-emerald-700" : isNotTriggered ? "text-slate-600" : isFailed ? "text-red-600" : isActive ? "text-amber-700" : "text-slate-500"
+                        )}
+                      >
+                        {isActive ? "Processing" : state === "success" ? "Complete" : state === "failed" ? "Failed" : state === "skipped" ? "Skipped" : state === "not_triggered" ? "Not Triggered" : "Pending"}
+                      </p>
                     </div>
                   </div>
-                  {detailLine ? (
-                    <p className="pl-[52px] text-[11px] leading-snug text-slate-500 font-body">{detailLine}</p>
-                  ) : null}
+                  <div className="mt-1 border-t border-slate-100/50 pt-3">
+                    <div className="flex items-start gap-2">
+                      <div
+                        className={cn(
+                          "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
+                          isActive ? "animate-pulse bg-cyan-500" : isFailed ? "bg-red-500" : "bg-slate-300"
+                        )}
+                      />
+                      <p 
+                        className={cn(
+                          "flex-1 break-words pb-0.5 text-xs leading-relaxed font-body",
+                          isFailed ? "text-red-700 font-bold" : "text-slate-600 font-medium"
+                        )}
+                      >
+                        {statusText}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               );
             })}
