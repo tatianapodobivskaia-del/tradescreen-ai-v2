@@ -449,22 +449,22 @@ Compliance Team`;
   return { subject, body, fullText: `Subject: ${subject}\n\n${body}` };
 }
 
-function riskBadgeClass(risk: string): string {
-  const u = risk.toUpperCase();
+function riskBadgeClass(risk?: string): string {
+  const u = (risk || "").toUpperCase();
   if (u === "HIGH") return "border-red-300 bg-red-100 text-red-900";
   if (u === "MEDIUM") return "border-cyan-300 bg-amber-100 text-amber-950";
   return "border-emerald-300 bg-emerald-100 text-emerald-900";
 }
 
-function docRiskBorder(risk: string): string {
-  const u = risk.toUpperCase();
+function docRiskBorder(risk?: string): string {
+  const u = (risk || "").toUpperCase();
   if (u === "HIGH") return "border-red-400 ring-1 ring-red-200";
   if (u === "MEDIUM") return "border-cyan-400 ring-1 ring-cyan-200";
   return "border-emerald-400 ring-1 ring-emerald-200";
 }
 
-function documentRiskHeroClasses(risk: string): string {
-  const u = risk.toUpperCase();
+function documentRiskHeroClasses(risk?: string): string {
+  const u = (risk || "").toUpperCase();
   if (u === "HIGH")
     return "bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] ring-1 ring-red-500/40";
   if (u === "MEDIUM")
@@ -472,8 +472,8 @@ function documentRiskHeroClasses(risk: string): string {
   return "bg-emerald-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)] ring-1 ring-emerald-500/40";
 }
 
-function entityCardLeftBorder(risk: string): string {
-  const u = risk.toUpperCase();
+function entityCardLeftBorder(risk?: string): string {
+  const u = (risk || "").toUpperCase();
   if (u === "HIGH") return "border-l-red-500";
   if (u === "MEDIUM") return "border-l-amber-500";
   return "border-l-emerald-500";
